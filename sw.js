@@ -1,6 +1,7 @@
 /* 離線快取：連線時走網路（永遠拿最新版並更新快取），離線時用裝置上的快取 */
 const CACHE = "tle-syd-v2";
-const ASSETS = ["./", "./index.html", "./app.js", "./manifest.json", "./icon.png"];
+const ASSETS = ["./", "./index.html", "./app.js", "./manifest.json", "./icon.png",
+  "./img/espresso.jpg", "./img/euca.webp", "./img/koala.webp", "./img/latte.jpg", "./img/oj.jpg", "./img/opera.webp", "./img/red.jpg", "./img/sparkle.webp", "./img/sparkling.jpg", "./img/still.jpg", "./img/tea.jpg", "./img/white.jpg"];
 /* 歌劇院影片：盡力快取，檔案不存在或太大也不影響 App 安裝 */
 const MEDIA = ["./media/design.mp4", "./media/build.mp4", "./media/arch.mp4"];
 
