@@ -1,6 +1,6 @@
 /* 離線快取：連線時走網路（永遠拿最新版並更新快取），離線時用裝置上的快取 */
-const CACHE = "tle-syd-v3";
-const ASSETS = ["./", "./index.html", "./app.js", "./manifest.json", "./icon.png",
+const CACHE = "tle-syd-v4";
+const ASSETS = ["./", "./index.html", "./app.js", "./manifest.json", "./icon.png", "./map.html", "./places.js", "./img/map-qr.png",
   "./img/espresso.jpg", "./img/euca.webp", "./img/koala.webp", "./img/latte.jpg", "./img/oj.jpg", "./img/opera.webp", "./img/red.jpg", "./img/sparkle.webp", "./img/sparkling.jpg", "./img/still.jpg", "./img/tea.jpg", "./img/white.jpg", "./img/zoomap.webp"];
 
 self.addEventListener("install", e => {

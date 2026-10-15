@@ -186,7 +186,7 @@ function renderHome(hdr,scr){
     ["wine",  "wine",   "1","喜鳳台",     "電子酒單",     "iPad 呈現酒單，董事自行瀏覽選擇，取代紙本"],
     ["drinks","cup",    "2","Rockpool",   "飲品點選",     "董事點選飲品，彙總後一次交給服務生"],
     ["koala", "camera", "3","Taronga Zoo","無尾熊紀念照", "拍照套上專屬紀念框，AirDrop 送到董事手機", true],
-    ["zoo",   "map",    "4","Taronga Zoo","園區地圖",     "官方地圖可縮放，Keeper Talk 時刻一鍵定位"],
+    ["zoo",   "map",    "4","Taronga Zoo","園區地圖",     "選動物就亮起位置；可分享給旅客手機用"],
   ];
   el.innerHTML=`<div class="tiles">${tiles.map(([id,icn,no,place,tt,td,main])=>`
     <div class="tile${main?" main":""}" data-p="${id}">
@@ -597,123 +597,23 @@ async function renderGallery(box){
   });
 }
 
-/* ============================================================ 4 園區地圖（Taronga Zoo 官方地圖） */
-const ZOO_IMG="img/zoomap.webp", ZOO_W=4048, ZOO_H=2863;
-/* 格線中心像素座標（由官方地圖 PDF 的格線文字位置算出）：欄 1–17、列 A–M */
-const ZOO_COLS={1:92,2:276,3:460,4:644,5:828,6:1012,7:1196,8:1380,9:1564,10:1748,11:1932,12:2116,13:2300,14:2484,15:2669,16:2852,17:3037};
-const ZOO_ROWS={A:94,B:284,C:477,D:667,E:859,F:1053,G:1242,H:1434,I:1626,J:1818,K:2010,L:2203,M:2394};
-function gridXY(ref){
-  const m=/^(\d{1,2})([A-M])$/i.exec(String(ref).trim()); if(!m) return null;
-  const x=ZOO_COLS[+m[1]], y=ZOO_ROWS[m[2].toUpperCase()]; return x&&y?{x,y}:null;
-}
-/* 官方地圖右欄 Presentations, Talks & Encounters（時刻以當日現場公告為準）：時間、名稱、中文、格線 */
-const ZOO_TALKS=[
-  ["10:40am","Rhino Keeper Talk","犀牛","12F"],
-  ["11:00am","Reptile Keeper Talk","爬蟲 · ARC Roof","8H"],
-  ["11:00am","Seals for the Wild","海獅表演","9F"],
-  ["11:00am–12:55pm","Koala Encounter","無尾熊近距離合照 · 票券於 Top Plaza Shop（7L）購買","3K"],
-  ["11:30am","Meerkat Keeper Talk","狐獴","14I"],
-  ["12:00pm","Lion Keeper Talk","獅子","16K"],
-  ["12:00pm","Free Flight Birds","飛鳥表演","16G"],
-  ["12:15pm","Chimpanzee Keeper Talk","黑猩猩","14K"],
-  ["1:00pm","Dingo Keeper Talk","澳洲野犬","4J"],
-  ["1:20pm","Giraffe Keeper Talk","長頸鹿 · Waterhole","12I"],
-  ["1:40pm","Capybara Keeper Talk","水豚","8I"],
-  ["2:00pm","Seals for the Wild","海獅表演","9F"],
-  ["2:00pm","Farmyard Feed","農場餵食","3C"],
-  ["2:15pm","Cassowary Keeper Talk","食火雞","7I"],
-  ["2:20pm","Gorilla Keeper Talk","大猩猩","10G"],
-  ["2:30pm","Koala Keeper Talk","無尾熊","4J"],
-  ["2:40pm","Penguin Keeper Talk","企鵝","9E"],
-  ["3:00pm","Free Flight Birds","飛鳥表演","16G"],
-];
-/* 快速定位：名稱、格線（多個以逗號分隔）。格線代號取自官方地圖圖例；標「約」者為依地圖位置估計 */
-const ZOO_SPOTS=[
-  ["無尾熊合照 Koala Encounter","3K"],
-  ["購票 Top Plaza Shop","7L"],
-  ["正門 Main Entrance（約）","4L"],
-  ["Zoo Entry（約）","9K"],
-  ["渡輪 Ferry（約）","15A"],
-  ["Sky Safari 下站（約）","6L"],
-  ["廁所 Toilets","5D,7L,4J,8D,11E,11H,12G"],
-  ["火車站 Train Station","6F,10K"],
-  ["咖啡／餐飲 Café","7L,12G,5E"],
-  ["Selfie with a View","12K,5E,15E,16G"],
-  ["飲水 Water Refill","8L,10L,11F,12J,10I,16G,5D,3C,4K"],
-  ["公車站 Bus Stop","4M,15B"],
-];
+/* ============================================================ 4 園區地圖（內嵌 map.html，同一份也分享給旅客） */
+const MAP_URL=new URL("map.html",location.href).href.replace(/\?.*$/,"");
 PAGES.zoo=(hdr,scr)=>{
-  hbar(hdr,"Taronga Zoo · 園區地圖");
+  hbar(hdr,"Taronga Zoo · 園區地圖",{right:`<button class="btn pri" id="shareMap" style="padding:7px 12px;font-size:13px">${ic("share",15)} 分享給旅客</button>`});
   const page=document.createElement("div");
   page.className="zoopage";
-  page.innerHTML=`<div class="zoochips">${ZOO_SPOTS.map((s,i)=>{ const refs=s[1].split(","); return `<button class="zchip" data-i="${i}">${esc(s[0])}<b>${esc(refs[0])}${refs.length>1?` +${refs.length-1}`:""}</b></button>`; }).join("")}</div>
-    <div class="mapwrap" id="mapwrap">
-      <div class="maplayer" id="maplayer"><img src="${ZOO_IMG}" width="${ZOO_W}" height="${ZOO_H}" alt="Taronga Zoo map"><div id="pins"></div></div>
-      <div class="mapctl"><button id="zin" title="放大">＋</button><button id="zout" title="縮小">－</button><button id="zfit" style="font-size:12.5px">全圖</button></div>
-      <div class="maphint">雙指縮放 · 拖曳移動 · 點兩下放大</div>
-    </div>
-    <div class="sched" id="sched">
-      <div class="sh">🕐 Keeper Talks & Encounters<span style="font-weight:600">（官方地圖時刻，以現場公告為準）</span><span class="cnt">${ZOO_TALKS.length} 場 ▾</span></div>
-      <div class="sl">${ZOO_TALKS.map((t,i)=>`<div class="srow" data-i="${i}"><span class="st">${esc(t[0])}</span><span class="sn">${esc(t[1])}<small>${esc(t[2])}</small></span><span class="sg">${esc(t[3])}</span></div>`).join("")}</div>
-    </div>`;
+  page.innerHTML=`<iframe class="zooframe" src="map.html?embed=1" title="Taronga Zoo map" allow="clipboard-write"></iframe>`;
   scr.appendChild(page);
-
-  const wrap=page.querySelector("#mapwrap"), layer=page.querySelector("#maplayer"), pins=page.querySelector("#pins");
-  const MAX=2.5;
-  let sc=0.2, tx=0, ty=0, minSc=0.1;
-  const apply=()=>{ layer.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`; pins.querySelectorAll(".pin").forEach(p=>p.style.transform=`scale(${1/sc})`); };
-  const clamp=()=>{ const W=wrap.clientWidth,H=wrap.clientHeight,w=ZOO_W*sc,h=ZOO_H*sc;
-    tx = w<=W ? (W-w)/2 : Math.min(0,Math.max(W-w,tx));
-    ty = h<=H ? (H-h)/2 : Math.min(0,Math.max(H-h,ty)); };
-  const fit=()=>{ const W=wrap.clientWidth,H=wrap.clientHeight; if(!W||!H) return; sc=Math.min(W/ZOO_W,H/ZOO_H); minSc=sc; clamp(); apply(); };
-  const zoomAt=(f,cx,cy)=>{ const ns=Math.min(Math.max(sc*f,minSc),MAX), k=ns/sc; tx=cx-(cx-tx)*k; ty=cy-(cy-ty)*k; sc=ns; clamp(); apply(); };
-  const goTo=(x,y,s)=>{ const W=wrap.clientWidth,H=wrap.clientHeight; sc=Math.min(Math.max(s||Math.max(minSc*2.6,0.42),minSc),MAX); tx=W/2-x*sc; ty=H/2-y*sc; clamp(); apply(); };
-  const showPins=(refs,label)=>{
-    const pts=refs.map(r=>({r,p:gridXY(r)})).filter(o=>o.p);
-    pins.innerHTML=pts.map(o=>`<div class="pin pulse" style="left:${o.p.x}px;top:${o.p.y}px"><span class="pinlbl">${esc(label)} ${esc(o.r)}</span></div>`).join("");
-    if(!pts.length) return;
-    if(pts.length===1) goTo(pts[0].p.x,pts[0].p.y);
-    else{ const xs=pts.map(o=>o.p.x),ys=pts.map(o=>o.p.y); const x0=Math.min(...xs)-250,x1=Math.max(...xs)+250,y0=Math.min(...ys)-250,y1=Math.max(...ys)+250;
-      const s=Math.min(wrap.clientWidth/(x1-x0),wrap.clientHeight/(y1-y0)); goTo((x0+x1)/2,(y0+y1)/2,s); }
+  hdr.querySelector("#shareMap").onclick=()=>{
+    openModal("分享園區地圖給旅客",`<div style="text-align:center">
+        <img src="img/map-qr.png" alt="QR" style="width:min(300px,70vw);display:block;margin:0 auto 10px;border:1px solid var(--line);border-radius:12px;padding:8px">
+        <div style="font-size:13px;color:var(--ink2);line-height:1.7">旅客用手機相機掃描即可開啟，不用安裝。<br>點選動物、表演或地點，地圖會亮起位置。</div>
+        <div style="margin-top:10px;font-size:12px;color:var(--ink3);word-break:break-all;-webkit-user-select:text;user-select:text">${esc(MAP_URL)}</div>
+      </div>`,
+      [["複製連結","sec",async()=>{ try{ await navigator.clipboard.writeText(MAP_URL); toast("連結已複製"); }catch(e){ toast("請長按上方網址複製"); } }],
+       [`${ic("share",15)} 傳送（AirDrop／LINE）`,"pri",async()=>{ if(navigator.share){ try{ await navigator.share({title:"Taronga Zoo 園區地圖",url:MAP_URL}); }catch(e){} } else toast("此環境不支援分享，請複製連結"); }]]);
   };
-  /* 手勢：單指拖曳、雙指縮放、點兩下放大；桌機滾輪縮放 */
-  const pts=new Map(); let start=null, lastTap=0, moved=false;
-  const snap=()=>{ const a=[...pts.values()]; if(a.length>=2) return {n:2,d:Math.hypot(a[1].x-a[0].x,a[1].y-a[0].y),mx:(a[0].x+a[1].x)/2,my:(a[0].y+a[1].y)/2,sc,tx,ty};
-    if(a.length===1) return {n:1,x:a[0].x,y:a[0].y,tx,ty}; return null; };
-  wrap.addEventListener("pointerdown",e=>{ e.preventDefault(); wrap.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); start=snap(); moved=false; });
-  wrap.addEventListener("pointermove",e=>{
-    if(!pts.has(e.pointerId)) return;
-    pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); const cur=snap(); if(!start||!cur||cur.n!==start.n){ start=snap(); return; }
-    const r=wrap.getBoundingClientRect();
-    if(cur.n===2){ const ns=Math.min(Math.max(start.sc*cur.d/start.d,minSc),MAX), k=ns/start.sc, mx=start.mx-r.left, my=start.my-r.top;
-      tx=mx-(mx-start.tx)*k+(cur.mx-start.mx); ty=my-(my-start.ty)*k+(cur.my-start.my); sc=ns; moved=true; }
-    else{ const dx=cur.x-start.x, dy=cur.y-start.y; if(Math.hypot(dx,dy)>6) moved=true; tx=start.tx+dx; ty=start.ty+dy; }
-    clamp(); apply();
-  });
-  const up=e=>{
-    if(!pts.has(e.pointerId)) return;
-    pts.delete(e.pointerId);
-    if(pts.size===0 && !moved){ const now=Date.now(); const r=wrap.getBoundingClientRect();
-      if(now-lastTap<320){ zoomAt(sc>minSc*1.8?minSc/sc:2.4,e.clientX-r.left,e.clientY-r.top); lastTap=0; } else lastTap=now; }
-    start=snap();
-  };
-  wrap.addEventListener("pointerup",up); wrap.addEventListener("pointercancel",up);
-  wrap.addEventListener("wheel",e=>{ e.preventDefault(); const r=wrap.getBoundingClientRect(); zoomAt(e.deltaY<0?1.15:1/1.15,e.clientX-r.left,e.clientY-r.top); },{passive:false});
-  page.querySelector("#zin").onclick=()=>zoomAt(1.4,wrap.clientWidth/2,wrap.clientHeight/2);
-  page.querySelector("#zout").onclick=()=>zoomAt(1/1.4,wrap.clientWidth/2,wrap.clientHeight/2);
-  page.querySelector("#zfit").onclick=()=>{ pins.innerHTML=""; page.querySelectorAll(".zchip.on,.srow.hi").forEach(x=>x.classList.remove("on","hi")); fit(); };
-  page.querySelectorAll(".zchip").forEach(c=>c.onclick=()=>{
-    const s=ZOO_SPOTS[+c.dataset.i]; page.querySelectorAll(".zchip").forEach(x=>x.classList.toggle("on",x===c)); page.querySelectorAll(".srow.hi").forEach(x=>x.classList.remove("hi"));
-    showPins(s[1].split(","),s[0].replace(/（約）/,""));
-  });
-  const sched=page.querySelector("#sched");
-  sched.querySelector(".sh").onclick=()=>sched.classList.toggle("open");
-  page.querySelectorAll(".srow").forEach(r=>r.onclick=()=>{
-    const t=ZOO_TALKS[+r.dataset.i]; page.querySelectorAll(".srow").forEach(x=>x.classList.toggle("hi",x===r)); page.querySelectorAll(".zchip.on").forEach(x=>x.classList.remove("on"));
-    showPins([t[3]],`${t[0]} ${t[1]}`);
-  });
-  requestAnimationFrame(fit);
-  const img=layer.querySelector("img"); img.onload=()=>{ if(!pins.children.length) fit(); };
 };
 
 /* ============================================================ 設定 */

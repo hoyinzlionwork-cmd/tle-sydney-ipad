@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>Taronga Zoo 園區地圖</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Zoo Map">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+:root{--ink:#333336;--ink2:#8E8E93;--ink3:#B9B9BF;--line:#E5E5EA;--navy:#0B2545;--red:#E60012;--green:#1E9E4A;
+  --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#fff;color:var(--ink);font-family:"PingFang TC","Microsoft JhengHei",system-ui,sans-serif;-webkit-user-select:none;user-select:none}
+button,input{font-family:inherit}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+.top{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:calc(8px + var(--safe-top)) 14px 8px;background:#fff;border-bottom:1px solid var(--line);z-index:5}
+.top .t{font-size:16px;font-weight:900;flex:1;line-height:1.2}
+.top .t small{display:block;font-size:11px;color:var(--ink2);font-weight:700;letter-spacing:1px}
+.top button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:800;color:var(--ink);cursor:pointer}
+.top button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.body{flex:1;min-height:0;display:flex;position:relative}
+.mapwrap{position:relative;flex:1;min-width:0;background:#DCE7D3;overflow:hidden;touch-action:none}
+.layer{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.layer img{display:block;pointer-events:none;-webkit-user-drag:none}
+.spot{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity .35s}
+.spot.on{opacity:1}
+.dot{position:absolute;width:0;height:0;pointer-events:none}
+.dot .d{position:absolute;left:-6px;top:-6px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--navy);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.dot .l{position:absolute;left:10px;top:-10px;font-size:11px;font-weight:800;color:var(--navy);background:rgba(255,255,255,.9);padding:1px 6px;border-radius:6px;white-space:nowrap}
+.pin{position:absolute;width:0;height:0;pointer-events:none}
+.pin .ring{position:absolute;left:-60px;top:-60px;width:120px;height:120px;border-radius:50%;border:4px solid var(--red);animation:ring 1.4s ease-out infinite}
+.pin .ring2{animation-delay:.5s}
+@keyframes ring{0%{transform:scale(.25);opacity:1}100%{transform:scale(1.4);opacity:0}}
+.pin .em{position:absolute;left:-30px;top:-30px;width:60px;height:60px;border-radius:50%;background:#fff;border:4px solid var(--red);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.pin .lb{position:absolute;left:50%;top:-78px;transform:translateX(-50%);background:var(--navy);color:#fff;font-size:14px;font-weight:800;padding:6px 12px;border-radius:999px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.3)}
+.pin .lb small{font-weight:600;opacity:.85}
+.ctl{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:8px;z-index:3}
+.ctl button{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.15);color:var(--ink)}
+.hint{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.92);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--ink2);font-weight:600;pointer-events:none;z-index:3}
+@media (max-width:420px){.top .t small{display:none}.top .t{font-size:15px}}
+/* ---- 側欄 / 底部抽屜 ---- */
+.panel{background:#fff;display:flex;flex-direction:column;min-height:0}
+.panel .tabs{display:flex;gap:6px;padding:10px 12px 8px;overflow-x:auto;flex-shrink:0}
+.tab{flex-shrink:0;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:800;color:var(--ink2);cursor:pointer}
+.tab.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.search{padding:0 12px 8px;flex-shrink:0}
+.search input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px;background:#fff;color:var(--ink);-webkit-user-select:text;user-select:text}
+.search input:focus{outline:none;border-color:var(--navy)}
+.list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 8px calc(12px + var(--safe-bottom))}
+.item{display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:10px}
+.item:active{background:#F4F4F6}
+.item.on{background:#FDECEE}
+.item .ic{width:36px;height:36px;border-radius:10px;background:#F0F0F2;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.item .tx{flex:1;min-width:0}
+.item .zh{font-size:15px;font-weight:800;line-height:1.3}
+.item .en{font-size:11.5px;color:var(--ink2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .tm{font-size:13px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap}
+.item .gd{font-size:11px;font-weight:800;color:#fff;background:var(--navy);border-radius:6px;padding:2px 7px}
+.item.hot .zh::after{content:"★";color:var(--red);margin-left:5px;font-size:12px}
+.empty{padding:30px 12px;text-align:center;color:var(--ink3);font-size:13px}
+.handle{display:none}
+/* 手機：底部抽屜 */
+@media (max-width:899px){
+  .body{flex-direction:column}
+  .panel{flex-shrink:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:0 -6px 20px rgba(0,0,0,.08);height:42%;transition:height .25s}
+  .panel.min{height:auto}
+  .panel.min .tabs,.panel.min .search,.panel.min .list{display:none}
+  .panel.max{height:78%}
+  .handle{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px 4px;cursor:pointer;flex-shrink:0}
+  .handle::before{content:"";width:40px;height:5px;border-radius:3px;background:#D9D9DE}
+  .handle .ht{font-size:12.5px;font-weight:800;color:var(--ink2)}
+  .panel.min .handle{padding:10px 14px calc(10px + var(--safe-bottom))}
+}
+/* iPad／桌機：右側欄 */
+@media (min-width:900px){
+  .panel{width:340px;border-left:1px solid var(--line)}
+  .item .zh{font-size:16px}
+}
+/* 校正模式 */
+.editbar{display:none;position:absolute;left:12px;top:12px;z-index:4;background:#FFF8E6;border:1px solid #F5DFA0;color:#8A6400;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:700;max-width:70%}
+.edit .editbar{display:block}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <div class="t">Taronga Zoo 園區地圖<small>TARONGA ZOO SYDNEY · 點選右側或下方項目，地圖會亮起位置</small></div>
+    <button id="allbtn">顯示全部動物</button>
+    <button id="sharebtn">分享</button>
+  </div>
+  <div class="body">
+    <div class="mapwrap" id="wrap">
+      <div class="layer" id="layer"><img id="mapimg" alt="Taronga Zoo map"><div class="spot" id="spot"></div><div id="dots"></div><div id="pins"></div></div>
+      <div class="editbar" id="editbar">校正模式：先點清單項目，再點地圖上的正確位置。<button id="exportbtn" style="margin-left:8px;border:none;background:#8A6400;color:#fff;border-radius:6px;padding:3px 8px;font-size:12px">匯出</button></div>
+      <div class="ctl"><button id="zin">＋</button><button id="zout">－</button><button id="zfit" style="font-size:12px">全圖</button></div>
+      <div class="hint" id="hint">雙指縮放 · 拖曳移動 · 點兩下放大</div>
+    </div>
+    <div class="panel" id="panel">
+      <div class="handle" id="handle"><span class="ht" id="handletxt">選動物、表演或地點 ▴</span></div>
+      <div class="tabs" id="tabs"></div>
+      <div class="search"><input id="q" type="search" placeholder="搜尋：無尾熊、koala、廁所…"></div>
+      <div class="list" id="list"></div>
+    </div>
+  </div>
+</div>
+<script src="places.js"></script>
+<script>
+"use strict";
+const D=window.ZOO_DATA, $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const params=new URLSearchParams(location.search);
+const EDIT=params.get("edit")==="1", EMBED=params.get("embed")==="1";
+if(EDIT) document.body.classList.add("edit");
+if(EMBED){ $("#sharebtn").style.display="none"; $(".top .t").innerHTML='<small style="font-size:12px;letter-spacing:0">點選下方／右側項目，地圖會亮起位置</small>'; }
+
+/* 位置：格線 → 像素；本機校正覆蓋 */
+let overrides={}; try{ overrides=JSON.parse(localStorage.getItem("zoo_overrides")||"{}"); }catch(e){}
+function gridXY(ref){ const m=/^(\d{1,2})([A-M])$/i.exec(String(ref).trim()); if(!m) return null; const x=D.cols[+m[1]],y=D.rows[m[2].toUpperCase()]; return x&&y?{x,y}:null; }
+function pointsOf(p){
+  if(overrides[p.id]) return [overrides[p.id]];
+  if(p.x!=null) return [{x:p.x,y:p.y}];
+  if(p.grid){ const g=gridXY(p.grid); return g?[g]:[]; }
+  if(p.grids) return p.grids.split(",").map(gridXY).filter(Boolean);
+  return [];
+}
+const CATS=[["animal","動物"],["show","表演・體驗"],["food","餐飲・購物"],["entry","入口・交通"],["facility","設施"]];
+let cat="animal", query="", current=null, showAll=false;
+
+/* ---- 清單 ---- */
+function renderTabs(){
+  $("#tabs").innerHTML=CATS.map(([k,l])=>`<button class="tab${cat===k?" on":""}" data-k="${k}">${l}</button>`).join("");
+  $("#tabs").querySelectorAll(".tab").forEach(b=>b.onclick=()=>{ cat=b.dataset.k; renderTabs(); renderList(); });
+}
+function renderList(){
+  const q=query.trim().toLowerCase();
+  let items=D.places.filter(p=>q? (p.zh+" "+p.en+" "+(p.area||"")+" "+(p.note||"")).toLowerCase().includes(q) : p.cat===cat);
+  if(cat==="show"&&!q) items=items.slice().sort((a,b)=>toMin(a.time)-toMin(b.time));
+  $("#list").innerHTML=items.length?items.map(p=>`<div class="item${p.hot?" hot":""}${current&&current.id===p.id?" on":""}" data-id="${p.id}">
+      <div class="ic">${p.em||"📍"}</div>
+      <div class="tx"><div class="zh">${esc(p.zh)}</div><div class="en">${esc(p.en)}${p.area?` · ${esc(p.area)}`:""}${p.note?` · ${esc(p.note)}`:""}</div></div>
+      ${p.time?`<div class="tm">${esc(p.time)}</div>`:""}${p.grid?`<span class="gd">${esc(p.grid)}</span>`:""}${p.grids?`<span class="gd">${p.grids.split(",").length} 處</span>`:""}
+    </div>`).join(""):`<div class="empty">找不到「${esc(query)}」</div>`;
+  $("#list").querySelectorAll(".item").forEach(el=>el.onclick=()=>select(D.places.find(p=>p.id===el.dataset.id)));
+}
+function toMin(t){ const m=/(\d{1,2}):(\d{2})(am|pm)/i.exec(t||""); if(!m) return 9999; let h=+m[1]%12; if(m[3].toLowerCase()==="pm") h+=12; return h*60+ +m[2]; }
+$("#q").oninput=e=>{ query=e.target.value; renderList(); };
+
+/* ---- 地圖 ---- */
+const wrap=$("#wrap"), layer=$("#layer"), img=$("#mapimg"), spot=$("#spot"), pins=$("#pins"), dots=$("#dots");
+img.src=D.img; img.width=D.w; img.height=D.h;
+const MAX=2.6; let sc=0.2,tx=0,ty=0,minSc=0.1;
+const apply=()=>{ layer.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`; const inv=`scale(${1/sc})`;
+  pins.querySelectorAll(".pin").forEach(p=>p.style.transform=inv); dots.querySelectorAll(".dot").forEach(p=>p.style.transform=inv); };
+const clamp=()=>{ const W=wrap.clientWidth,H=wrap.clientHeight,w=D.w*sc,h=D.h*sc;
+  tx=w<=W?(W-w)/2:Math.min(0,Math.max(W-w,tx)); ty=h<=H?(H-h)/2:Math.min(0,Math.max(H-h,ty)); };
+const fit=()=>{ const W=wrap.clientWidth,H=wrap.clientHeight; if(!W||!H) return; sc=Math.min(W/D.w,H/D.h); minSc=sc; clamp(); apply(); };
+const zoomAt=(f,cx,cy)=>{ const ns=Math.min(Math.max(sc*f,minSc),MAX),k=ns/sc; tx=cx-(cx-tx)*k; ty=cy-(cy-ty)*k; sc=ns; clamp(); apply(); };
+const goTo=(x,y,s)=>{ const W=wrap.clientWidth,H=wrap.clientHeight; sc=Math.min(Math.max(s,minSc),MAX); tx=W/2-x*sc; ty=H/2-y*sc; clamp(); apply(); };
+
+function select(p, keepPanel){
+  current=p; renderList();
+  const pts=pointsOf(p);
+  const label=`${p.em||""} ${p.zh}${p.time?` <small>${p.time}</small>`:""}`;
+  pins.innerHTML=pts.map(o=>`<div class="pin" style="left:${o.x}px;top:${o.y}px"><div class="ring"></div><div class="ring ring2"></div><div class="em">${p.em||"📍"}</div><div class="lb">${label}</div></div>`).join("");
+  /* 亮起來：其餘地圖壓暗，目標位置留圓形亮區 */
+  if(pts.length){
+    const holes=pts.map(o=>`radial-gradient(circle at ${o.x}px ${o.y}px, rgba(0,0,0,0) 0, rgba(0,0,0,0) 190px, rgba(0,0,0,.55) 330px)`).join(",");
+    spot.style.background=holes; spot.style.backgroundBlendMode=pts.length>1?"lighten":"normal"; spot.classList.add("on");
+  } else spot.classList.remove("on");
+  if(pts.length===1) goTo(pts[0].x,pts[0].y,Math.max(minSc*2.4,0.5));
+  else if(pts.length>1){ const xs=pts.map(o=>o.x),ys=pts.map(o=>o.y),pad=300; const x0=Math.min(...xs)-pad,x1=Math.max(...xs)+pad,y0=Math.min(...ys)-pad,y1=Math.max(...ys)+pad;
+    goTo((x0+x1)/2,(y0+y1)/2,Math.min(wrap.clientWidth/(x1-x0),wrap.clientHeight/(y1-y0))); }
+  apply();
+  if(!keepPanel && matchMedia("(max-width:899px)").matches){ setPanel("min"); }
+  $("#handletxt").textContent=`${p.em||""} ${p.zh} ▴  換一個`;
+}
+function clearSel(){ current=null; pins.innerHTML=""; spot.classList.remove("on"); renderList(); $("#handletxt").textContent="選動物、表演或地點 ▴"; }
+function renderDots(){
+  dots.innerHTML=showAll?D.places.filter(p=>p.cat==="animal").map(p=>{ const o=pointsOf(p)[0]; return o?`<div class="dot" style="left:${o.x}px;top:${o.y}px"><div class="d"></div><div class="l">${p.em||""} ${esc(p.zh)}</div></div>`:""; }).join(""):"";
+  apply();
+}
+$("#allbtn").onclick=()=>{ showAll=!showAll; $("#allbtn").classList.toggle("on",showAll); renderDots(); if(showAll){ clearSel(); fit(); } };
+
+/* 手勢 */
+const pts=new Map(); let start=null,lastTap=0,moved=false;
+const snap=()=>{ const a=[...pts.values()]; if(a.length>=2) return {n:2,d:Math.hypot(a[1].x-a[0].x,a[1].y-a[0].y),mx:(a[0].x+a[1].x)/2,my:(a[0].y+a[1].y)/2,sc,tx,ty}; if(a.length===1) return {n:1,x:a[0].x,y:a[0].y,tx,ty}; return null; };
+wrap.addEventListener("pointerdown",e=>{ if(e.target.closest(".ctl,.editbar")) return; e.preventDefault(); wrap.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); start=snap(); moved=false; });
+wrap.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); const cur=snap(); if(!start||!cur||cur.n!==start.n){ start=snap(); return; }
+  const r=wrap.getBoundingClientRect();
+  if(cur.n===2){ const ns=Math.min(Math.max(start.sc*cur.d/start.d,minSc),MAX),k=ns/start.sc,mx=start.mx-r.left,my=start.my-r.top; tx=mx-(mx-start.tx)*k+(cur.mx-start.mx); ty=my-(my-start.ty)*k+(cur.my-start.my); sc=ns; moved=true; }
+  else{ const dx=cur.x-start.x,dy=cur.y-start.y; if(Math.hypot(dx,dy)>6) moved=true; tx=start.tx+dx; ty=start.ty+dy; }
+  clamp(); apply(); });
+const up=e=>{ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId);
+  if(pts.size===0&&!moved){ const r=wrap.getBoundingClientRect(), now=Date.now();
+    if(EDIT&&current){ const x=(e.clientX-r.left-tx)/sc, y=(e.clientY-r.top-ty)/sc; overrides[current.id]={x:Math.round(x),y:Math.round(y)}; localStorage.setItem("zoo_overrides",JSON.stringify(overrides)); select(current,true); lastTap=0; return; }
+    if(now-lastTap<320){ zoomAt(sc>minSc*1.8?minSc/sc:2.4,e.clientX-r.left,e.clientY-r.top); lastTap=0; } else lastTap=now; }
+  start=snap(); };
+wrap.addEventListener("pointerup",up); wrap.addEventListener("pointercancel",up);
+wrap.addEventListener("wheel",e=>{ e.preventDefault(); const r=wrap.getBoundingClientRect(); zoomAt(e.deltaY<0?1.15:1/1.15,e.clientX-r.left,e.clientY-r.top); },{passive:false});
+$("#zin").onclick=()=>zoomAt(1.4,wrap.clientWidth/2,wrap.clientHeight/2);
+$("#zout").onclick=()=>zoomAt(1/1.4,wrap.clientWidth/2,wrap.clientHeight/2);
+$("#zfit").onclick=()=>{ clearSel(); fit(); };
+$("#exportbtn").onclick=async()=>{ const t=JSON.stringify(overrides); try{ await navigator.clipboard.writeText(t); alert("已複製 "+Object.keys(overrides).length+" 筆校正位置"); }catch(e){ prompt("複製下方內容",t); } };
+
+/* 手機抽屜 */
+let panelState="mid";
+function setPanel(s){ panelState=s; const p=$("#panel"); p.classList.toggle("min",s==="min"); p.classList.toggle("max",s==="max"); }
+$("#handle").onclick=()=>setPanel(panelState==="min"?"mid":panelState==="mid"?"max":"min");
+
+/* 分享 */
+$("#sharebtn").onclick=async()=>{
+  const url=location.origin+location.pathname;
+  if(navigator.share){ try{ await navigator.share({title:"Taronga Zoo 園區地圖",url}); return; }catch(e){} }
+  try{ await navigator.clipboard.writeText(url); alert("連結已複製：\n"+url); }catch(e){ prompt("複製連結",url); }
+};
+
+renderTabs(); renderList();
+img.onload=()=>{ fit(); const id=params.get("p"); if(id){ const p=D.places.find(x=>x.id===id); if(p) select(p,true); } };
+window.addEventListener("resize",()=>{ clamp(); apply(); });
+</script>
+</body>
+</html>
