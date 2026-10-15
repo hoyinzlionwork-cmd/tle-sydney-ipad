@@ -372,35 +372,57 @@ function rectsOverlap(a,b){ return !(a.x+a.w<b.x||b.x+b.w<a.x||a.y+a.h<b.y||b.y+
 function measureSigns(){ [false,true].forEach(f=>{ zlabels.classList.toggle("far",f); zlabels.querySelectorAll(".zl").forEach(el=>{ el.classList.remove("hide"); const s0=el.firstElementChild; el.dataset[f?"wf":"wn"]=s0.offsetWidth; el.dataset[f?"hf":"hn"]=s0.offsetHeight; }); }); zlabels.classList.remove("far"); }
 function signRect(el,z){ const far=zlabels.classList.contains("far"), w=+el.dataset[far?"wf":"wn"]||80, h=+el.dataset[far?"hf":"hn"]||30; const x=tx+parseFloat(el.style.left)*sc, y=ty+parseFloat(el.style.top)*sc; return {x:x-w/2-2,y:y-h/2-2,w:w+4,h:h+4}; }
 function cullSigns(){
-  const kept=[], {W,H}=pendingVp||vpNow(), far=zlabels.classList.contains("far");
+  const kept=[], {W,H}=pendingVp||vpNow(), far=zlabels.classList.contains("far"), overview=!curZone;
+  const toScr=pt=>({x:tx+pt.x*sc,y:ty+pt.y*sc}), toScene=(x,y)=>({x:(x-tx)/sc,y:(y-ty)/sc});
+  const heroEls=new Map(); marks.querySelectorAll(".mk.hero").forEach(m=>heroEls.set(m.dataset.z,m));
+  const heroRects=new Map(); D.zones.forEach(z=>{ const h=z.heroP; if(overview&&h&&h.pts[0]&&heroEls.has(z.id)){ const c=toScr(h.pts[0]), r=h.cat==="animal"?20:13; heroRects.set(z.id,{x:c.x-r,y:c.y-r,w:2*r,h:2*r,disc:h.cat!=="animal"}); } });
   const order=[...zlabels.querySelectorAll(".zl")].map(el=>({el,z:zoneOf(el.dataset.z)})).sort((a,b)=>{
     const pa=a.z.id==="main"||a.z.id==="ferry"?-1:a.z.nAnimals, pb=b.z.id==="main"||b.z.id==="ferry"?-1:b.z.nAnimals; return pb-pa; });
+  const sizeOf=el=>({w:+el.dataset[far?"wf":"wn"]||80,h:+el.dataset[far?"hf":"hn"]||30});
+  const inside=r=>r.x>=0&&r.y>=0&&r.x+r.w<=W&&r.y+r.h<=H;
+  const padR=(r,p)=>({x:r.x-p,y:r.y-p,w:r.w+2*p,h:r.h+2*p});
   order.forEach(({el,z})=>{
-    el.classList.remove("hide");
-    if(el.classList.contains("on")){ kept.push(signRect(el,z)); return; }
+    el.classList.remove("hide"); const heroEl=heroEls.get(z.id); if(heroEl) heroEl.classList.remove("hide");
+    if(el.classList.contains("on")){ el.style.left=z.anchor.x+"px"; el.style.top=z.b.y0+"px"; kept.push(signRect(el,z)); return; }
+    const hr=heroRects.get(z.id);
+    if(hr){ /* 總覽：名牌＝代表動物的鎖定組合 */
+      const hideBoth=()=>{ el.classList.add("hide"); if(heroEl) heroEl.classList.add("hide"); };
+      if(!inside(hr)){ hideBoth(); return; }
+      const {w,h}=sizeOf(el), hx=hr.x+hr.w/2, hy=hr.y+hr.h/2, gap=5;
+      const fitX=r=>{ r.x=Math.min(Math.max(r.x,2),W-2-r.w); return r; }, fitY=r=>{ r.y=Math.min(Math.max(r.y,2),H-2-r.h); return r; };
+      const above=fitX({x:hx-w/2-2,y:hr.y-gap-h-2,w:w+4,h:h+4}), below=fitX({x:hx-w/2-2,y:hr.y+hr.h+gap-2,w:w+4,h:h+4});
+      const right=fitY({x:hr.x+hr.w+gap-2,y:hy-h/2-2,w:w+4,h:h+4}), left=fitY({x:hr.x-gap-w-2,y:hy-h/2-2,w:w+4,h:h+4});
+      const cands=hr.disc?[below,above]:[above,below]; if(far){ cands.push(right,left); }   /* 遠景很擠：最後才允許貼在側邊 */
+      const others=[...heroRects.entries()].filter(([id])=>id!==z.id).map(([,r])=>padR(r,16));
+      for(const r of cands){
+        if(!inside(r)) continue;
+        if(others.some(o=>rectsOverlap(o,r))) continue;
+        if(kept.some(k=>rectsOverlap(k,padR(r,12)))) continue;
+        const c=toScene(r.x+r.w/2,r.y+r.h/2); el.style.left=c.x+"px"; el.style.top=c.y+"px"; kept.push(r); return;
+      }
+      hideBoth(); return;
+    }
+    /* 沒有代表動物（老虎區、非洲草原）或選區中：用錨點 */
     const exempt=z.id==="main"||z.id==="ferry";
     const estW=[...(z.short||z.zh)].length*(far?12:13)+18;
     if(!exempt&&estW>(z.b.x1-z.b.x0)*sc*1.15){ el.classList.add("hide"); return; }
     el.style.left=z.anchor.x+"px"; el.style.top=z.anchor.y+"px";
-    let r=signRect(el,z);
-    const h=z.heroP; const heroEl=h?marks.querySelector(`.mk.hero[data-z="${z.id}"]`):null; if(heroEl) heroEl.classList.remove("hide");
-    if(exempt&&far&&h&&h.pts[0]){ /* 正門／碼頭：名牌直接掛在圓盤正下方；放不下就藏圓盤不藏名牌 */
-      const hx=tx+h.pts[0].x*sc, hy=ty+h.pts[0].y*sc; el.style.left=h.pts[0].x+"px"; el.style.top=((hy+20+r.h/2-ty)/sc)+"px"; r=signRect(el,z);
-      if(r.x<0||r.x+r.w>W||r.y<0||r.y+r.h>H){ el.classList.add("hide"); if(heroEl) heroEl.classList.add("hide"); return; }
-      if(kept.some(k=>rectsOverlap(k,r))){ if(heroEl) heroEl.classList.add("hide"); el.style.left=z.anchor.x+"px"; el.style.top=z.anchor.y+"px"; r=signRect(el,z); if(kept.some(k=>rectsOverlap(k,r))) el.classList.add("hide"); else kept.push(r); } else kept.push(r); return; }
-    /* 遠景：名牌若壓到代表動物，往遠離動物的方向推開，而不是藏起來 */
-    if(far&&h&&h.pts[0]){ const hx=tx+h.pts[0].x*sc, hy=ty+h.pts[0].y*sc;
-      const hb={x:hx-18,y:hy-18,w:36,h:36};
-      if(rectsOverlap(hb,r)){ let dx=(r.x+r.w/2)-hx, dy=(r.y+r.h/2)-hy; const L=Math.hypot(dx,dy); if(L<1){ dx=0; dy=1; } else { dx/=L; dy/=L; }
-        for(let step=18+r.h/2+4; step<140 && rectsOverlap(hb,r); step+=8){ const nx=hx+dx*step, ny=hy+dy*step; el.style.left=((nx-tx)/sc)+"px"; el.style.top=((ny-ty)/sc)+"px"; r=signRect(el,z); } } }
-    if(r.x<0||r.x+r.w>W||r.y<0||r.y+r.h>H){ el.classList.add("hide"); return; }
-    const pad={x:r.x-12,y:r.y-12,w:r.w+24,h:r.h+24};
-    if(kept.some(k=>rectsOverlap(k,pad))) el.classList.add("hide"); else kept.push(r);
+    const r=signRect(el,z);
+    if(!inside(r)){ el.classList.add("hide"); return; }
+    if(kept.some(k=>rectsOverlap(k,padR(r,12)))) el.classList.add("hide"); else kept.push(r);
   });
 }
 function glyphRect(m){ const r=m.classList.contains("img")?(marks.classList.contains("far")?16:20):m.classList.contains("disc")?13:5; const x=tx+parseFloat(m.style.left)*sc, y=ty+parseFloat(m.style.top)*sc; return {x:x-r,y:y-r,w:2*r,h:2*r}; }
+function pushDiscs(all){
+  const imgs=all.filter(m=>m.classList.contains("img")).map(m=>({x:tx+parseFloat(m.style.left)*sc,y:ty+parseFloat(m.style.top)*sc}));
+  all.filter(m=>m.classList.contains("disc")).forEach(m=>{
+    let x=tx+parseFloat(m.dataset.ox)*sc, y=ty+parseFloat(m.dataset.oy)*sc;
+    for(let i=0;i<6;i++){ let moved=false; imgs.forEach(g=>{ const dx=x-g.x, dy=y-g.y, L=Math.hypot(dx,dy); if(L<36){ const ux=L<1?0:dx/L, uy=L<1?1:dy/L; x=g.x+ux*36; y=g.y+uy*36; moved=true; } }); if(!moved) break; }
+    m.style.left=((x-tx)/sc)+"px"; m.style.top=((y-ty)/sc)+"px";
+  });
+}
 function cullLabels(){
-  const all=[...marks.querySelectorAll(".mk:not(.hide)")], glyphs=new Map(all.map(m=>[m,glyphRect(m)]));
+  const all=[...marks.querySelectorAll(".mk:not(.hide)")]; pushDiscs(all); const glyphs=new Map(all.map(m=>[m,glyphRect(m)]));
   const kept=[...glyphs.values()];
   const onSign=zlabels.querySelector(".zl.on"); if(onSign){ const r=signRect(onSign,zoneOf(onSign.dataset.z)); kept.push({x:r.x,y:r.y-r.h-16,w:r.w,h:r.h}); }
   const mks=all.filter(m=>m.querySelector(".n"));
@@ -444,7 +466,7 @@ function markHTML(p,o,opts){
   const name=opts.name||label(p);
   const n=opts.hero?"":`<div class="n${tm?" hastm":""}"><span class="nm">${esc(name)}</span>${tm}</div>`;
   const far=(p.cat==="food"||p.cat==="entry"||p.cat==="facility")?' data-lbl="far"':"";
-  return `<div class="${cls.join(" ")}" data-id="${p.id}"${opts.hero?` data-z="${opts.hero}"`:""}${p.hot?' data-hot="1"':""}${far} style="left:${o.x}px;top:${o.y}px">${inner}${n}</div>`;
+  return `<div class="${cls.join(" ")}" data-id="${p.id}"${opts.hero?` data-z="${opts.hero}"`:""}${p.hot?' data-hot="1"':""}${far} data-ox="${o.x}" data-oy="${o.y}" style="left:${o.x}px;top:${o.y}px">${inner}${n}</div>`;
 }
 function renderMarks(){
   let html="";
