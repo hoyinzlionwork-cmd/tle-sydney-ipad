@@ -9,7 +9,7 @@ window.ZOO_DATA = {
   /* 區域：邊界為地圖像素座標多邊形（依官方地圖區塊目視描繪，可在 map.html?edit=1 之後再調）。
    * 地點以「落在哪個多邊形內」自動歸入該區。 */
   zones: [
-    { id:"nuradiya",  zh:"澳洲原生動物區", en:"Nura Diya Australia", color:"#2E8B57", hero:"koala",
+    { id:"nuradiya",  zh:"澳洲原生動物區", en:"Nura Diya Australia", color:"#2E8B57", label:[745,1600], hero:"koala",
       desc:"無尾熊、袋鼠、鴯鶓、澳洲野犬、鴨嘴獸、夜行動物館。無尾熊近距離合照（Koala Encounter）在這一區。", hot:true,
       short:"澳洲原生動物", poly:[[430,1480],[1060,1480],[1060,2090],[430,2090]] },
     { id:"kids",      zh:"兒童步道", en:"Kids Trail", color:"#E0533D", hero:"farmyard",
@@ -24,10 +24,10 @@ window.ZOO_DATA = {
     { id:"primates",  zh:"靈長類區", en:"Gorilla Forest & Primates", color:"#6D4C41", hero:"gorilla", label:[1330,1190],
       desc:"大猩猩、獠狨、Moore Park 鳥園；園內小火車上站（6F）。",
       short:"靈長類", poly:[[1060,1080],[1960,1080],[1960,1400],[1060,1400]] },
-    { id:"rainforest",zh:"雨林與爬蟲區", en:"ARC & Rainforest", color:"#7CB342", hero:"arc",
+    { id:"rainforest",zh:"雨林與爬蟲區", en:"ARC & Rainforest", color:"#7CB342", label:[1400,1770], hero:"arc",
       desc:"ARC 爬蟲館（蛇、龜、蛙、蜥蜴）、水豚、食火雞、澳洲雨林鳥園、Helmore 草坪。",
       short:"雨林・爬蟲", poly:[[1060,1400],[1700,1400],[1700,1900],[1060,1900]] },
-    { id:"entry",     zh:"入口廣場・狐猴步道", en:"Zoo Entry & Lemur Walk", color:"#8E24AA", hero:"lemurs",
+    { id:"entry",     zh:"入口廣場・狐猴步道", en:"Zoo Entry & Lemur Walk", color:"#8E24AA", label:[1500,2010], hero:"lemurs",
       desc:"Zoo Entry 起點、Top Plaza 商店（買無尾熊合照票）、環尾狐猴、無尾熊、科羅伯里蛙、樹袋鼠、Centenary 劇場。",
       short:"入口廣場", poly:[[1060,1900],[1700,1900],[1700,1700],[2180,1700],[2180,2200],[1060,2200]] },
     { id:"wildasia",  zh:"亞洲雨林", en:"Wild Asia", color:"#F57C00", hero:"squirrelmonkey",
