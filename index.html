@@ -13,20 +13,20 @@
 :root{
   --red:#E60012; --red-dk:#C00010; --red-bg:#FDECEE;
   --ink:#333336; --ink2:#8E8E93; --ink3:#B9B9BF;
-  --line:#E5E5EA; --bg:#F4F4F6; --dark:#2E2E30; --dark2:#3C3C3F;
+  --line:#E5E5EA; --bg:#FFFFFF; --dark:#2E2E30; --dark2:#3C3C3F;
   --green:#34C759; --amber:#FF9500; --navy:#0B2545; --gold:#C9A24A;
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bottom:env(safe-area-inset-bottom,0px);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;height:100%}
-body{font-family:"PingFang TC","Microsoft JhengHei",system-ui,sans-serif;background:#E9EAEC;color:var(--ink);
+body{font-family:"PingFang TC","Microsoft JhengHei",system-ui,sans-serif;background:#FFFFFF;color:var(--ink);
   overscroll-behavior:none;-webkit-user-select:none;user-select:none}
 button,input,textarea,select{font-family:inherit}
 svg.ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px}
 
 #frame{max-width:640px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;background:var(--bg);
-  box-shadow:0 0 40px rgba(0,0,0,.12);position:relative;overflow:hidden}
+  position:relative;overflow:hidden}
 
 /* ===== header ===== */
 #hdr{flex-shrink:0;z-index:5}
@@ -171,18 +171,35 @@ h3.sect{font-size:13px;color:var(--ink2);font-weight:800;margin:16px 2px 9px;let
 .gal .gi .gn{font-size:12px;font-weight:700;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gal .gi .gt{font-size:10.5px;color:var(--ink3)}
 
-/* ===== 歌劇院 ===== */
-.opsec{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:14px}
-.opsec .oph{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
-.opsec .oph .on{width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font-weight:900;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.opsec .oph .ot{font-size:16px;font-weight:900;flex:1}
-.opsec .oph .oe{font-size:11.5px;color:var(--ink2);font-weight:700;letter-spacing:1px}
-.opsec video{width:100%;max-height:420px;background:#000;display:block}
-.opsec .novid{background:#1b1b1f;color:#bbb;padding:34px 16px;text-align:center;font-size:13px;line-height:1.7}
-.opsec .notes{padding:12px 14px}
-.opsec .notes .nh{font-size:12px;font-weight:800;color:var(--ink2);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
-.opsec .notes ul{margin:0;padding-left:20px;font-size:15px;line-height:1.8}
-.opsec .notes .empty{font-size:13px;color:var(--ink3);line-height:1.6}
+/* ===== 園區地圖 ===== */
+.zoochips{display:flex;gap:8px;overflow-x:auto;padding:10px 14px;background:#fff;border-bottom:1px solid var(--line)}
+.zchip{flex-shrink:0;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.zchip b{font-size:11px;color:#fff;background:var(--navy);border-radius:6px;padding:1px 6px}
+.zchip.on{border-color:var(--navy);background:#E8EEF8}
+.mapwrap{position:relative;flex:1;min-height:0;background:#DCE7D3;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+.maplayer{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.maplayer img{display:block;pointer-events:none;-webkit-user-drag:none}
+.pin{position:absolute;width:44px;height:44px;margin:-44px 0 0 -22px;transform-origin:50% 100%;pointer-events:none}
+.pin::before{content:"";position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--red);box-shadow:0 3px 8px rgba(0,0,0,.35);border:3px solid #fff}
+.pin.pulse::after{content:"";position:absolute;left:50%;bottom:-6px;width:28px;height:10px;margin-left:-14px;border-radius:50%;background:rgba(230,0,18,.35);animation:pp 1.2s ease-out infinite}
+@keyframes pp{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.2);opacity:0}}
+.pinlbl{position:absolute;left:50%;top:-30px;transform:translateX(-50%);background:#fff;color:var(--ink);font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.mapctl{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:8px}
+.mapctl button{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.12);color:var(--ink)}
+.maphint{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.92);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--ink2);font-weight:600;pointer-events:none}
+.sched{flex-shrink:0;background:#fff;border-top:1px solid var(--line);max-height:40%;display:flex;flex-direction:column}
+.sched .sh{display:flex;align-items:center;gap:8px;padding:10px 14px;font-size:13px;font-weight:800;color:var(--ink2);cursor:pointer}
+.sched .sh .cnt{margin-left:auto;font-size:12px;font-weight:600}
+.sched .sl{overflow-y:auto;padding:0 10px 10px;display:none}
+.sched.open .sl{display:block}
+.srow{display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid var(--line);cursor:pointer;font-size:14px}
+.srow:last-child{border-bottom:none}
+.srow .st{font-variant-numeric:tabular-nums;font-weight:800;min-width:64px;color:var(--navy)}
+.srow .sn{flex:1;font-weight:600}
+.srow .sn small{display:block;font-size:11.5px;color:var(--ink2);font-weight:600}
+.srow .sg{font-size:12px;font-weight:800;color:#fff;background:var(--navy);border-radius:6px;padding:2px 8px}
+.srow.hi{background:#FDECEE}
+.zoopage{display:flex;flex-direction:column;height:100%}
 
 /* ===== modal / toast ===== */
 .modal{position:fixed;inset:0;background:rgba(20,20,24,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:18px}
@@ -221,7 +238,7 @@ h3.sect{font-size:13px;color:var(--ink2);font-weight:800;margin:16px 2px 9px;let
   .gal{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
   .fr{width:112px}
   .fr .fbox{width:112px;height:140px}
-  .opsec .notes ul{font-size:16px}
+  .srow{font-size:15px}
   .koala2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
   .koala2>div{min-width:0}
 }

@@ -1,6 +1,6 @@
 /* 導領e化平台 · 雪梨董事會 領隊 iPad App
  * 純前端 PWA：載入一次後可完全離線使用，不連任何 API、無後端。
- * 四個情境：喜鳳台電子酒單／Rockpool 飲品點選／Taronga Zoo 無尾熊紀念照／歌劇院影音導覽
+ * 四個情境：喜鳳台電子酒單／Rockpool 飲品點選／Taronga Zoo 無尾熊紀念照／Taronga Zoo 園區地圖
  * 標示「待補」「示意」的內容請於「設定」頁或下方 CONFIG 填入實際資料。 */
 "use strict";
 
@@ -12,6 +12,7 @@ const P = {
   cup:'<path d="M6 8h11v6a5 5 0 0 1-10 0z"/><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 4c0 1-.8 1-.8 2M11.5 4c0 1-.8 1-.8 2"/>',
   camera:'<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/>',
   film:'<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 5v14M16 5v14M4 9h4M4 15h4M16 9h4M16 15h4"/>',
+  map:'<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>',
   share:'<path d="M12 15V4m0 0-3.5 3.5M12 4l3.5 3.5"/><path d="M5 12v8h14v-8"/>',
   trash:'<path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>',
@@ -49,13 +50,6 @@ const DEFAULT_WINES = `香檳｜（示意）Champagne Brut NV｜法國 香檳區
 白酒｜（示意）Hunter Valley Semillon｜澳洲 獵人谷 2022｜柑橘與青草香，餘韻乾淨｜｜img/white.jpg
 紅酒｜（示意）Barossa Shiraz｜澳洲 巴羅莎 2020｜黑莓、黑胡椒，酒體飽滿｜｜img/red.jpg
 無酒精｜（示意）氣泡水 Sparkling Water｜｜佐餐解膩｜｜img/sparkling.jpg`;
-
-/* 歌劇院三段影片：檔案放 app/media/，檔名固定；或在頁面上「從 iPad 匯入影片」 */
-const OPERA = [
-  { id:"design", title:"設計理念", en:"DESIGN",       file:"media/design.mp4" },
-  { id:"build",  title:"建造過程", en:"CONSTRUCTION", file:"media/build.mp4" },
-  { id:"arch",   title:"建築特色", en:"ARCHITECTURE", file:"media/arch.mp4" },
-];
 
 /* ============================================================ STATE */
 const SKEY = "tle_syd_v2";
@@ -192,7 +186,7 @@ function renderHome(hdr,scr){
     ["wine",  "wine",   "1","喜鳳台",     "電子酒單",     "iPad 呈現酒單，董事自行瀏覽選擇，取代紙本"],
     ["drinks","cup",    "2","Rockpool",   "飲品點選",     "董事點選飲品，彙總後一次交給服務生"],
     ["koala", "camera", "3","Taronga Zoo","無尾熊紀念照", "拍照套上專屬紀念框，AirDrop 送到董事手機", true],
-    ["opera", "film",   "4","Opera House","建築影音導覽", "影片＋領隊補充說明，外觀導覽不再長篇口述"],
+    ["zoo",   "map",    "4","Taronga Zoo","園區地圖",     "官方地圖可縮放，Keeper Talk 時刻一鍵定位"],
   ];
   el.innerHTML=`<div class="tiles">${tiles.map(([id,icn,no,place,tt,td,main])=>`
     <div class="tile${main?" main":""}" data-p="${id}">
@@ -603,52 +597,123 @@ async function renderGallery(box){
   });
 }
 
-/* ============================================================ 4 歌劇院影音導覽 */
-PAGES.opera=(hdr,scr)=>{
-  hbar(hdr,"Sydney Opera House · 影音導覽");
-  const el=document.createElement("div");
-  el.className="pagepad";
-  el.innerHTML=`<p class="vs">歌劇院內部已有約 1 小時專業導覽，外觀改由領隊以 iPad 播放影片＋補充說明。影片檔請放入 <b>app/media/</b>（design.mp4、build.mp4、arch.mp4）或在此頁「從 iPad 匯入」，匯入後離線可播。</p>
-    <div id="secs">讀取中…</div>`;
-  scr.appendChild(el);
-  idbAll("files").then(files=>{
-    const box=el.querySelector("#secs"); box.innerHTML="";
-    OPERA.forEach((sec,i)=>{
-      const imported=files.filter(f=>f.cat==="opera:"+sec.id).sort((a,b)=>b.ts-a.ts)[0];
-      const notes=(S.opera[sec.id]||"").split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-      const d=document.createElement("div");
-      d.className="opsec";
-      d.innerHTML=`<div class="oph"><span class="on">${i+1}</span><span class="ot">${esc(sec.title)}</span><span class="oe">${sec.en}</span></div>
-        <div class="vwrap"></div>
-        <div class="notes"><div class="nh"><span>領隊補充重點</span><button class="btn ghost" style="padding:4px 8px;font-size:12.5px">${ic("pen",14)} 編輯</button></div>
-          ${notes.length?`<ul>${notes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<div class="empty">補充重點待補。按「編輯」逐行填入，現場對著 iPad 講即可。</div>`}
-        </div>`;
-      const vw=d.querySelector(".vwrap");
-      const importLbl=`<label class="camlbl" style="margin-top:10px">${ic("film",16)} 從 iPad 匯入影片<input type="file" accept="video/*"></label>`;
-      const showNoVid=msg=>{ vw.innerHTML=`<div class="novid">${msg}<br>${importLbl}</div>`; bindImport(); };
-      const bindImport=()=>{ const inp=vw.querySelector("input[type=file]"); if(!inp) return; inp.onchange=async e=>{
-        const f=e.target.files[0]; if(!f) return;
-        await idbPut("files",{id:"v"+Date.now(),cat:"opera:"+sec.id,name:f.name,type:f.type,size:f.size,blob:f,ts:Date.now()});
-        toast(`已匯入「${f.name}」`); render();
-      }; };
-      if(imported){
-        const u=URL.createObjectURL(imported.blob);
-        vw.innerHTML=`<video controls playsinline preload="metadata" src="${u}"></video>
-          <div style="display:flex;gap:8px;align-items:center;padding:8px 14px 0;font-size:12px;color:#8E8E93"><span style="flex:1">已匯入：${esc(imported.name)}</span><button class="btn ghost" style="padding:4px 8px;font-size:12px">移除</button></div>`;
-        vw.querySelector("button").onclick=()=>confirmBox("移除匯入的影片？",async()=>{ await idbDel("files",imported.id); render(); });
-      }else{
-        const v=document.createElement("video");
-        v.controls=true; v.playsInline=true; v.preload="metadata"; v.src=sec.file;
-        v.onerror=()=>showNoVid(`尚未放入影片 <b>${esc(sec.file)}</b>（待補）`);
-        vw.appendChild(v);
-      }
-      d.querySelector(".nh button").onclick=()=>{
-        openModal(`${sec.title} · 補充重點`,`<div class="field"><label>每行一點，現場照著講</label><textarea id="nt" placeholder="例：1973 年落成，設計師 Jørn Utzon…">${esc(S.opera[sec.id]||"")}</textarea></div>`,
-          [["取消","sec",closeModal],["儲存","pri",()=>{ S.opera[sec.id]=$("#nt").value; save(); closeModal(); render(); toast("已儲存"); }]]);
-      };
-      box.appendChild(d);
-    });
+/* ============================================================ 4 園區地圖（Taronga Zoo 官方地圖） */
+const ZOO_IMG="img/zoomap.webp", ZOO_W=4048, ZOO_H=2863;
+/* 格線中心像素座標（由官方地圖 PDF 的格線文字位置算出）：欄 1–17、列 A–M */
+const ZOO_COLS={1:92,2:276,3:460,4:644,5:828,6:1012,7:1196,8:1380,9:1564,10:1748,11:1932,12:2116,13:2300,14:2484,15:2669,16:2852,17:3037};
+const ZOO_ROWS={A:94,B:284,C:477,D:667,E:859,F:1053,G:1242,H:1434,I:1626,J:1818,K:2010,L:2203,M:2394};
+function gridXY(ref){
+  const m=/^(\d{1,2})([A-M])$/i.exec(String(ref).trim()); if(!m) return null;
+  const x=ZOO_COLS[+m[1]], y=ZOO_ROWS[m[2].toUpperCase()]; return x&&y?{x,y}:null;
+}
+/* 官方地圖右欄 Presentations, Talks & Encounters（時刻以當日現場公告為準）：時間、名稱、中文、格線 */
+const ZOO_TALKS=[
+  ["10:40am","Rhino Keeper Talk","犀牛","12F"],
+  ["11:00am","Reptile Keeper Talk","爬蟲 · ARC Roof","8H"],
+  ["11:00am","Seals for the Wild","海獅表演","9F"],
+  ["11:00am–12:55pm","Koala Encounter","無尾熊近距離合照 · 票券於 Top Plaza Shop（7L）購買","3K"],
+  ["11:30am","Meerkat Keeper Talk","狐獴","14I"],
+  ["12:00pm","Lion Keeper Talk","獅子","16K"],
+  ["12:00pm","Free Flight Birds","飛鳥表演","16G"],
+  ["12:15pm","Chimpanzee Keeper Talk","黑猩猩","14K"],
+  ["1:00pm","Dingo Keeper Talk","澳洲野犬","4J"],
+  ["1:20pm","Giraffe Keeper Talk","長頸鹿 · Waterhole","12I"],
+  ["1:40pm","Capybara Keeper Talk","水豚","8I"],
+  ["2:00pm","Seals for the Wild","海獅表演","9F"],
+  ["2:00pm","Farmyard Feed","農場餵食","3C"],
+  ["2:15pm","Cassowary Keeper Talk","食火雞","7I"],
+  ["2:20pm","Gorilla Keeper Talk","大猩猩","10G"],
+  ["2:30pm","Koala Keeper Talk","無尾熊","4J"],
+  ["2:40pm","Penguin Keeper Talk","企鵝","9E"],
+  ["3:00pm","Free Flight Birds","飛鳥表演","16G"],
+];
+/* 快速定位：名稱、格線（多個以逗號分隔）。格線代號取自官方地圖圖例；標「約」者為依地圖位置估計 */
+const ZOO_SPOTS=[
+  ["無尾熊合照 Koala Encounter","3K"],
+  ["購票 Top Plaza Shop","7L"],
+  ["正門 Main Entrance（約）","4L"],
+  ["Zoo Entry（約）","9K"],
+  ["渡輪 Ferry（約）","15A"],
+  ["Sky Safari 下站（約）","6L"],
+  ["廁所 Toilets","5D,7L,4J,8D,11E,11H,12G"],
+  ["火車站 Train Station","6F,10K"],
+  ["咖啡／餐飲 Café","7L,12G,5E"],
+  ["Selfie with a View","12K,5E,15E,16G"],
+  ["飲水 Water Refill","8L,10L,11F,12J,10I,16G,5D,3C,4K"],
+  ["公車站 Bus Stop","4M,15B"],
+];
+PAGES.zoo=(hdr,scr)=>{
+  hbar(hdr,"Taronga Zoo · 園區地圖");
+  const page=document.createElement("div");
+  page.className="zoopage";
+  page.innerHTML=`<div class="zoochips">${ZOO_SPOTS.map((s,i)=>{ const refs=s[1].split(","); return `<button class="zchip" data-i="${i}">${esc(s[0])}<b>${esc(refs[0])}${refs.length>1?` +${refs.length-1}`:""}</b></button>`; }).join("")}</div>
+    <div class="mapwrap" id="mapwrap">
+      <div class="maplayer" id="maplayer"><img src="${ZOO_IMG}" width="${ZOO_W}" height="${ZOO_H}" alt="Taronga Zoo map"><div id="pins"></div></div>
+      <div class="mapctl"><button id="zin" title="放大">＋</button><button id="zout" title="縮小">－</button><button id="zfit" style="font-size:12.5px">全圖</button></div>
+      <div class="maphint">雙指縮放 · 拖曳移動 · 點兩下放大</div>
+    </div>
+    <div class="sched" id="sched">
+      <div class="sh">🕐 Keeper Talks & Encounters<span style="font-weight:600">（官方地圖時刻，以現場公告為準）</span><span class="cnt">${ZOO_TALKS.length} 場 ▾</span></div>
+      <div class="sl">${ZOO_TALKS.map((t,i)=>`<div class="srow" data-i="${i}"><span class="st">${esc(t[0])}</span><span class="sn">${esc(t[1])}<small>${esc(t[2])}</small></span><span class="sg">${esc(t[3])}</span></div>`).join("")}</div>
+    </div>`;
+  scr.appendChild(page);
+
+  const wrap=page.querySelector("#mapwrap"), layer=page.querySelector("#maplayer"), pins=page.querySelector("#pins");
+  const MAX=2.5;
+  let sc=0.2, tx=0, ty=0, minSc=0.1;
+  const apply=()=>{ layer.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`; pins.querySelectorAll(".pin").forEach(p=>p.style.transform=`scale(${1/sc})`); };
+  const clamp=()=>{ const W=wrap.clientWidth,H=wrap.clientHeight,w=ZOO_W*sc,h=ZOO_H*sc;
+    tx = w<=W ? (W-w)/2 : Math.min(0,Math.max(W-w,tx));
+    ty = h<=H ? (H-h)/2 : Math.min(0,Math.max(H-h,ty)); };
+  const fit=()=>{ const W=wrap.clientWidth,H=wrap.clientHeight; if(!W||!H) return; sc=Math.min(W/ZOO_W,H/ZOO_H); minSc=sc; clamp(); apply(); };
+  const zoomAt=(f,cx,cy)=>{ const ns=Math.min(Math.max(sc*f,minSc),MAX), k=ns/sc; tx=cx-(cx-tx)*k; ty=cy-(cy-ty)*k; sc=ns; clamp(); apply(); };
+  const goTo=(x,y,s)=>{ const W=wrap.clientWidth,H=wrap.clientHeight; sc=Math.min(Math.max(s||Math.max(minSc*2.6,0.42),minSc),MAX); tx=W/2-x*sc; ty=H/2-y*sc; clamp(); apply(); };
+  const showPins=(refs,label)=>{
+    const pts=refs.map(r=>({r,p:gridXY(r)})).filter(o=>o.p);
+    pins.innerHTML=pts.map(o=>`<div class="pin pulse" style="left:${o.p.x}px;top:${o.p.y}px"><span class="pinlbl">${esc(label)} ${esc(o.r)}</span></div>`).join("");
+    if(!pts.length) return;
+    if(pts.length===1) goTo(pts[0].p.x,pts[0].p.y);
+    else{ const xs=pts.map(o=>o.p.x),ys=pts.map(o=>o.p.y); const x0=Math.min(...xs)-250,x1=Math.max(...xs)+250,y0=Math.min(...ys)-250,y1=Math.max(...ys)+250;
+      const s=Math.min(wrap.clientWidth/(x1-x0),wrap.clientHeight/(y1-y0)); goTo((x0+x1)/2,(y0+y1)/2,s); }
+  };
+  /* 手勢：單指拖曳、雙指縮放、點兩下放大；桌機滾輪縮放 */
+  const pts=new Map(); let start=null, lastTap=0, moved=false;
+  const snap=()=>{ const a=[...pts.values()]; if(a.length>=2) return {n:2,d:Math.hypot(a[1].x-a[0].x,a[1].y-a[0].y),mx:(a[0].x+a[1].x)/2,my:(a[0].y+a[1].y)/2,sc,tx,ty};
+    if(a.length===1) return {n:1,x:a[0].x,y:a[0].y,tx,ty}; return null; };
+  wrap.addEventListener("pointerdown",e=>{ e.preventDefault(); wrap.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); start=snap(); moved=false; });
+  wrap.addEventListener("pointermove",e=>{
+    if(!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); const cur=snap(); if(!start||!cur||cur.n!==start.n){ start=snap(); return; }
+    const r=wrap.getBoundingClientRect();
+    if(cur.n===2){ const ns=Math.min(Math.max(start.sc*cur.d/start.d,minSc),MAX), k=ns/start.sc, mx=start.mx-r.left, my=start.my-r.top;
+      tx=mx-(mx-start.tx)*k+(cur.mx-start.mx); ty=my-(my-start.ty)*k+(cur.my-start.my); sc=ns; moved=true; }
+    else{ const dx=cur.x-start.x, dy=cur.y-start.y; if(Math.hypot(dx,dy)>6) moved=true; tx=start.tx+dx; ty=start.ty+dy; }
+    clamp(); apply();
   });
+  const up=e=>{
+    if(!pts.has(e.pointerId)) return;
+    pts.delete(e.pointerId);
+    if(pts.size===0 && !moved){ const now=Date.now(); const r=wrap.getBoundingClientRect();
+      if(now-lastTap<320){ zoomAt(sc>minSc*1.8?minSc/sc:2.4,e.clientX-r.left,e.clientY-r.top); lastTap=0; } else lastTap=now; }
+    start=snap();
+  };
+  wrap.addEventListener("pointerup",up); wrap.addEventListener("pointercancel",up);
+  wrap.addEventListener("wheel",e=>{ e.preventDefault(); const r=wrap.getBoundingClientRect(); zoomAt(e.deltaY<0?1.15:1/1.15,e.clientX-r.left,e.clientY-r.top); },{passive:false});
+  page.querySelector("#zin").onclick=()=>zoomAt(1.4,wrap.clientWidth/2,wrap.clientHeight/2);
+  page.querySelector("#zout").onclick=()=>zoomAt(1/1.4,wrap.clientWidth/2,wrap.clientHeight/2);
+  page.querySelector("#zfit").onclick=()=>{ pins.innerHTML=""; page.querySelectorAll(".zchip.on,.srow.hi").forEach(x=>x.classList.remove("on","hi")); fit(); };
+  page.querySelectorAll(".zchip").forEach(c=>c.onclick=()=>{
+    const s=ZOO_SPOTS[+c.dataset.i]; page.querySelectorAll(".zchip").forEach(x=>x.classList.toggle("on",x===c)); page.querySelectorAll(".srow.hi").forEach(x=>x.classList.remove("hi"));
+    showPins(s[1].split(","),s[0].replace(/（約）/,""));
+  });
+  const sched=page.querySelector("#sched");
+  sched.querySelector(".sh").onclick=()=>sched.classList.toggle("open");
+  page.querySelectorAll(".srow").forEach(r=>r.onclick=()=>{
+    const t=ZOO_TALKS[+r.dataset.i]; page.querySelectorAll(".srow").forEach(x=>x.classList.toggle("hi",x===r)); page.querySelectorAll(".zchip.on").forEach(x=>x.classList.remove("on"));
+    showPins([t[3]],`${t[0]} ${t[1]}`);
+  });
+  requestAnimationFrame(fit);
+  const img=layer.querySelector("img"); img.onload=()=>{ if(!pins.children.length) fit(); };
 };
 
 /* ============================================================ 設定 */
