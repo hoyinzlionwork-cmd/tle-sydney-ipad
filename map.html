@@ -8,129 +8,212 @@
 <meta name="apple-mobile-web-app-title" content="Zoo Map">
 <link rel="apple-touch-icon" href="icon.png">
 <style>
-:root{--ink:#333336;--ink2:#8E8E93;--ink3:#B9B9BF;--line:#E5E5EA;--navy:#0B2545;--red:#E60012;
+:root{--ink:#2B2F36;--ink2:#7A818C;--ink3:#B4BAC4;--line:#E6E8EC;--navy:#0B2545;--red:#E0533D;
+  --land:#EAF1E4;--lawn:#D3E6C6;--ground:#F3E8D4;--water:#A9D1EA;--road:#8B939E;--path:#FBFAF6;--build:#D9CAB4;
   --safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden;background:#fff;color:var(--ink);font-family:"PingFang TC","Microsoft JhengHei",system-ui,sans-serif;-webkit-user-select:none;user-select:none}
 button,input{font-family:inherit}
 #app{position:fixed;inset:0;display:flex;flex-direction:column}
-.top{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:calc(8px + var(--safe-top)) 14px 8px;background:#fff;border-bottom:1px solid var(--line);z-index:5}
-.top .t{font-size:16px;font-weight:900;flex:1;line-height:1.2;min-width:0}
+/* ---- 頂欄 ---- */
+.top{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:calc(8px + var(--safe-top)) 14px 8px;background:#fff;border-bottom:1px solid var(--line);z-index:6}
+.top .t{font-size:16px;font-weight:900;flex:1;min-width:0;line-height:1.2}
 .top .t small{display:block;font-size:11px;color:var(--ink2);font-weight:700;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:800;color:var(--ink);cursor:pointer;white-space:nowrap}
+.top button.on{background:var(--navy);border-color:var(--navy);color:#fff}
 @media (max-width:420px){.top .t small{display:none}.top .t{font-size:15px}}
+/* ---- 地圖 ---- */
 .body{flex:1;min-height:0;display:flex;position:relative}
-.mapwrap{position:relative;flex:1;min-width:0;background:#DCE7D3;overflow:hidden;touch-action:none}
+.mapwrap{position:relative;flex:1;min-width:0;background:var(--land);overflow:hidden;touch-action:none}
 .layer{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
-.layer img{display:block;pointer-events:none;-webkit-user-drag:none}
-.layer svg{position:absolute;left:0;top:0;pointer-events:none}
-.layer svg .zone{pointer-events:auto;cursor:pointer;fill-opacity:.18;stroke-width:8;stroke-opacity:.9;stroke-linejoin:round;transition:fill-opacity .25s,stroke-opacity .25s}
-.layer svg .zone.dim{fill-opacity:.04;stroke-opacity:.25}
-.layer svg .zone.on{fill-opacity:.08;stroke-width:14;stroke-opacity:1;filter:drop-shadow(0 0 18px rgba(255,255,255,.9))}
-.layer svg .shade{fill:rgba(10,20,30,.55);pointer-events:none;opacity:0;transition:opacity .3s}
-.layer svg .shade.on{opacity:1}
+.layer svg{display:block}
+#L-lawn path{fill:var(--lawn)}
+#L-ground path{fill:var(--ground)}
+#L-water path{fill:var(--water)}
+#L-roads path{fill:var(--road)}
+#L-paths path{fill:var(--path);stroke:#E3DED2;stroke-width:1.5}
+#L-build path{fill:var(--build)}
+#L-raster{opacity:0;transition:opacity .3s}
+.zone{cursor:pointer;fill-opacity:.16;stroke-width:6;stroke-opacity:.85;stroke-linejoin:round;transition:fill-opacity .25s,stroke-opacity .25s,stroke-width .25s}
+.zone.dim{fill-opacity:.06;stroke-opacity:.2}
+.zone.on{fill-opacity:.1;stroke-width:14;stroke-opacity:1;filter:url(#glow)}
+#L-shade path{fill:rgba(20,32,44,.42);pointer-events:none}
+.layer .ov{position:absolute;left:0;top:0;width:0;height:0}
+/* 區域標籤（HTML，反向縮放維持大小） */
 .zl{position:absolute;width:0;height:0;pointer-events:none}
-.zl .b{position:absolute;left:0;top:0;transform:translate(-50%,-50%);background:rgba(255,255,255,.94);border:3px solid;border-radius:999px;padding:5px 12px;font-size:14px;font-weight:900;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.25);color:var(--ink)}
-.zl .b small{display:block;font-size:11px;font-weight:700;color:var(--ink2);text-align:center;letter-spacing:.5px}
-.zl.dim{opacity:.35}
-#zlabels.far .b{font-size:12px;padding:3px 9px;border-width:2px}
+.zl .b{position:absolute;left:0;top:0;transform:translate(-50%,-50%);background:rgba(255,255,255,.95);border:2.5px solid;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:900;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.18);color:var(--ink);text-align:center}
+.zl .b small{display:block;font-size:11px;font-weight:700;color:var(--ink2);letter-spacing:.5px}
+#zlabels.far .b{font-size:12px;padding:4px 10px;border-width:2px}
 #zlabels.far .b small{display:none}
+.zl.dim{opacity:.3}
+.zl.hide{display:none}
+#marks.far .mk:not(.on) .n{display:none}
+/* 圖標 */
 .mk{position:absolute;width:0;height:0;cursor:pointer}
-.mk .c{position:absolute;left:-19px;top:-19px;width:38px;height:38px;border-radius:50%;background:#fff;border:3px solid var(--navy);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 3px 8px rgba(0,0,0,.3);animation:pop .3s ease-out}
-.mk .n{position:absolute;left:50%;top:22px;transform:translateX(-50%);background:rgba(255,255,255,.95);color:var(--ink);font-size:12px;font-weight:800;padding:2px 8px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.2)}
-.mk.show .c{border-color:#8E24AA}
-.mk.food .c{border-color:#F57C00}
-.mk.on .c{border-color:var(--red);transform:scale(1.25)}
+.mk .c{position:absolute;left:-22px;top:-22px;width:44px;height:44px;border-radius:50%;background:#fff;border:3px solid var(--navy);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,.25);animation:pop .3s ease-out}
+.mk .c img{width:30px;height:30px;display:block}
+.mk .c svg{width:24px;height:24px;fill:var(--navy)}
+.mk.show .c{border-radius:14px}
+.mk.show .c::after{content:"";position:absolute;right:-6px;top:-6px;width:16px;height:16px;border-radius:50%;background:#8E24AA;border:2px solid #fff}
+.mk.food .c svg,.mk.entry .c svg,.mk.facility .c svg{fill:#fff}
+.mk.food .c{background:#F57C00;border-color:#fff}
+.mk.entry .c{background:#546E7A;border-color:#fff}
+.mk.facility .c{background:#1D6FB8;border-color:#fff}
+.mk .n{position:absolute;left:50%;top:26px;transform:translateX(-50%);background:rgba(255,255,255,.96);color:var(--ink);font-size:12px;font-weight:800;padding:2px 8px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.mk.on .c{border-color:var(--red);transform:scale(1.2);z-index:2}
 .mk.on .n{background:var(--red);color:#fff}
-@keyframes pop{0%{transform:scale(.2);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes pop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
 .pin{position:absolute;width:0;height:0;pointer-events:none}
 .pin .ring{position:absolute;left:-60px;top:-60px;width:120px;height:120px;border-radius:50%;border:4px solid var(--red);animation:ring 1.4s ease-out infinite}
 .pin .ring2{animation-delay:.5s}
-@keyframes ring{0%{transform:scale(.25);opacity:1}100%{transform:scale(1.4);opacity:0}}
+@keyframes ring{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.4);opacity:0}}
 .ctl{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:8px;z-index:3}
 .ctl button{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.15);color:var(--ink)}
-.hint{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.92);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--ink2);font-weight:600;pointer-events:none;z-index:3;max-width:60%}
-/* ---- 側欄 / 底部抽屜 ---- */
-.panel{background:#fff;display:flex;flex-direction:column;min-height:0}
-.ph{display:flex;align-items:center;gap:8px;padding:10px 12px 6px;flex-shrink:0}
+.hint{position:absolute;left:12px;bottom:12px;background:rgba(255,255,255,.92);border-radius:999px;padding:6px 12px;font-size:12px;color:var(--ink2);font-weight:600;pointer-events:none;z-index:3;max-width:62%}
+.legend{position:absolute;left:12px;top:12px;z-index:3;background:rgba(255,255,255,.92);border-radius:12px;padding:8px 10px;font-size:11.5px;color:var(--ink2);font-weight:700;display:flex;gap:10px;flex-wrap:wrap;max-width:60%}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+/* ---- 可收合側欄 ---- */
+.drawer{position:relative;flex-shrink:0;background:#fff;display:flex;flex-direction:column;min-height:0;z-index:5;transition:width .25s,height .25s}
+.dtab{position:absolute;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:900;font-size:12.5px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.12);z-index:7}
+.dinner{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden}
+.dtabs{display:flex;gap:6px;padding:10px 12px 8px;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--line)}
+.dt{flex-shrink:0;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:800;color:var(--ink2);cursor:pointer}
+.dt.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.search{padding:10px 12px 6px;flex-shrink:0}
+.search input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px;background:#fff;color:var(--ink);-webkit-user-select:text;user-select:text}
+.search input:focus{outline:none;border-color:var(--navy)}
+.dlist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 10px calc(14px + var(--safe-bottom))}
+.ph{display:flex;align-items:center;gap:8px;padding:8px 2px 6px}
 .ph .back{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:800;cursor:pointer;color:var(--ink)}
 .ph .zt{flex:1;min-width:0}
 .ph .zt b{display:block;font-size:16px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ph .zt small{display:block;font-size:11.5px;color:var(--ink2);font-weight:700}
-.search{padding:0 12px 8px;flex-shrink:0}
-.search input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px;background:#fff;color:var(--ink);-webkit-user-select:text;user-select:text}
-.search input:focus{outline:none;border-color:var(--navy)}
-.list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 10px calc(12px + var(--safe-bottom))}
-.zc{display:flex;gap:12px;padding:12px 10px;border:1.5px solid var(--line);border-radius:14px;margin-bottom:9px;cursor:pointer;align-items:flex-start}
-.zc:active{background:#F4F4F6}
-.zc .sw{width:14px;align-self:stretch;border-radius:7px;flex-shrink:0}
+.zc{display:flex;gap:12px;padding:12px 10px;border:1.5px solid var(--line);border-radius:14px;margin-bottom:9px;cursor:pointer;align-items:flex-start;background:#fff}
+.zc:active{background:#F4F5F7}
+.zc .sw{width:12px;align-self:stretch;border-radius:6px;flex-shrink:0}
 .zc .zt{flex:1;min-width:0}
 .zc .zn{font-size:15.5px;font-weight:900;line-height:1.3}
 .zc .zn small{font-size:11.5px;color:var(--ink2);font-weight:700;margin-left:6px}
 .zc .zd{font-size:12.5px;color:var(--ink);line-height:1.55;margin-top:4px}
 .zc .zcnt{font-size:11.5px;color:var(--ink2);font-weight:700;margin-top:5px}
-.zc.hot .zn::after{content:"★ 無尾熊合照";color:var(--red);font-size:11px;margin-left:6px;vertical-align:middle}
-.zdesc{font-size:13px;line-height:1.6;color:var(--ink);background:#F7F7F8;border-radius:12px;padding:10px 12px;margin:0 0 10px}
-.gh{font-size:12px;font-weight:800;color:var(--ink2);margin:10px 4px 6px;letter-spacing:.5px}
+.zc .zicons{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap}
+.zc .zicons img{width:22px;height:22px;opacity:.85}
+.star{color:var(--red);font-size:11px;font-weight:900;margin-left:6px}
+.zdesc{font-size:13px;line-height:1.6;color:var(--ink);background:#F5F6F8;border-radius:12px;padding:10px 12px;margin:0 0 10px}
+.gh{font-size:12px;font-weight:800;color:var(--ink2);margin:12px 4px 6px;letter-spacing:.5px}
 .item{display:flex;align-items:center;gap:10px;padding:9px 8px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:10px}
-.item:active{background:#F4F4F6}
-.item.on{background:#FDECEE}
-.item .ic{width:36px;height:36px;border-radius:10px;background:#F0F0F2;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.item:active{background:#F4F5F7}
+.item.on{background:#FDEDEA}
+.item .ic{width:38px;height:38px;border-radius:50%;background:#fff;border:2px solid var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.item .ic img{width:26px;height:26px}
+.item .ic svg{width:20px;height:20px;fill:var(--navy)}
+.item.food .ic svg,.item.entry .ic svg,.item.facility .ic svg{fill:#fff}
+.item.food .ic{background:#F57C00;border-color:#F57C00}
+.item.entry .ic{background:#546E7A;border-color:#546E7A}
+.item.facility .ic{background:#1D6FB8;border-color:#1D6FB8}
+.item.show .ic{border-color:#8E24AA}
 .item .tx{flex:1;min-width:0}
 .item .zh{font-size:15px;font-weight:800;line-height:1.3}
 .item .en{font-size:11.5px;color:var(--ink2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .item .tm{font-size:13px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap}
 .item .gd{font-size:11px;font-weight:800;color:#fff;background:var(--navy);border-radius:6px;padding:2px 7px}
 .item .zb{font-size:11px;font-weight:800;color:#fff;border-radius:6px;padding:2px 7px;white-space:nowrap}
-.item.hot .zh::after{content:"★";color:var(--red);margin-left:5px;font-size:12px}
 .empty{padding:30px 12px;text-align:center;color:var(--ink3);font-size:13px}
-.handle{display:none}
-@media (max-width:899px){
-  .body{flex-direction:column}
-  .panel{flex-shrink:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:0 -6px 20px rgba(0,0,0,.08);height:45%;transition:height .25s}
-  .panel.min{height:auto}
-  .panel.min .ph,.panel.min .search,.panel.min .list{display:none}
-  .panel.max{height:80%}
-  .handle{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px 4px;cursor:pointer;flex-shrink:0}
-  .handle::before{content:"";width:40px;height:5px;border-radius:3px;background:#D9D9DE}
-  .handle .ht{font-size:12.5px;font-weight:800;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .panel.min .handle{padding:10px 14px calc(10px + var(--safe-bottom))}
+.lay{display:flex;align-items:center;gap:10px;padding:11px 8px;border-bottom:1px solid var(--line);cursor:pointer}
+.lay .sw{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+.lay .lt{flex:1;font-size:14.5px;font-weight:700}
+.lay .lt small{display:block;font-size:11.5px;color:var(--ink2);font-weight:600}
+.tog{width:44px;height:26px;border-radius:13px;background:#D9DCE2;position:relative;flex-shrink:0;transition:background .2s}
+.tog::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:left .2s}
+.lay.on .tog{background:var(--navy)}
+.lay.on .tog::after{left:21px}
+/* 寬螢幕：右側欄 */
+@media (min-width:760px){
+  .drawer{width:350px;border-left:1px solid var(--line)}
+  .drawer.closed{width:0;border-left:none}
+  .drawer.closed .dinner{display:none}
+  .dtab{left:-40px;top:14px;width:40px;height:112px;border-radius:12px 0 0 12px;border-right:none;writing-mode:vertical-rl;letter-spacing:3px;padding:10px 0}
 }
-@media (min-width:900px){ .panel{width:360px;border-left:1px solid var(--line)} }
-.editbar{display:none;position:absolute;left:12px;top:12px;z-index:4;background:#FFF8E6;border:1px solid #F5DFA0;color:#8A6400;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:700;max-width:70%}
+/* 手機：底部抽屜 */
+@media (max-width:759px){
+  .body{flex-direction:column}
+  .drawer{height:46%;border-top:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:0 -6px 20px rgba(0,0,0,.08)}
+  .drawer.max{height:82%}
+  .drawer.closed{height:0;border-top:none;box-shadow:none}
+  .drawer.closed .dinner{display:none}
+  .dtab{left:50%;transform:translateX(-50%);top:-38px;height:38px;padding:0 18px;border-radius:12px 12px 0 0;border-bottom:none}
+}
+.editbar{display:none;position:absolute;left:12px;top:60px;z-index:4;background:#FFF8E6;border:1px solid #F5DFA0;color:#8A6400;border-radius:10px;padding:8px 12px;font-size:12.5px;font-weight:700;max-width:70%}
 .edit .editbar{display:block}
 </style>
 </head>
 <body>
 <div id="app">
   <div class="top">
-    <div class="t" id="title">Taronga Zoo 園區地圖<small>先選區域 → 邊界亮起 → 再看這區有什麼</small></div>
+    <div class="t" id="title">Taronga Zoo 園區地圖<small>先選區域 → 邊界亮起 → 再看這區的動物</small></div>
+    <button id="rasterbtn" title="對照官方原圖">原圖</button>
     <button id="sharebtn">分享</button>
   </div>
   <div class="body">
     <div class="mapwrap" id="wrap">
-      <div class="layer" id="layer"><img id="mapimg" alt="Taronga Zoo map"><svg id="svg"></svg><div id="zlabels"></div><div id="marks"></div><div id="pins"></div></div>
+      <div class="layer" id="layer">
+        <svg id="scene"></svg>
+        <div class="ov" id="zlabels"></div>
+        <div class="ov" id="marks"></div>
+        <div class="ov" id="pins"></div>
+      </div>
+      <div class="legend" id="legend"></div>
       <div class="editbar" id="editbar">校正模式：先點清單項目，再點地圖上的正確位置。<button id="exportbtn" style="margin-left:8px;border:none;background:#8A6400;color:#fff;border-radius:6px;padding:3px 8px;font-size:12px">匯出</button></div>
       <div class="ctl"><button id="zin">＋</button><button id="zout">－</button><button id="zfit" style="font-size:12px">全圖</button></div>
-      <div class="hint" id="hint">點地圖上的區域，或從下方選</div>
+      <div class="hint" id="hint">點地圖上的區域，或打開選單</div>
     </div>
-    <div class="panel" id="panel">
-      <div class="handle" id="handle"><span class="ht" id="handletxt">選一個區域 ▴</span></div>
-      <div class="ph" id="ph"></div>
-      <div class="search"><input id="q" type="search" placeholder="搜尋：無尾熊、koala、廁所、長頸鹿…"></div>
-      <div class="list" id="list"></div>
-    </div>
+    <aside class="drawer" id="drawer">
+      <button class="dtab" id="dtab">選單</button>
+      <div class="dinner">
+        <div class="dtabs" id="dtabs"></div>
+        <div class="search" id="searchbox"><input id="q" type="search" placeholder="搜尋：無尾熊、koala、廁所、長頸鹿…"></div>
+        <div class="dlist" id="dlist"></div>
+      </div>
+    </aside>
   </div>
 </div>
 <script src="places.js"></script>
+<script src="layers.js"></script>
 <script>
 "use strict";
-const D=window.ZOO_DATA, $=s=>document.querySelector(s);
+const D=window.ZOO_DATA, LY=window.ZOO_LAYERS||{}, $=s=>document.querySelector(s);
+const SW=3064, SH=2560;   /* 向量場景範圍（官方地圖去掉右欄與圖例） */
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const params=new URLSearchParams(location.search);
 const EDIT=params.get("edit")==="1", EMBED=params.get("embed")==="1";
 if(EDIT) document.body.classList.add("edit");
 if(EMBED){ $("#sharebtn").style.display="none"; }
+
+/* ---- 向量符號（非動物） ---- */
+const G={
+  paw:'<path d="M12 13c-2.8 0-5 2.2-5 4.2 0 1.5 1 2.3 2.3 2.3 1 0 1.7-.5 2.7-.5s1.7.5 2.7.5c1.3 0 2.3-.8 2.3-2.3 0-2-2.2-4.2-5-4.2zM7.5 11.5a1.8 2.4 0 1 0 0-4.8 1.8 2.4 0 0 0 0 4.8zm9 0a1.8 2.4 0 1 0 0-4.8 1.8 2.4 0 0 0 0 4.8zM10 9a1.7 2.3 0 1 0 0-4.6A1.7 2.3 0 0 0 10 9zm4 0a1.7 2.3 0 1 0 0-4.6A1.7 2.3 0 0 0 14 9z"/>',
+  food:'<path d="M7 2v8a2 2 0 0 0 1 1.7V22h2V11.7A2 2 0 0 0 11 10V2H9.5v6h-1V2H7zm9 0c-1.7 0-3 2.2-3 5v5h2v10h2V2z"/>',
+  cafe:'<path d="M4 5h12v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V5zm13 2h1.5a2.5 2.5 0 0 1 0 5H17V7zM4 19h14v2H4z"/>',
+  shop:'<path d="M7 7V6a5 5 0 0 1 10 0v1h3l-1 14H5L4 7h3zm2 0h6V6a3 3 0 0 0-6 0v1z"/>',
+  gate:'<path d="M4 21V5l8-3 8 3v16h-6v-6h-4v6H4zm5-11h6V8H9v2z"/>',
+  ferry:'<path d="M4 15l-1 3h18l-1-3H4zm2-1 1.5-5H9V6h6v3h1.5L18 14H6zm-2 6h16c0 1-1 2-2 2H6c-1 0-2-1-2-2z"/>',
+  train:'<path d="M6 3h12a2 2 0 0 1 2 2v10a3 3 0 0 1-3 3l2 3h-2l-2-3H9l-2 3H5l2-3a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2zm0 3v5h12V6H6zm2 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm8 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>',
+  bus:'<path d="M5 3h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2v2h-3v-2H8v2H5v-2a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm0 3v6h14V6H5zm1.5 8a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm11 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>',
+  cable:'<path d="M3 4l18 3v2L13 7.5V10h4a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h4V7.2L3 6V4zm4 8v4h4v-4H7zm6 0v4h4v-4h-4z"/>',
+  toilet:'<path d="M7 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm10 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM5 7h4a1 1 0 0 1 1 1v6H9v8H5v-8H4V8a1 1 0 0 1 1-1zm10 0h4a1 1 0 0 1 1 1l1 7h-2l-.5 7h-3l-.5-7h-2l1-7a1 1 0 0 1 1-1z"/>',
+  water:'<path d="M12 2s-6 7-6 12a6 6 0 0 0 12 0c0-5-6-12-6-12zm-2 13a1 1 0 0 1 1 1 2 2 0 0 0 2 2 1 1 0 0 1 0 2 4 4 0 0 1-4-4 1 1 0 0 1 1-1z"/>',
+  camera:'<path d="M9 4h6l1.5 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3.5L9 4zm3 5a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>',
+  cash:'<path d="M2 6h20v12H2V6zm10 2.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zM4 8v2a2 2 0 0 0 2-2H4zm14 0a2 2 0 0 0 2 2V8h-2zM4 16h2a2 2 0 0 0-2-2v2zm16 0v-2a2 2 0 0 0-2 2h2z"/>',
+  access:'<path d="M12 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm-1 5h2v4h4v2h-4v1l4 6h-2.3L12 15.5 9.3 20H7l4-6V7zm-4 6a5 5 0 0 0 6 6.9v2A7 7 0 0 1 5.5 12H7z"/>',
+  hospital:'<path d="M3 5h18v16H3V5zm7 3v3H7v4h3v3h4v-3h3v-4h-3V8h-4z"/>',
+  building:'<path d="M3 21V9l9-6 9 6v12h-7v-6h-4v6H3zm6-9h6V9H9v3z"/>',
+  theatre:'<path d="M3 4h18v3H3V4zm1 5h16l-1 11H5L4 9zm5 2v6h2v-6H9zm4 0v6h2v-6h-2z"/>',
+  picnic:'<path d="M2 8h20v2h-3l2 9h-2l-1.5-6h-11L5 19H3l2-9H2V8zm6 2-.5 2h9l-.5-2H8z"/>',
+  moon:'<path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/>',
+  clock:'<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 5h-2v6l5 3 1-1.7-4-2.3V7z"/>',
+};
+const glyph=n=>`<svg viewBox="0 0 24 24">${G[n]||G.paw}</svg>`;
+const iconHTML=p=>p.icon?`<img src="img/icons/${p.icon}.webp" alt="">`:glyph(p.glyph||(p.cat==="animal"?"paw":p.cat==="food"?"food":p.cat==="entry"?"gate":"paw"));
 
 /* ---- 座標工具 ---- */
 let overrides={}; try{ overrides=JSON.parse(localStorage.getItem("zoo_overrides")||"{}"); }catch(e){}
@@ -139,107 +222,171 @@ const pointsOf=p=>{ if(overrides[p.id]) return [overrides[p.id]]; if(p.x!=null) 
 const inPoly=(pt,poly)=>{ let c=false; for(let i=0,j=poly.length-1;i<poly.length;j=i++){ const [xi,yi]=poly[i],[xj,yj]=poly[j]; if(((yi>pt.y)!==(yj>pt.y))&&(pt.x<(xj-xi)*(pt.y-yi)/(yj-yi)+xi)) c=!c; } return c; };
 const centroid=poly=>{ let x=0,y=0; poly.forEach(([a,b])=>{x+=a;y+=b;}); return {x:x/poly.length,y:y/poly.length}; };
 const bounds=poly=>{ const xs=poly.map(p=>p[0]),ys=poly.map(p=>p[1]); return {x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)}; };
-/* 每個地點自動歸區（多點設施不歸區） */
-D.places.forEach(p=>{ const pts=pointsOf(p); p.zone=(pts.length===1)?(D.zones.find(z=>inPoly(pts[0],z.poly))||{}).id||null:null; });
+const assignZones=()=>D.places.forEach(p=>{ const pts=pointsOf(p); p.zone=(pts.length===1)?(D.zones.find(z=>inPoly(pts[0],z.poly))||{}).id||null:null; });
+assignZones();
 const zoneOf=id=>D.zones.find(z=>z.id===id);
-const CATN={animal:"動物",show:"表演・體驗",food:"餐飲・購物",entry:"入口・交通",facility:"設施"};
 const toMin=t=>{ const m=/(\d{1,2}):(\d{2})(am|pm)/i.exec(t||""); if(!m) return 9999; let h=+m[1]%12; if(m[3].toLowerCase()==="pm") h+=12; return h*60+ +m[2]; };
 
-/* ---- 地圖基本 ---- */
-const wrap=$("#wrap"), layer=$("#layer"), img=$("#mapimg"), svg=$("#svg"), marks=$("#marks"), pins=$("#pins"), zlabels=$("#zlabels");
-img.src=D.img; img.width=D.w; img.height=D.h;
-svg.setAttribute("width",D.w); svg.setAttribute("height",D.h); svg.setAttribute("viewBox",`0 0 ${D.w} ${D.h}`);
+/* ---- 曲線區域：多邊形 → 加入外凸中點 → Catmull-Rom 平滑 ---- */
+function blobPath(poly0,seed){
+  const c0=centroid(poly0);
+  /* 先向內縮 28px，區與區之間留出縫隙 */
+  const poly=poly0.map(([x,y])=>{ const dx=x-c0.x,dy=y-c0.y,l=Math.hypot(dx,dy)||1; return [x-dx/l*28,y-dy/l*28]; });
+  const c=centroid(poly), n=poly.length, pts=[];
+  let r=seed*9301+49297; const rnd=()=>{ r=(r*9301+49297)%233280; return r/233280; };
+  for(let i=0;i<n;i++){
+    const p=poly[i], q=poly[(i+1)%n];
+    pts.push(p);
+    const mx=(p[0]+q[0])/2, my=(p[1]+q[1])/2, len=Math.hypot(q[0]-p[0],q[1]-p[1]);
+    let dx=mx-c.x, dy=my-c.y; const dl=Math.hypot(dx,dy)||1; dx/=dl; dy/=dl;
+    const bulge=len*(0.025+rnd()*0.035);
+    pts.push([mx+dx*bulge,my+dy*bulge]);
+  }
+  const m=pts.length; let d=`M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for(let i=0;i<m;i++){
+    const p0=pts[(i-1+m)%m],p1=pts[i],p2=pts[(i+1)%m],p3=pts[(i+2)%m];
+    const c1=[p1[0]+(p2[0]-p0[0])/6,p1[1]+(p2[1]-p0[1])/6], c2=[p2[0]-(p3[0]-p1[0])/6,p2[1]-(p3[1]-p1[1])/6];
+    d+=`C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return d+"Z";
+}
+D.zones.forEach((z,i)=>z.blob=blobPath(z.poly,i+1));
+
+/* ---- 場景 ---- */
+const wrap=$("#wrap"), layer=$("#layer"), svg=$("#scene"), marks=$("#marks"), pins=$("#pins"), zlabels=$("#zlabels");
+const LAYERS=[
+  {id:"zones", zh:"區域邊界", en:"每區看什麼", color:"#2E8B57", on:true},
+  {id:"build", zh:"建築・展場", en:"官方地圖分析出的建物與平台", color:"#D9CAB4", on:true},
+  {id:"paths", zh:"主要步道", en:"淺灰步道（分析結果，部分未完整）", color:"#E3DED2", on:true},
+  {id:"terrain",zh:"水域・草坪・展場地面", en:"海灣、水池、草坪、沙地", color:"#A9D1EA", on:true},
+  {id:"animals",zh:"所有動物圖標", en:"預設只在選區後顯示該區", color:"#0B2545", on:false},
+  {id:"shows", zh:"表演・體驗", en:"Keeper Talk 時刻地點", color:"#8E24AA", on:false},
+  {id:"facility",zh:"設施（廁所、飲水、商店、入口）", en:"", color:"#1D6FB8", on:false},
+  {id:"raster",zh:"官方原圖對照", en:"半透明疊在底下", color:"#999", on:false},
+];
+const LON=Object.fromEntries(LAYERS.map(l=>[l.id,l.on]));
+function buildScene(){
+  const P=(k,cls)=>`<g id="L-${k}" class="${cls||""}"><path fill-rule="evenodd" d="${LY[k]||""}"/></g>`;
+  svg.setAttribute("width",SW); svg.setAttribute("height",SH); svg.setAttribute("viewBox",`0 0 ${SW} ${SH}`);
+  svg.innerHTML=`<defs><filter id="glow" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="14" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <rect width="${SW}" height="${SH}" fill="var(--land)"/>
+    <image id="L-raster" href="${D.img}" x="0" y="0" width="${D.w}" height="${D.h}"/>
+    <g id="L-terrain">${P("lawn")}${P("sand").replace('id="L-sand"','id="L-ground"')}${P("water")}</g>
+    ${P("roads")}${P("paths")}${P("build")}
+    <g id="L-zones">${D.zones.map(z=>`<path class="zone" data-z="${z.id}" d="${z.blob}" fill="${z.color}" stroke="${z.color}"/>`).join("")}</g>
+    <g id="L-shade"></g>`;
+  zlabels.innerHTML=D.zones.map(z=>{ const c=centroid(z.poly); const n=D.places.filter(p=>p.zone===z.id&&p.cat==="animal").length;
+    return `<div class="zl" data-z="${z.id}" style="left:${c.x}px;top:${c.y}px"><div class="b" style="border-color:${z.color}">${esc(z.short||z.zh)}<small>${n?n+" 種動物":esc(z.en)}</small></div></div>`; }).join("");
+  $("#legend").innerHTML=`<span><i style="background:var(--water)"></i>水域</span><span><i style="background:var(--lawn)"></i>草坪</span><span><i style="background:var(--ground)"></i>展場地面</span><span><i style="background:var(--build)"></i>建築</span><span><i style="background:var(--road)"></i>道路</span>`;
+  applyLayers();
+}
+function applyLayers(){
+  const show=(id,on)=>{ const el=document.getElementById("L-"+id); if(el) el.style.display=on?"":"none"; };
+  show("zones",LON.zones); show("build",LON.build); show("paths",LON.paths); show("terrain",LON.terrain);
+  zlabels.style.display=LON.zones?"":"none";
+  const r=document.getElementById("L-raster"); if(r) r.style.opacity=LON.raster?.55:0;
+  $("#rasterbtn").classList.toggle("on",LON.raster);
+  renderMarks();
+}
+
+/* ---- 縮放平移 ---- */
 const MAX=2.6; let sc=0.2,tx=0,ty=0,minSc=0.1;
 const apply=()=>{ layer.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`; const inv=`scale(${1/sc})`;
-  layer.querySelectorAll(".pin,.mk,.zl").forEach(p=>p.style.transform=inv); zlabels.classList.toggle("far",sc<minSc*1.6); };
-const clamp=()=>{ const W=wrap.clientWidth,H=wrap.clientHeight,w=D.w*sc,h=D.h*sc; tx=w<=W?(W-w)/2:Math.min(0,Math.max(W-w,tx)); ty=h<=H?(H-h)/2:Math.min(0,Math.max(H-h,ty)); };
-const fit=()=>{ const W=wrap.clientWidth,H=wrap.clientHeight; if(!W||!H) return; sc=Math.min(W/D.w,H/D.h); minSc=sc; clamp(); apply(); };
+  layer.querySelectorAll(".pin,.mk,.zl").forEach(p=>p.style.transform=inv); zlabels.classList.toggle("far",sc<minSc*1.6); marks.classList.toggle("far",sc<0.5); };
+const clamp=()=>{ const W=wrap.clientWidth,H=wrap.clientHeight,w=SW*sc,h=SH*sc; tx=w<=W?(W-w)/2:Math.min(0,Math.max(W-w,tx)); ty=h<=H?(H-h)/2:Math.min(0,Math.max(H-h,ty)); };
+const fit=()=>{ const W=wrap.clientWidth,H=wrap.clientHeight; if(!W||!H) return; sc=Math.min(W/SW,H/SH); minSc=sc; clamp(); apply(); };
 const zoomAt=(f,cx,cy)=>{ const ns=Math.min(Math.max(sc*f,minSc),MAX),k=ns/sc; tx=cx-(cx-tx)*k; ty=cy-(cy-ty)*k; sc=ns; clamp(); apply(); };
 const goTo=(x,y,s)=>{ const W=wrap.clientWidth,H=wrap.clientHeight; sc=Math.min(Math.max(s,minSc),MAX); tx=W/2-x*sc; ty=H/2-y*sc; clamp(); apply(); };
 const fitBounds=(b,pad)=>{ pad=pad||120; const W=wrap.clientWidth,H=wrap.clientHeight; const s=Math.min(W/(b.x1-b.x0+pad*2),H/(b.y1-b.y0+pad*2)); goTo((b.x0+b.x1)/2,(b.y0+b.y1)/2,s); };
 
-/* ---- 區域繪製 ---- */
-let curZone=null, curPlace=null, query="";
-function drawZones(){
-  const shade=curZone?`<path class="shade on" fill-rule="evenodd" d="M0 0H${D.w}V${D.h}H0Z ${polyPath(curZone.poly)}"/>`:`<path class="shade" d=""/>`;
-  svg.innerHTML=shade+D.zones.map(z=>`<path class="zone${curZone?(curZone.id===z.id?" on":" dim"):""}" data-z="${z.id}" d="${polyPath(z.poly)}" fill="${z.color}" stroke="${z.color}"/>`).join("");
-  zlabels.innerHTML=D.zones.map(z=>{ const c=centroid(z.poly); const n=D.places.filter(p=>p.zone===z.id&&p.cat==="animal").length;
-    return `<div class="zl${curZone&&curZone.id!==z.id?" dim":""}" style="left:${c.x}px;top:${c.y}px"><div class="b" style="border-color:${z.color}">${esc(z.short||z.zh)}<small>${n?n+" 種動物":esc(z.en)}</small></div></div>`; }).join("");
+/* ---- 狀態 ---- */
+let curZone=null, curPlace=null, query="", tab="zones";
+function drawZoneState(){
+  svg.querySelectorAll(".zone").forEach(el=>{ el.classList.toggle("on",!!curZone&&el.dataset.z===curZone.id); el.classList.toggle("dim",!!curZone&&el.dataset.z!==curZone.id); });
+  zlabels.querySelectorAll(".zl").forEach(el=>{ el.classList.toggle("dim",!!curZone&&el.dataset.z!==curZone.id); el.classList.toggle("hide",!!curZone&&el.dataset.z===curZone.id); });
+  $("#L-shade").innerHTML=curZone?`<path fill-rule="evenodd" d="M0 0H${SW}V${SH}H0Z ${curZone.blob}"/>`:"";
+}
+function markHTML(p,o,label){ return `<div class="mk ${p.cat}" data-id="${p.id}" style="left:${o.x}px;top:${o.y}px"><div class="c">${iconHTML(p)}</div><div class="n">${esc(label||p.zh)}${p.time?` <span style="font-weight:600">${esc(p.time)}</span>`:""}</div></div>`; }
+function renderMarks(){
+  const set=new Map();
+  if(curZone) D.places.filter(p=>p.zone===curZone.id&&p.cat!=="facility").forEach(p=>set.set(p.id,p));
+  if(LON.animals) D.places.filter(p=>p.cat==="animal").forEach(p=>set.set(p.id,p));
+  if(LON.shows) D.places.filter(p=>p.cat==="show").forEach(p=>set.set(p.id,p));
+  if(LON.facility) D.places.filter(p=>p.cat==="facility"||p.cat==="entry"||p.cat==="food").forEach(p=>set.set(p.id,p));
+  if(curPlace) set.set(curPlace.id,curPlace);
+  let html="";
+  set.forEach(p=>{ const pts=pointsOf(p); pts.forEach((o,i)=>{ html+=markHTML(p,o,p.grids?`${p.zh} ${p.grids.split(",")[i]}`:p.zh); }); });
+  marks.innerHTML=html;
+  marks.querySelectorAll(".mk").forEach(m=>{ m.classList.toggle("on",!!curPlace&&m.dataset.id===curPlace.id); m.onclick=e=>{ e.stopPropagation(); selectPlace(D.places.find(p=>p.id===m.dataset.id)); }; });
   apply();
 }
-const polyPath=poly=>"M"+poly.map(p=>p.join(" ")).join("L")+"Z";
 
-/* ---- 面板 ---- */
-function renderPanel(){
-  const ph=$("#ph"), list=$("#list"), q=query.trim().toLowerCase();
-  if(q){
-    ph.innerHTML=`<div class="zt"><b>搜尋「${esc(query)}」</b><small>全園區</small></div>`;
-    const items=D.places.filter(p=>(p.zh+" "+p.en+" "+(p.area||"")+" "+(p.note||"")).toLowerCase().includes(q));
-    list.innerHTML=items.length?items.map(itemHTML).join(""):`<div class="empty">找不到「${esc(query)}」</div>`;
-  }else if(curZone){
-    const z=curZone, items=D.places.filter(p=>p.zone===z.id);
-    ph.innerHTML=`<button class="back" id="backbtn">← 全部區域</button><div class="zt"><b style="color:${z.color}">${esc(z.zh)}</b><small>${esc(z.en)}</small></div>`;
-    const groups=[["animal","🐾 這區的動物"],["show","🕐 表演・體驗（以現場公告為準）"],["food","🍽️ 餐飲・購物"],["entry","🚪 入口・交通"],["facility","ℹ️ 設施"]];
-    list.innerHTML=`<div class="zdesc">${esc(z.desc)}</div>`+groups.map(([c,l])=>{ let its=items.filter(p=>p.cat===c); if(!its.length) return ""; if(c==="show") its=its.slice().sort((a,b)=>toMin(a.time)-toMin(b.time)); return `<div class="gh">${l}</div>`+its.map(itemHTML).join(""); }).join("")
-      +(items.length?"":`<div class="empty">這區尚未標記地點</div>`);
-    $("#backbtn").onclick=()=>selectZone(null);
-  }else{
-    ph.innerHTML=`<div class="zt"><b>園區分區</b><small>點一區看邊界與這區的動物</small></div>`;
-    list.innerHTML=D.zones.map(z=>{ const n=D.places.filter(p=>p.zone===z.id&&p.cat==="animal").length, s=D.places.filter(p=>p.zone===z.id&&p.cat==="show").length;
-      return `<div class="zc${z.hot?" hot":""}" data-z="${z.id}"><div class="sw" style="background:${z.color}"></div><div class="zt"><div class="zn">${esc(z.zh)}<small>${esc(z.en)}</small></div><div class="zd">${esc(z.desc)}</div><div class="zcnt">${n} 種動物${s?` · ${s} 場表演`:""}</div></div></div>`; }).join("")
-      +`<div class="gh">🕐 全日表演時刻</div>`+D.places.filter(p=>p.cat==="show").slice().sort((a,b)=>toMin(a.time)-toMin(b.time)).map(itemHTML).join("")
-      +`<div class="gh">ℹ️ 全園設施</div>`+D.places.filter(p=>p.cat==="facility"&&p.grids).map(itemHTML).join("");
-    list.querySelectorAll(".zc").forEach(el=>el.onclick=()=>selectZone(zoneOf(el.dataset.z)));
+/* ---- 側欄 ---- */
+const TABS=[["zones","區域"],["animal","動物"],["show","表演"],["facility","設施"],["layers","圖層"]];
+function renderTabs(){ $("#dtabs").innerHTML=TABS.map(([k,l])=>`<button class="dt${tab===k?" on":""}" data-k="${k}">${l}</button>`).join("");
+  $("#dtabs").querySelectorAll(".dt").forEach(b=>b.onclick=()=>{ tab=b.dataset.k; renderTabs(); renderList(); }); }
+function itemHTML(p){ const z=p.zone?zoneOf(p.zone):null;
+  return `<div class="item ${p.cat}${curPlace&&curPlace.id===p.id?" on":""}" data-id="${p.id}">
+    <div class="ic">${iconHTML(p)}</div>
+    <div class="tx"><div class="zh">${esc(p.zh)}${p.hot?`<span class="star">★</span>`:""}</div><div class="en">${esc(p.en)}${p.area?` · ${esc(p.area)}`:""}${p.note?` · ${esc(p.note)}`:""}</div></div>
+    ${p.time?`<div class="tm">${esc(p.time)}</div>`:""}${p.grid?`<span class="gd">${esc(p.grid)}</span>`:""}${p.grids?`<span class="gd">${p.grids.split(",").length} 處</span>`:""}
+    ${(!curZone||query||tab!=="zones")&&z?`<span class="zb" style="background:${z.color}">${esc(z.short||z.zh)}</span>`:""}
+  </div>`; }
+function zoneCard(z){ const an=D.places.filter(p=>p.zone===z.id&&p.cat==="animal"), s=D.places.filter(p=>p.zone===z.id&&p.cat==="show").length;
+  return `<div class="zc" data-z="${z.id}"><div class="sw" style="background:${z.color}"></div><div class="zt"><div class="zn">${esc(z.zh)}${z.hot?`<span class="star">★ 無尾熊合照</span>`:""}<small>${esc(z.en)}</small></div><div class="zd">${esc(z.desc)}</div>
+    <div class="zicons">${an.filter(p=>p.icon).slice(0,8).map(p=>`<img src="img/icons/${p.icon}.webp" alt="" title="${esc(p.zh)}">`).join("")}</div>
+    <div class="zcnt">${an.length} 種動物${s?` · ${s} 場表演`:""}</div></div></div>`; }
+function renderList(){
+  const list=$("#dlist"), q=query.trim().toLowerCase();
+  $("#searchbox").style.display=tab==="layers"?"none":"";
+  if(q){ const items=D.places.filter(p=>(p.zh+" "+p.en+" "+(p.area||"")+" "+(p.note||"")).toLowerCase().includes(q));
+    list.innerHTML=`<div class="ph"><div class="zt"><b>搜尋「${esc(query)}」</b><small>全園區</small></div></div>`+(items.length?items.map(itemHTML).join(""):`<div class="empty">找不到「${esc(query)}」</div>`); }
+  else if(tab==="layers"){
+    list.innerHTML=`<div class="ph"><div class="zt"><b>圖層</b><small>底圖已拆成多層，可個別開關</small></div></div>`+LAYERS.map(l=>`<div class="lay${LON[l.id]?" on":""}" data-l="${l.id}"><span class="sw" style="background:${l.color}"></span><div class="lt">${esc(l.zh)}${l.en?`<small>${esc(l.en)}</small>`:""}</div><span class="tog"></span></div>`).join("");
+    list.querySelectorAll(".lay").forEach(el=>el.onclick=()=>{ LON[el.dataset.l]=!LON[el.dataset.l]; applyLayers(); renderList(); });
+    return;
   }
+  else if(tab==="animal"){ const items=D.places.filter(p=>p.cat==="animal").slice().sort((a,b)=>(a.zone||"").localeCompare(b.zone||""));
+    list.innerHTML=`<div class="ph"><div class="zt"><b>所有動物</b><small>點一個，地圖會亮起它所在的區域與位置</small></div></div>`+items.map(itemHTML).join(""); }
+  else if(tab==="show"){ const items=D.places.filter(p=>p.cat==="show").slice().sort((a,b)=>toMin(a.time)-toMin(b.time));
+    list.innerHTML=`<div class="ph"><div class="zt"><b>表演・體驗</b><small>官方地圖時刻，以現場公告為準</small></div></div>`+items.map(itemHTML).join(""); }
+  else if(tab==="facility"){ const items=D.places.filter(p=>p.cat==="facility"||p.cat==="food"||p.cat==="entry");
+    list.innerHTML=`<div class="ph"><div class="zt"><b>設施・餐飲・入口</b><small>多點設施會同時標出所有位置</small></div></div>`+items.map(itemHTML).join(""); }
+  else if(curZone){ const z=curZone, items=D.places.filter(p=>p.zone===z.id);
+    const groups=[["animal","這區的動物"],["show","表演・體驗（以現場公告為準）"],["food","餐飲・購物"],["entry","入口・交通"],["facility","設施"]];
+    list.innerHTML=`<div class="ph"><button class="back" id="backbtn">← 全部區域</button><div class="zt"><b style="color:${z.color}">${esc(z.zh)}</b><small>${esc(z.en)}</small></div></div><div class="zdesc">${esc(z.desc)}</div>`
+      +groups.map(([c,l])=>{ let its=items.filter(p=>p.cat===c); if(!its.length) return ""; if(c==="show") its=its.slice().sort((a,b)=>toMin(a.time)-toMin(b.time)); return `<div class="gh">${l}</div>`+its.map(itemHTML).join(""); }).join("");
+    $("#backbtn").onclick=()=>selectZone(null); }
+  else{ list.innerHTML=`<div class="ph"><div class="zt"><b>園區分區</b><small>點一區：邊界亮起、顯示這區的動物</small></div></div>`+D.zones.map(zoneCard).join("");
+    list.querySelectorAll(".zc").forEach(el=>el.onclick=()=>selectZone(zoneOf(el.dataset.z))); }
   list.querySelectorAll(".item").forEach(el=>el.onclick=()=>selectPlace(D.places.find(p=>p.id===el.dataset.id)));
 }
-function itemHTML(p){ const z=p.zone?zoneOf(p.zone):null;
-  return `<div class="item${p.hot?" hot":""}${curPlace&&curPlace.id===p.id?" on":""}" data-id="${p.id}">
-    <div class="ic">${p.em||"📍"}</div>
-    <div class="tx"><div class="zh">${esc(p.zh)}</div><div class="en">${esc(p.en)}${p.area?` · ${esc(p.area)}`:""}${p.note?` · ${esc(p.note)}`:""}</div></div>
-    ${p.time?`<div class="tm">${esc(p.time)}</div>`:""}${p.grid?`<span class="gd">${esc(p.grid)}</span>`:""}${p.grids?`<span class="gd">${p.grids.split(",").length} 處</span>`:""}
-    ${(!curZone||query)&&z?`<span class="zb" style="background:${z.color}">${esc(z.short||z.zh)}</span>`:""}
-  </div>`; }
-$("#q").oninput=e=>{ query=e.target.value; renderPanel(); };
+$("#q").oninput=e=>{ query=e.target.value; renderList(); };
 
-/* ---- 選區域：邊界亮起、其餘壓暗、圖標跑出來 ---- */
-function selectZone(z, keepPanel){
-  curZone=z; curPlace=null; query=""; $("#q").value="";
-  drawZones(); pins.innerHTML="";
-  if(z){
-    const items=D.places.filter(p=>p.zone===z.id&&p.cat!=="facility");
-    marks.innerHTML=items.map(p=>{ const o=pointsOf(p)[0]; return `<div class="mk ${p.cat}" data-id="${p.id}" style="left:${o.x}px;top:${o.y}px"><div class="c">${p.em||"📍"}</div><div class="n">${esc(p.zh)}${p.time?` ${esc(p.time)}`:""}</div></div>`; }).join("");
-    marks.querySelectorAll(".mk").forEach(m=>m.onclick=e=>{ e.stopPropagation(); selectPlace(D.places.find(p=>p.id===m.dataset.id)); });
-    fitBounds(bounds(z.poly),160);
-    $("#handletxt").textContent=`${z.zh} ▴ 這區有 ${items.filter(p=>p.cat==="animal").length} 種動物`;
-    $("#hint").textContent="點圖標看名稱；「全圖」回到分區";
-  }else{
-    marks.innerHTML=""; fit();
-    $("#handletxt").textContent="選一個區域 ▴"; $("#hint").textContent="點地圖上的區域，或從下方選";
-  }
-  apply(); renderPanel();
-  if(!keepPanel&&matchMedia("(max-width:899px)").matches) setPanel(z?"min":"mid");
+/* ---- 選區 / 選點 ---- */
+function selectZone(z,keepDrawer){
+  curZone=z; curPlace=null; query=""; $("#q").value=""; pins.innerHTML="";
+  drawZoneState(); renderMarks();
+  if(z){ fitBounds(bounds(z.poly),160); $("#hint").textContent="點圖標看名稱；「全圖」回到分區"; tab="zones"; }
+  else{ fit(); $("#hint").textContent="點地圖上的區域，或打開選單"; }
+  renderTabs(); renderList();
+  if(!keepDrawer&&isPhone()&&z) setDrawer("closed");
 }
-/* ---- 選單一地點：該圖標變紅＋脈衝 ---- */
-function selectPlace(p, keepPanel){
-  if(p.zone&&(!curZone||curZone.id!==p.zone)) selectZone(zoneOf(p.zone),true);
-  curPlace=p; renderPanel();
-  marks.querySelectorAll(".mk").forEach(m=>m.classList.toggle("on",m.dataset.id===p.id));
+function selectPlace(p,keepDrawer){
+  if(p.zone&&(!curZone||curZone.id!==p.zone)){ curZone=zoneOf(p.zone); drawZoneState(); }
+  curPlace=p; renderMarks(); renderList();
   const pts=pointsOf(p);
   pins.innerHTML=pts.map(o=>`<div class="pin" style="left:${o.x}px;top:${o.y}px"><div class="ring"></div><div class="ring ring2"></div></div>`).join("");
-  if(!p.zone&&pts.length){ /* 多點設施：顯示全部位置 */
-    marks.innerHTML=pts.map((o,i)=>`<div class="mk on" style="left:${o.x}px;top:${o.y}px"><div class="c">${p.em||"📍"}</div><div class="n">${esc(p.zh)}${p.grids?" "+esc(p.grids.split(",")[i]):""}</div></div>`).join("");
-    const xs=pts.map(o=>o.x),ys=pts.map(o=>o.y); fitBounds({x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)},300);
-  }else if(pts.length===1){ goTo(pts[0].x,pts[0].y,Math.max(sc,0.55)); }
+  if(pts.length===1) goTo(pts[0].x,pts[0].y,Math.max(sc,0.6));
+  else if(pts.length>1){ const xs=pts.map(o=>o.x),ys=pts.map(o=>o.y); fitBounds({x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)},300); }
   apply();
-  $("#handletxt").textContent=`${p.em||""} ${p.zh} ▴`;
-  if(!keepPanel&&matchMedia("(max-width:899px)").matches) setPanel("min");
+  if(!keepDrawer&&isPhone()) setDrawer("closed");
 }
 
 /* ---- 手勢 ---- */
 const pts=new Map(); let start=null,lastTap=0,moved=false;
 const snap=()=>{ const a=[...pts.values()]; if(a.length>=2) return {n:2,d:Math.hypot(a[1].x-a[0].x,a[1].y-a[0].y),mx:(a[0].x+a[1].x)/2,my:(a[0].y+a[1].y)/2,sc,tx,ty}; if(a.length===1) return {n:1,x:a[0].x,y:a[0].y,tx,ty}; return null; };
-wrap.addEventListener("pointerdown",e=>{ if(e.target.closest(".ctl,.editbar")) return; e.preventDefault(); wrap.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); start=snap(); moved=false; });
+wrap.addEventListener("pointerdown",e=>{ if(e.target.closest(".ctl,.editbar,.legend")) return; e.preventDefault(); wrap.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); start=snap(); moved=false; });
 wrap.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); const cur=snap(); if(!start||!cur||cur.n!==start.n){ start=snap(); return; }
   const r=wrap.getBoundingClientRect();
   if(cur.n===2){ const ns=Math.min(Math.max(start.sc*cur.d/start.d,minSc),MAX),k=ns/start.sc,mx=start.mx-r.left,my=start.my-r.top; tx=mx-(mx-start.tx)*k+(cur.mx-start.mx); ty=my-(my-start.ty)*k+(cur.my-start.my); sc=ns; moved=true; }
@@ -247,10 +394,10 @@ wrap.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; pts.s
   clamp(); apply(); });
 const up=e=>{ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId);
   if(pts.size===0&&!moved){ const r=wrap.getBoundingClientRect(), now=Date.now();
-    if(EDIT&&curPlace){ overrides[curPlace.id]={x:Math.round((e.clientX-r.left-tx)/sc),y:Math.round((e.clientY-r.top-ty)/sc)}; localStorage.setItem("zoo_overrides",JSON.stringify(overrides)); D.places.forEach(p=>{ const q=pointsOf(p); p.zone=q.length===1?(D.zones.find(z=>inPoly(q[0],z.poly))||{}).id||null:null; }); selectPlace(curPlace,true); return; }
+    if(EDIT&&curPlace){ overrides[curPlace.id]={x:Math.round((e.clientX-r.left-tx)/sc),y:Math.round((e.clientY-r.top-ty)/sc)}; localStorage.setItem("zoo_overrides",JSON.stringify(overrides)); assignZones(); selectPlace(curPlace,true); return; }
     const el=document.elementFromPoint(e.clientX,e.clientY);
-    const mk=el&&el.closest(".mk"); if(mk&&mk.dataset.id){ selectPlace(D.places.find(p=>p.id===mk.dataset.id)); lastTap=0; start=snap(); return; }
-    if(el&&el.classList&&el.classList.contains("zone")){ const z=zoneOf(el.dataset.z); if(!curZone||curZone.id!==z.id){ selectZone(z); lastTap=0; start=snap(); return; } }
+    const mk=el&&el.closest(".mk"); if(mk&&mk.dataset.id){ selectPlace(D.places.find(p=>p.id===mk.dataset.id),true); lastTap=0; start=snap(); return; }
+    if(el&&el.classList&&el.classList.contains("zone")){ const z=zoneOf(el.dataset.z); if(!curZone||curZone.id!==z.id){ selectZone(z,true); setDrawer("open"); lastTap=0; start=snap(); return; } }
     if(now-lastTap<320){ zoomAt(sc>minSc*1.8?minSc/sc:2.4,e.clientX-r.left,e.clientY-r.top); lastTap=0; } else lastTap=now; }
   start=snap(); };
 wrap.addEventListener("pointerup",up); wrap.addEventListener("pointercancel",up);
@@ -258,21 +405,23 @@ wrap.addEventListener("wheel",e=>{ e.preventDefault(); const r=wrap.getBoundingC
 $("#zin").onclick=()=>zoomAt(1.4,wrap.clientWidth/2,wrap.clientHeight/2);
 $("#zout").onclick=()=>zoomAt(1/1.4,wrap.clientWidth/2,wrap.clientHeight/2);
 $("#zfit").onclick=()=>selectZone(null,true);
+$("#rasterbtn").onclick=()=>{ LON.raster=!LON.raster; applyLayers(); if(tab==="layers") renderList(); };
 $("#exportbtn").onclick=async()=>{ const t=JSON.stringify(overrides); try{ await navigator.clipboard.writeText(t); alert("已複製 "+Object.keys(overrides).length+" 筆校正位置"); }catch(e){ prompt("複製下方內容",t); } };
 
-/* 手機抽屜 */
-let panelState="mid";
-function setPanel(s){ panelState=s; const p=$("#panel"); p.classList.toggle("min",s==="min"); p.classList.toggle("max",s==="max"); }
-$("#handle").onclick=()=>setPanel(panelState==="min"?"mid":panelState==="mid"?"max":"min");
+/* ---- 可收合側欄 ---- */
+const isPhone=()=>matchMedia("(max-width:759px)").matches;
+let dstate="open";
+function setDrawer(s){ dstate=s; const d=$("#drawer"); d.classList.toggle("closed",s==="closed"); d.classList.toggle("max",s==="max"); $("#dtab").textContent=s==="closed"?(isPhone()?"▴ 選單":"選單"):(isPhone()?"▾ 收起":"收起"); requestAnimationFrame(()=>{ clamp(); apply(); }); }
+$("#dtab").onclick=()=>setDrawer(dstate==="closed"?"open":"closed");
 
-/* 分享 */
+/* ---- 分享 ---- */
 $("#sharebtn").onclick=async()=>{ const url=location.origin+location.pathname;
   if(navigator.share){ try{ await navigator.share({title:"Taronga Zoo 園區地圖",url}); return; }catch(e){} }
   try{ await navigator.clipboard.writeText(url); alert("連結已複製：\n"+url); }catch(e){ prompt("複製連結",url); } };
 
-drawZones(); renderPanel();
-img.onload=()=>{ fit(); const z=params.get("z"), p=params.get("p");
-  if(p){ const pl=D.places.find(x=>x.id===p); if(pl) selectPlace(pl,true); } else if(z){ const zz=zoneOf(z); if(zz) selectZone(zz,true); } };
+buildScene(); renderTabs(); renderList(); setDrawer(isPhone()?"closed":"open");
+requestAnimationFrame(()=>{ fit(); const z=params.get("z"), p=params.get("p");
+  if(p){ const pl=D.places.find(x=>x.id===p); if(pl) selectPlace(pl,true); } else if(z){ const zz=zoneOf(z); if(zz) selectZone(zz,true); } });
 window.addEventListener("resize",()=>{ clamp(); apply(); });
 </script>
 </body>
