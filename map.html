@@ -45,7 +45,7 @@ button{cursor:pointer}
 /* 區域名牌 */
 .zl,.mk{transform:scale(var(--isc));will-change:transform}
 .zl{position:absolute;width:0;height:0;pointer-events:none;transition:opacity var(--dur)}
-.zl .s{position:absolute;left:0;top:0;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;background:var(--land);color:#fff;border-radius:6px;padding:4px 9px;text-align:center;white-space:nowrap;line-height:1.15;filter:var(--sign-lift);transition:background var(--dur)}
+.zl .s{position:absolute;left:0;top:0;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;background:var(--land);color:#fff;border-radius:6px;padding:4px 9px;text-align:center;white-space:nowrap;line-height:1.15;box-shadow:0 1px 0 rgba(0,0,0,.18);transition:background var(--dur)}
 .zl .s::before{content:"";position:absolute;left:-8px;right:-8px;top:-12px;bottom:-12px}
 .zl .s .zh{display:block;font-size:13px;font-weight:600;letter-spacing:.2px}
 .zl .s .en{display:block;font-size:9px;font-weight:500;letter-spacing:.6px;text-transform:uppercase;color:rgba(255,255,255,.78);margin-top:1px}
@@ -76,7 +76,7 @@ body.has-place .zl.on .s{background:var(--land)}
 .mk.img .n{top:22px}
 .mk.disc .n{top:16px}
 .mk.noicon .n{top:6px}
-.mk.img .n.r,.mk.img .n.l,.mk.disc .n.r,.mk.disc .n.l,.mk.noicon .n.r,.mk.noicon .n.l{top:-11px;bottom:auto;transform:none}
+.mk.img .n.r,.mk.img .n.l,.mk.disc .n.r,.mk.disc .n.l,.mk.noicon .n.r,.mk.noicon .n.l{top:0;bottom:auto;transform:translateY(-50%)}
 .mk.img .n.r{left:26px}.mk.disc .n.r{left:18px}.mk.noicon .n.r{left:10px}
 .mk.img .n.l,.mk.disc .n.l,.mk.noicon .n.l{left:auto}.mk.img .n.l{right:26px}.mk.disc .n.l{right:18px}.mk.noicon .n.l{right:10px}
 .mk .n .tm{display:inline-block;flex-shrink:0;margin-left:0;padding:0 0 0 6px;border-left:1px solid var(--chip-border);color:var(--ink);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
@@ -283,7 +283,7 @@ const zoneOf=id=>D.zones.find(z=>z.id===id);
 const byId=id=>D.places.find(p=>p.id===id);
 function assignZones(){
   D.places.forEach(p=>{ p.pts=pointsOf(p).map(o=>({x:o.x,y:o.y})); });
-  /* 同一像素上疊了多個點 → 以 28px 環形錯開 */
+  /* 同一像素上疊了多個點 → 以 36px 環形錯開 */
   const bucket={}; D.places.forEach(p=>{ if(p.cat==="show"&&p.host) return; p.pts.forEach(o=>{ const k=o.x+","+o.y; (bucket[k]=bucket[k]||[]).push(o); }); });
   Object.values(bucket).forEach(arr=>{ if(arr.length<2) return; arr.forEach((o,i)=>{ const a=-Math.PI/2+i*2*Math.PI/arr.length; o.x=Math.round(o.x+36*Math.cos(a)); o.y=Math.round(o.y+36*Math.sin(a)); }); });
   D.places.forEach(p=>{ p.ptZones=p.zoneId?p.pts.map(()=>p.zoneId):p.pts.map(zoneIdAt); p.zone=p.pts.length===1?p.ptZones[0]:null; });
@@ -365,14 +365,14 @@ function fitBounds(b,pad,vp,anim){ const s1=fitScaleFor(b,pad,vp); const x=(b.x0
 function zoomAt(f,cx,cy,anim){ const ns=Math.min(Math.max(sc*f,minSc),MAX),k=ns/sc; const tx1=cx-(cx-tx)*k, ty1=cy-(cy-ty)*k;
   if(anim){ const {W,H}=vpNow(); animateTo((W/2-tx1)/ns,(H/2-ty1)/ns,ns,null,200); } else { tx=tx1; ty=ty1; sc=ns; clamp(); apply(); } }
 let settleToken=0;
-function settleAfterLayout(vp){ transitioning=true; pendingVp=vp||null; if(vp) minSc=minScFor(vp); const tok=++settleToken; setTimeout(()=>{ if(tok!==settleToken) return; transitioning=false; pendingVp=null; measureVp(); refit(); },DUR+50); }
+function settleAfterLayout(vp){ transitioning=true; pendingVp=vp||null; if(vp) minSc=minScFor(vp); const tok=++settleToken; setTimeout(()=>{ if(tok!==settleToken) return; transitioning=false; pendingVp=null; measureVp(); refit(); queueCull(); },DUR+50); }
 
 /* ---- 名牌／圖標碰撞（尺寸只量一次） ---- */
 function rectsOverlap(a,b){ return !(a.x+a.w<b.x||b.x+b.w<a.x||a.y+a.h<b.y||b.y+b.h<a.y); }
 function measureSigns(){ [false,true].forEach(f=>{ zlabels.classList.toggle("far",f); zlabels.querySelectorAll(".zl").forEach(el=>{ el.classList.remove("hide"); const s0=el.firstElementChild; el.dataset[f?"wf":"wn"]=s0.offsetWidth; el.dataset[f?"hf":"hn"]=s0.offsetHeight; }); }); zlabels.classList.remove("far"); }
 function signRect(el,z){ const far=zlabels.classList.contains("far"), w=+el.dataset[far?"wf":"wn"]||80, h=+el.dataset[far?"hf":"hn"]||30; const x=tx+parseFloat(el.style.left)*sc, y=ty+parseFloat(el.style.top)*sc; return {x:x-w/2-2,y:y-h/2-2,w:w+4,h:h+4}; }
 function cullSigns(){
-  const kept=[], {W,H}=vpNow(), far=zlabels.classList.contains("far");
+  const kept=[], {W,H}=pendingVp||vpNow(), far=zlabels.classList.contains("far");
   const order=[...zlabels.querySelectorAll(".zl")].map(el=>({el,z:zoneOf(el.dataset.z)})).sort((a,b)=>{
     const pa=a.z.id==="main"||a.z.id==="ferry"?-1:a.z.nAnimals, pb=b.z.id==="main"||b.z.id==="ferry"?-1:b.z.nAnimals; return pb-pa; });
   order.forEach(({el,z})=>{
@@ -387,7 +387,7 @@ function cullSigns(){
     if(exempt&&far&&h&&h.pts[0]){ /* 正門／碼頭：名牌直接掛在圓盤正下方；放不下就藏圓盤不藏名牌 */
       const hx=tx+h.pts[0].x*sc, hy=ty+h.pts[0].y*sc; el.style.left=h.pts[0].x+"px"; el.style.top=((hy+20+r.h/2-ty)/sc)+"px"; r=signRect(el,z);
       if(r.x<0||r.x+r.w>W||r.y<0||r.y+r.h>H){ el.classList.add("hide"); if(heroEl) heroEl.classList.add("hide"); return; }
-      if(kept.some(k=>rectsOverlap(k,r))) el.classList.add("hide"); else kept.push(r); return; }
+      if(kept.some(k=>rectsOverlap(k,r))){ if(heroEl) heroEl.classList.add("hide"); el.style.left=z.anchor.x+"px"; el.style.top=z.anchor.y+"px"; r=signRect(el,z); if(kept.some(k=>rectsOverlap(k,r))) el.classList.add("hide"); else kept.push(r); } else kept.push(r); return; }
     /* 遠景：名牌若壓到代表動物，往遠離動物的方向推開，而不是藏起來 */
     if(far&&h&&h.pts[0]){ const hx=tx+h.pts[0].x*sc, hy=ty+h.pts[0].y*sc;
       const hb={x:hx-18,y:hy-18,w:36,h:36};
@@ -400,30 +400,30 @@ function cullSigns(){
 }
 function glyphRect(m){ const r=m.classList.contains("img")?(marks.classList.contains("far")?16:20):m.classList.contains("disc")?13:5; const x=tx+parseFloat(m.style.left)*sc, y=ty+parseFloat(m.style.top)*sc; return {x:x-r,y:y-r,w:2*r,h:2*r}; }
 function cullLabels(){
-  const all=[...marks.querySelectorAll(".mk")], glyphs=new Map(all.map(m=>[m,glyphRect(m)]));
+  const all=[...marks.querySelectorAll(".mk:not(.hide)")], glyphs=new Map(all.map(m=>[m,glyphRect(m)]));
   const kept=[...glyphs.values()];
   const onSign=zlabels.querySelector(".zl.on"); if(onSign){ const r=signRect(onSign,zoneOf(onSign.dataset.z)); kept.push({x:r.x,y:r.y-r.h-16,w:r.w,h:r.h}); }
   const mks=all.filter(m=>m.querySelector(".n"));
   const pri=m=>m.classList.contains("on")?0:m.classList.contains("noicon")?1:m.querySelector(".tm")?2:m.dataset.hot?3:4;
   mks.sort((a,b)=>pri(a)-pri(b)||parseFloat(a.style.top)-parseFloat(b.style.top));
-  const farThr=curZone?fitScaleFor(curZone.b)*1.3:0.6, {W}=vpNow();
+  const farThr=curZone?fitScaleFor(curZone.b)*1.3:0.6, {W}=pendingVp||vpNow();
   const discRects=new Set(all.filter(m=>m.classList.contains("disc")).map(m=>glyphs.get(m)));
   mks.forEach(m=>{ const n=m.querySelector(".n"); n.classList.remove("hide","up","r","l"); n.style.left="";
     if(m.dataset.lbl==="far"&&sc<farThr&&!m.classList.contains("on")){ n.classList.add("hide"); return; }
     const w=+n.dataset.w||60,h=+n.dataset.h||20, isImg=m.classList.contains("img"), isDisc=m.classList.contains("disc"), top=isImg?22:isDisc?16:6, side=isImg?26:isDisc?18:10;
     const cx=tx+parseFloat(m.style.left)*sc, cy=ty+parseFloat(m.style.top)*sc, own=glyphs.get(m), animal=!isDisc;
     const hits=r=>kept.some(k=>k!==own&&!(animal&&discRects.has(k))&&rectsOverlap(k,r));
-    const cands=[["",{x:cx-w/2-2,y:cy+top-2,w:w+4,h:h+4}],["up",{x:cx-w/2-2,y:cy-top-h-2,w:w+4,h:h+4}],["r",{x:cx+side-2,y:cy-h/2-2,w:w+4,h:h+4}],["l",{x:cx-side-w-2,y:cy-h/2-2,w:w+4,h:h+4}]];
+    const clampX=r=>{ let dx=0; if(r.x<4) dx=4-r.x; else if(r.x+r.w>W-4) dx=(W-4)-(r.x+r.w); r.x+=dx; r.dx=dx; return r; };
+    const cands=[["",clampX({x:cx-w/2-2,y:cy+top-2,w:w+4,h:h+4})],["up",clampX({x:cx-w/2-2,y:cy-top-h-2,w:w+4,h:h+4})],["r",{x:cx+side-2,y:cy-h/2-2,w:w+4,h:h+4}],["l",{x:cx-side-w-2,y:cy-h/2-2,w:w+4,h:h+4}]];
     let placed=null; for(const [cls,r] of cands){ if(!hits(r)){ placed=[cls,r]; break; } }
     if(!placed){ if(pri(m)>1){ n.classList.add("hide"); return; } placed=cands[0]; }
     if(placed[0]) n.classList.add(placed[0]);
-    /* 下／上位置：名片不要被畫面左右邊緣切掉 */
-    if(placed[0]===""||placed[0]==="up"){ const r=placed[1]; let dx=0; if(r.x<4) dx=4-r.x; else if(r.x+r.w>W-4) dx=(W-4)-(r.x+r.w); if(dx){ n.style.left=`calc(50% + ${dx}px)`; r.x+=dx; } }
+    if(placed[1].dx) n.style.left=`calc(50% + ${placed[1].dx}px)`;
     kept.push(placed[1]); });
 }
 
 /* ---- 狀態 ---- */
-let curZone=null, curPlace=null, curShow=null, query="", tab="zones", searchOpen=false, pushDepth=0;
+let curZone=null, curPlace=null, curShow=null, query="", tab="zones", searchOpen=false;
 function drawZoneState(){
   $("#L-outline").setAttribute("d",curZone?curZone.blob:"");
   $("#L-outline2").setAttribute("d",curZone&&["savannah","entry","main"].includes(curZone.id)?curZone.blob:"");
@@ -544,7 +544,7 @@ function selectPlace(p,opts){
   opts=opts||{}; if(!p) return;
   let show=null; if(p.cat==="show"&&p.hostRef){ show=p; p=p.hostRef; }
   if(curPlace===p&&curShow===show&&!opts.fromHistory) return;
-  cancelCam();
+  cancelCam(); const prevZone=curZone;
   if(p.zone&&(!curZone||curZone.id!==p.zone)){ curZone=zoneOf(p.zone); } else if(!p.zone&&p.pts.length>1){ curZone=null; }
   curPlace=p; curShow=show; query=""; $("#q").value="";
   drawZoneState(); renderMarks();
@@ -554,7 +554,7 @@ function selectPlace(p,opts){
   else if(p.pts.length>1){ const xs=p.pts.map(o=>o.x),ys=p.pts.map(o=>o.y); fitBounds({x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)},200,vp,true); }
   settleAfterLayout(vp);
   renderList();
-  if(!opts.fromHistory) pushURL();
+  if(!opts.fromHistory) pushURL(prevZone===curZone);
 }
 function applyState(st){ st=st||{}; if(st.p&&byId(st.p)){ selectPlace(byId(st.p),{fromHistory:true}); } else if(st.z&&zoneOf(st.z)){ selectZone(zoneOf(st.z),{fromHistory:true}); } else selectZone(null,{fromHistory:true}); }
 function goBack(){
