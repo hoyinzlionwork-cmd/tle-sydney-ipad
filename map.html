@@ -24,15 +24,9 @@ button,input{font-family:inherit}
 @media (max-width:420px){.top .t small{display:none}.top .t{font-size:15px}}
 /* ---- 地圖 ---- */
 .body{flex:1;min-height:0;display:flex;position:relative}
-.mapwrap{position:relative;flex:1;min-width:0;background:var(--land);overflow:hidden;touch-action:none}
+.mapwrap{position:relative;flex:1;min-width:0;background:#8FBF6E;overflow:hidden;touch-action:none}
 .layer{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
 .layer svg{display:block}
-#L-lawn path{fill:var(--lawn)}
-#L-ground path{fill:var(--ground)}
-#L-water path{fill:var(--water)}
-#L-roads path{fill:var(--road)}
-#L-paths path{fill:var(--path);stroke:#E3DED2;stroke-width:1.5}
-#L-build path{fill:var(--build)}
 #L-raster{opacity:0;transition:opacity .3s}
 .zone{cursor:pointer;fill-opacity:.16;stroke-width:6;stroke-opacity:.85;stroke-linejoin:round;transition:fill-opacity .25s,stroke-opacity .25s,stroke-width .25s}
 .zone.dim{fill-opacity:.06;stroke-opacity:.2}
@@ -150,8 +144,8 @@ button,input{font-family:inherit}
 <body>
 <div id="app">
   <div class="top">
-    <div class="t" id="title">Taronga Zoo 園區地圖<small>先選區域 → 邊界亮起 → 再看這區的動物</small></div>
-    <button id="rasterbtn" title="對照官方原圖">原圖</button>
+    <div class="t" id="title">Taronga Zoo 園區地圖<small>官方底圖（已清除文字與符號）</small></div>
+    <button id="rasterbtn" title="疊上官方文字與符號對照">官方標示</button>
     <button id="sharebtn">分享</button>
   </div>
   <div class="body">
@@ -162,10 +156,9 @@ button,input{font-family:inherit}
         <div class="ov" id="marks"></div>
         <div class="ov" id="pins"></div>
       </div>
-      <div class="legend" id="legend"></div>
-      <div class="editbar" id="editbar">校正模式：先點清單項目，再點地圖上的正確位置。<button id="exportbtn" style="margin-left:8px;border:none;background:#8A6400;color:#fff;border-radius:6px;padding:3px 8px;font-size:12px">匯出</button></div>
+            <div class="editbar" id="editbar">校正模式：先點清單項目，再點地圖上的正確位置。<button id="exportbtn" style="margin-left:8px;border:none;background:#8A6400;color:#fff;border-radius:6px;padding:3px 8px;font-size:12px">匯出</button></div>
       <div class="ctl"><button id="zin">＋</button><button id="zout">－</button><button id="zfit" style="font-size:12px">全圖</button></div>
-      <div class="hint" id="hint">點地圖上的區域，或打開選單</div>
+      <div class="hint" id="hint">雙指縮放 · 拖曳移動</div>
     </div>
     <aside class="drawer" id="drawer">
       <button class="dtab" id="dtab">選單</button>
@@ -178,10 +171,9 @@ button,input{font-family:inherit}
   </div>
 </div>
 <script src="places.js"></script>
-<script src="layers.js"></script>
 <script>
 "use strict";
-const D=window.ZOO_DATA, LY=window.ZOO_LAYERS||{}, $=s=>document.querySelector(s);
+const D=window.ZOO_DATA, $=s=>document.querySelector(s);
 const SW=3064, SH=2560;   /* 向量場景範圍（官方地圖去掉右欄與圖例） */
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const params=new URLSearchParams(location.search);
@@ -255,34 +247,27 @@ D.zones.forEach((z,i)=>z.blob=blobPath(z.poly,i+1));
 /* ---- 場景 ---- */
 const wrap=$("#wrap"), layer=$("#layer"), svg=$("#scene"), marks=$("#marks"), pins=$("#pins"), zlabels=$("#zlabels");
 const LAYERS=[
-  {id:"zones", zh:"區域邊界", en:"每區看什麼", color:"#2E8B57", on:true},
-  {id:"build", zh:"建築・展場", en:"官方地圖分析出的建物與平台", color:"#D9CAB4", on:true},
-  {id:"paths", zh:"主要步道", en:"淺灰步道（分析結果，部分未完整）", color:"#E3DED2", on:true},
-  {id:"terrain",zh:"水域・草坪・展場地面", en:"海灣、水池、草坪、沙地", color:"#A9D1EA", on:true},
+  {id:"zones", zh:"區域邊界", en:"每區看什麼（下一步再調樣式）", color:"#2E8B57", on:false},
   {id:"animals",zh:"所有動物圖標", en:"預設只在選區後顯示該區", color:"#0B2545", on:false},
   {id:"shows", zh:"表演・體驗", en:"Keeper Talk 時刻地點", color:"#8E24AA", on:false},
   {id:"facility",zh:"設施（廁所、飲水、商店、入口）", en:"", color:"#1D6FB8", on:false},
-  {id:"raster",zh:"官方原圖對照", en:"半透明疊在底下", color:"#999", on:false},
+  {id:"raster",zh:"官方標示對照", en:"把原圖的文字與符號半透明疊上來", color:"#999", on:false},
 ];
 const LON=Object.fromEntries(LAYERS.map(l=>[l.id,l.on]));
 function buildScene(){
-  const P=(k,cls)=>`<g id="L-${k}" class="${cls||""}"><path fill-rule="evenodd" d="${LY[k]||""}"/></g>`;
   svg.setAttribute("width",SW); svg.setAttribute("height",SH); svg.setAttribute("viewBox",`0 0 ${SW} ${SH}`);
   svg.innerHTML=`<defs><filter id="glow" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="14" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-    <rect width="${SW}" height="${SH}" fill="var(--land)"/>
+    <image id="L-base" href="img/base.webp" x="0" y="0" width="${D.w}" height="${D.h}"/>
     <image id="L-raster" href="${D.img}" x="0" y="0" width="${D.w}" height="${D.h}"/>
-    <g id="L-terrain">${P("lawn")}${P("sand").replace('id="L-sand"','id="L-ground"')}${P("water")}</g>
-    ${P("roads")}${P("paths")}${P("build")}
     <g id="L-zones">${D.zones.map(z=>`<path class="zone" data-z="${z.id}" d="${z.blob}" fill="${z.color}" stroke="${z.color}"/>`).join("")}</g>
     <g id="L-shade"></g>`;
   zlabels.innerHTML=D.zones.map(z=>{ const c=centroid(z.poly); const n=D.places.filter(p=>p.zone===z.id&&p.cat==="animal").length;
     return `<div class="zl" data-z="${z.id}" style="left:${c.x}px;top:${c.y}px"><div class="b" style="border-color:${z.color}">${esc(z.short||z.zh)}<small>${n?n+" 種動物":esc(z.en)}</small></div></div>`; }).join("");
-  $("#legend").innerHTML=`<span><i style="background:var(--water)"></i>水域</span><span><i style="background:var(--lawn)"></i>草坪</span><span><i style="background:var(--ground)"></i>展場地面</span><span><i style="background:var(--build)"></i>建築</span><span><i style="background:var(--road)"></i>道路</span>`;
   applyLayers();
 }
 function applyLayers(){
   const show=(id,on)=>{ const el=document.getElementById("L-"+id); if(el) el.style.display=on?"":"none"; };
-  show("zones",LON.zones); show("build",LON.build); show("paths",LON.paths); show("terrain",LON.terrain);
+  show("zones",LON.zones);
   zlabels.style.display=LON.zones?"":"none";
   const r=document.getElementById("L-raster"); if(r) r.style.opacity=LON.raster?.55:0;
   $("#rasterbtn").classList.toggle("on",LON.raster);
@@ -365,6 +350,7 @@ $("#q").oninput=e=>{ query=e.target.value; renderList(); };
 
 /* ---- 選區 / 選點 ---- */
 function selectZone(z,keepDrawer){
+  if(z&&!LON.zones){ LON.zones=true; applyLayers(); }
   curZone=z; curPlace=null; query=""; $("#q").value=""; pins.innerHTML="";
   drawZoneState(); renderMarks();
   if(z){ fitBounds(bounds(z.poly),160); $("#hint").textContent="點圖標看名稱；「全圖」回到分區"; tab="zones"; }
