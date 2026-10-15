@@ -1,6 +1,7 @@
 /* Taronga Zoo 地點資料（map.html 讀取）
- * 座標：img/base.webp（4048×2863）上的像素；地圖只顯示左上 3064×2560（view）。
- * zones：id、zh（中文）、en、short（名牌字）、desc（這區看什麼）、poly（輪廓，沿步道描）、label（名牌座標）、hero（代表動物的 place id；null＝不放）、hot
+ * 座標：以官方地圖 3.4 倍渲染（4048×2863，即 img/zoomap.webp）為座標系；地圖只顯示左上 3064×2560（view），底圖 img/base.webp 只涵蓋這個範圍。
+ * 自動歸區（看座標落在哪個 poly）錯了就在該地點填 zoneId:"區域id"。
+ * zones：id、zh（中文）、en、signEn（名牌英文短字，可省）、short（名牌字）、desc（這區看什麼）、poly（輪廓，scratchpad/retrace2.py 以步道為邊界算出）、label（名牌座標）、hero（代表動物的 place id；null＝不放）、hot
  * places 每類必填：id、cat、zh、en；位置三選一：x,y ／ grid（單一格線）／ grids（多格線，逗號分隔）
  *   animal：icon（img/icons/ 檔名）或 abbr（沒圖標時清單用的一個字）；short（地圖短名）；area（搜尋用）
  *   show：time（可逗號分隔多場，如 "12:00pm, 3:00pm"）、grid、host（宿主動物 id，有＝併進該動物；沒有＝獨立場次）、note、hot
@@ -13,8 +14,7 @@ window.ZOO_DATA = {
   img: "img/zoomap.webp", w: 4048, h: 2863,
   cols: {1:92,2:276,3:460,4:644,5:828,6:1012,7:1196,8:1380,9:1564,10:1748,11:1932,12:2116,13:2300,14:2484,15:2669,16:2852,17:3037},
   rows: {A:94,B:284,C:477,D:667,E:859,F:1053,G:1242,H:1434,I:1626,J:1818,K:2010,L:2203,M:2394},
-  /* 區域：邊界為地圖像素座標多邊形（依官方地圖區塊目視描繪，可在 map.html?edit=1 之後再調）。
-   * 地點以「落在哪個多邊形內」自動歸入該區。 */
+  /* 區域（說明見檔頭） */
   zones: [
     { id:"nuradiya",  zh:"澳洲原生動物區", en:"Nura Diya Australia", color:"#2E8B57", label:[850,1958], hero:"koala",
       desc:"無尾熊、袋鼠、鴯鶓、澳洲野犬、鴨嘴獸、夜行動物館。無尾熊近距離合照（Koala Encounter）在這一區。", hot:true,
@@ -22,36 +22,36 @@ window.ZOO_DATA = {
     { id:"kids",      zh:"兒童步道", en:"Kids Trail", color:"#E0533D", label:[212,377], hero:"farmyard",
       desc:"農場動物（羊、驢、山羊、羊駝、雞）、袋熊、針鼴、短尾矮袋鼠、兔子、蜘蛛與竹節蟲。",
       short:"兒童步道", poly:[[120,153],[110,425],[237,618],[269,695],[318,910],[554,910],[616,883],[681,910],[726,910],[643,813],[680,757],[742,800],[744,869],[774,907],[795,890],[807,843],[930,827],[940,688],[817,620],[827,594],[784,529],[800,510],[800,174],[788,151],[760,140],[150,140]] },
-    { id:"bluemt",    zh:"藍山步道", en:"Blue Mountains Bushwalk", color:"#2A9D8F", label:[399,1006], hero:"tasdevil",
+    { id:"bluemt",    zh:"藍山步道", en:"Blue Mountains Bushwalk", color:"#2A9D8F", label:[399,1006], hero:"tasdevil", signEn:"Blue Mountains",
       desc:"袋獾、紅袋鼠、岩袋鼠、鳥園；Saltwater Bistro、Pit Stop 餐飲。",
-      short:"藍山步道", poly:[[317,915],[290,1191],[290,1486],[302,1509],[385,1520],[388,1460],[426,1435],[549,1431],[587,1465],[617,1432],[920,1427],[975,1469],[1010,1471],[1016,1516],[1040,1486],[810,1159],[795,1005],[730,915],[671,921],[637,904],[566,922]] },
-    { id:"seals",     zh:"海洋區", en:"Great Southern Oceans", color:"#1D6FB8", label:[1356,1029], hero:"seals",
+      short:"藍山步道", poly:[[409,817],[379,902],[316,921],[290,1186],[290,1486],[301,1508],[385,1520],[390,1463],[434,1435],[546,1432],[587,1465],[630,1432],[910,1427],[999,1474],[1016,1516],[1040,1486],[812,1162],[795,1005],[731,916],[668,919],[636,904],[565,918],[545,902],[531,834],[505,808],[451,797]] },
+    { id:"seals",     zh:"海洋區", en:"Great Southern Oceans", color:"#1D6FB8", hero:"seals", label:[1450,700], signEn:"Southern Oceans",
       desc:"海獅表演（Seals for the Wild）、企鵝、鵜鶘、海豹灣；往渡輪的下入口在這裡。",
       short:"海洋區", poly:[[1240,562],[1437,893],[1853,821],[1884,873],[1741,952],[1787,1023],[1920,926],[1863,1029],[1775,1071],[1664,942],[1820,866],[1546,893],[1438,965],[1240,662],[1240,1061],[1280,1120],[1437,1120],[1450,1066],[1529,1120],[1697,1120],[2000,987],[2000,795],[1921,819],[1959,776],[1877,702],[1943,662],[1485,721]] },
-    { id:"primates",  zh:"靈長類區", en:"Gorilla Forest & Primates", color:"#6D4C41", hero:"gorilla", label:[1445,1194],
+    { id:"primates",  zh:"靈長類區", en:"Gorilla Forest & Primates", color:"#6D4C41", hero:"gorilla", label:[1250,1340], signEn:"Gorilla Forest",
       desc:"大猩猩、獠狨、Moore Park 鳥園；園內小火車上站（6F）。",
       short:"靈長類", poly:[[1020,1279],[1211,1391],[1315,1391],[1380,1365],[1435,1314],[1430,1303],[1357,1303],[1343,1276],[1359,1241],[1396,1237],[1437,1278],[1494,1261],[1632,1153],[1598,1125],[1269,1135],[1201,1040],[1051,1041],[1020,1074]] },
-    { id:"rainforest",zh:"雨林與爬蟲區", en:"ARC & Rainforest", color:"#7CB342", label:[1522,1628], hero:"arc",
+    { id:"rainforest",zh:"雨林與爬蟲區", en:"ARC & Rainforest", color:"#7CB342", label:[1522,1628], hero:"arc", signEn:"ARC & Rainforest",
       desc:"ARC 爬蟲館（蛇、龜、蛙、蜥蜴）、水豚、食火雞、澳洲雨林鳥園、Helmore 草坪。",
-      short:"雨林・爬蟲", poly:[[1716,1441],[1639,1460],[1552,1536],[1452,1581],[1173,1587],[1163,1627],[1105,1657],[1103,1784],[1021,1785],[1021,1809],[1203,1931],[1509,1923],[1578,1940],[1620,1913],[1650,1940],[1614,1879],[1631,1860],[1710,1876],[1716,1898],[1678,1938],[1723,1933],[1740,1906],[1740,1619],[1719,1588],[1673,1583],[1733,1480],[1686,1481]] },
+      short:"雨林・爬蟲", poly:[[1021,1785],[1022,1810],[1203,1931],[1507,1923],[1578,1940],[1618,1921],[1665,1936],[1630,1893],[1664,1867],[1703,1895],[1667,1936],[1723,1933],[1740,1906],[1740,1619],[1693,1563],[1733,1480],[1716,1441],[1639,1460],[1552,1536],[1425,1580],[1402,1555],[1432,1483],[1419,1422],[1366,1383],[1306,1388],[1254,1457],[1283,1571],[1173,1587],[1162,1623],[1105,1657],[1098,1770]] },
     { id:"entry",     zh:"入口廣場・狐猴步道", en:"Zoo Entry & Lemur Walk", color:"#8E24AA", label:[2037,2147], hero:"lemurs",
       desc:"Zoo Entry 起點、Top Plaza 商店（買無尾熊合照票）、環尾狐猴、無尾熊、科羅伯里蛙、樹袋鼠、Centenary 劇場。",
-      short:"入口廣場", poly:[[1020,2135],[1023,2216],[1060,2240],[1689,2240],[1659,2200],[1714,2159],[1739,2192],[1743,2240],[2189,2239],[2220,2206],[2220,1998],[2068,2047],[1892,2071],[1809,2043],[1729,2060],[1678,2031],[1659,2039],[1623,2011],[1595,2022],[1525,1971],[1448,1953],[1297,1949],[1177,1974],[1105,1914],[1102,2110],[1076,2133]] },
+      short:"入口廣場", poly:[[1020,2135],[1023,2216],[1060,2240],[1689,2240],[1673,2197],[1708,2171],[1736,2188],[1743,2240],[2189,2239],[2220,2206],[2220,1998],[2069,2047],[1893,2070],[1788,2030],[1785,1950],[1741,1917],[1683,1940],[1658,2012],[1599,2018],[1525,1971],[1450,1953],[1295,1949],[1176,1970],[1105,1914],[1101,2105],[1076,2131]] },
     { id:"wildasia",  zh:"亞洲雨林", en:"Wild Asia", color:"#F57C00", label:[2318,847], hero:"squirrelmonkey",
       desc:"獨角犀牛、小貓熊、水獺、侏儒河馬、熊狸、松鼠猴、葉猴、安地斯神鷹、象龜；Taronga Food Market 在南側。",
-      short:"亞洲雨林", poly:[[2567,707],[2538,707],[2539,680],[2448,639],[2283,653],[2216,671],[2115,745],[2005,793],[2005,987],[2051,989],[2051,1052],[2082,1046],[2104,1071],[2062,1108],[2104,1126],[2096,1091],[2112,1078],[2144,1096],[2140,1133],[2201,1163],[2355,1149],[2471,1165],[2470,1126],[2546,1095],[2523,1084],[2532,1062],[2558,1082],[2687,966]] },
+      short:"亞洲雨林", poly:[[2005,793],[2005,987],[2048,1005],[2051,1052],[2076,1077],[2068,1111],[2200,1163],[2357,1149],[2471,1165],[2485,1120],[2536,1106],[2558,1127],[2568,1194],[2616,1218],[2664,1194],[2710,1114],[2710,1062],[2660,1010],[2687,965],[2567,707],[2529,675],[2449,639],[2282,653],[2214,672],[2117,744]] },
     { id:"tiger",     zh:"老虎區", en:"Tiger Trek", color:"#C62828", label:[2381,1379], hero:null,
       desc:"蘇門答臘虎、馬來熊；飛鳥表演（Free Flight Birds）在東側。",
       short:"老虎區", poly:[[2220,1231],[2220,1381],[2243,1392],[2220,1420],[2227,1503],[2260,1520],[2301,1508],[2325,1520],[2490,1523],[2559,1581],[2560,1752],[2605,1800],[2960,1800],[2993,1783],[3000,1194],[2983,1167],[2538,1160],[2526,1175],[2568,1208],[2563,1229],[2494,1200],[2563,1253],[2534,1286],[2491,1274],[2465,1237],[2324,1186],[2290,1193],[2292,1216],[2265,1244]] },
     { id:"savannah",  zh:"非洲草原", en:"African Savannah", color:"#D4A017", label:[2371,1711], hero:null,
       desc:"長頸鹿、斑馬、獅子、黑猩猩、狐獴、耳廓狐；Keeper Talk 多在這一區。",
-      short:"非洲草原", poly:[[2115,1468],[2142,1517],[2040,1597],[2046,1656],[2173,1726],[2260,1857],[2373,1858],[2481,1958],[2471,2011],[2373,2002],[2274,1920],[2224,1993],[2202,2240],[2990,2227],[3000,1783],[2968,1821],[2587,1816],[2534,1755],[2554,1585],[2477,1525],[2330,1525],[2333,1555],[2113,1648],[2054,1598],[2153,1595],[2160,1545],[2260,1525],[2220,1504],[2215,1440]] },
+      short:"非洲草原", poly:[[2115,1468],[2142,1517],[2040,1597],[2046,1656],[2173,1726],[2260,1857],[2373,1858],[2481,1958],[2471,2011],[2373,2002],[2274,1920],[2224,1993],[2220,2240],[2990,2227],[3000,1783],[2968,1821],[2587,1816],[2534,1755],[2554,1585],[2477,1525],[2330,1525],[2333,1555],[2113,1648],[2054,1598],[2153,1595],[2160,1545],[2260,1525],[2220,1504],[2215,1440]] },
     { id:"main",      zh:"正門區", en:"Main Entrance", color:"#546E7A", label:[1014,2385], hero:"mainentrance",
       desc:"正門、公車站、售票、Sky Safari 纜車（施工中）、Taronga Institute。",
-      short:"正門區", poly:[[573,2135],[625,2244],[690,2257],[709,2305],[698,2332],[598,2330],[610,2571],[640,2578],[618,2365],[656,2364],[681,2504],[670,2362],[703,2349],[760,2640],[874,2640],[883,2564],[1018,2559],[769,2554],[853,2508],[1017,2523],[1038,2539],[1020,2558],[1663,2533],[1705,2633],[1787,2616],[1790,2245],[1056,2245],[1018,2220],[1015,2135]] },
-    { id:"ferry",     zh:"渡輪碼頭", en:"Ferry Wharf", color:"#00897B", hero:"ferry", label:[2620,260], short:"渡輪碼頭",
+      short:"正門區", poly:[[573,2135],[625,2244],[690,2257],[709,2305],[698,2332],[598,2330],[610,2560],[640,2560],[618,2365],[656,2364],[681,2504],[670,2362],[703,2349],[760,2560],[874,2560],[883,2560],[1018,2559],[769,2554],[853,2508],[1017,2523],[1038,2539],[1020,2558],[1663,2533],[1705,2560],[1787,2560],[1790,2245],[1056,2245],[1018,2220],[1015,2135]] },
+    { id:"ferry",     zh:"渡輪碼頭", en:"Ferry Wharf", color:"#00897B", hero:"ferry", label:[2630,240], short:"渡輪碼頭",
       desc:"渡輪碼頭、往正門的公車；由此步行往下入口（海洋區）。",
-      poly:[[2440,182],[2440,192],[2582,188],[2697,201],[2730,225],[2748,260],[2735,340],[2775,337],[2797,316],[2800,204],[2650,143],[2694,20],[2592,20],[2542,139]] },
+      poly:[[2568,0],[2547,128],[2440,182],[2440,192],[2529,189],[2555,203],[2560,320],[2706,319],[2735,340],[2775,337],[2797,316],[2800,204],[2703,156],[2692,0]] },
   ],
   places: [
     /* ---- 動物 ---- */
@@ -66,7 +66,7 @@ window.ZOO_DATA = {
     { id:"bilby",        cat:"animal", zh:"兔耳袋狸",       en:"Bilby",                  x:735, y:1710, icon:"rabbit" },
     { id:"nocturnal",    cat:"animal", zh:"夜行動物館",     en:"Nocturnal Country",      x:720, y:1810, glyph:"moon", short:"夜行館", abbr:"夜" },
     { id:"dingo",        cat:"animal", zh:"澳洲野犬",       en:"Dingo Country",          x:630,  y:1781, icon:"dingo" },
-    { id:"tasdevil",     cat:"animal", zh:"袋獾",           en:"Tasmanian Devils",       x:463,  y:876, icon:"tasdevil" },
+    { id:"tasdevil",     cat:"animal", zoneId:"bluemt", zh:"袋獾",           en:"Tasmanian Devils",       x:463,  y:876, icon:"tasdevil" },
     { id:"wombat",       cat:"animal", zh:"袋熊",           en:"Wombat Burrow",          x:504,  y:282, icon:"wombat", area:"Kids Trail" },
     { id:"echidna",      cat:"animal", zh:"針鼴",           en:"Echidna",                x:630,  y:302, icon:"echidna", area:"Kids Trail" },
     { id:"quokka",       cat:"animal", zh:"短尾矮袋鼠",     en:"Quokka",                 x:398,  y:322, icon:"quokka", area:"Kids Trail" },
@@ -79,7 +79,7 @@ window.ZOO_DATA = {
     { id:"rainforestav", cat:"animal", zh:"澳洲雨林鳥園",   en:"Australian Rainforest Aviary", x:1171, y:1821, icon:"parrot", short:"雨林鳥園" },
     { id:"cassowary",    cat:"animal", zh:"食火雞",         en:"Cassowary",              x:1221, y:1701, icon:"cassowary" },
     { id:"capybara",     cat:"animal", zh:"水豚",           en:"Capybaras",              x:1506, y:1616, icon:"capybara" },
-    { id:"arc",          cat:"animal", zh:"爬蟲館（蛇、龜、蛙、蜥蜴）", en:"ARC – Reptiles", x:1343, y:1470, icon:"snake", short:"爬蟲館" },
+    { id:"arc",          cat:"animal", zoneId:"rainforest", zh:"爬蟲館（蛇、龜、蛙、蜥蜴）", en:"ARC – Reptiles", x:1343, y:1470, icon:"snake", short:"爬蟲館" },
     { id:"turtle",       cat:"animal", zh:"龜",             en:"Turtle",                 x:670,  y:1551, icon:"tortoise" },
     { id:"frogs",        cat:"animal", zh:"科羅伯里蛙",     en:"Corroboree Frogs",       x:1871, y:1991, icon:"frog" },
     { id:"seals",        cat:"animal", zh:"海獅・海豹（表演場）", en:"Seals for the Wild", x:1615, y:1007, icon:"seal", short:"海獅表演場" },
@@ -89,7 +89,7 @@ window.ZOO_DATA = {
     { id:"wetland",      cat:"animal", zh:"濕地鳥園",       en:"Wetland Aviary",         x:2068, y:796, icon:"bird", short:"濕地鳥園" },
     { id:"gorilla",      cat:"animal", zh:"大猩猩",         en:"Gorillas",               x:1676, y:1279, icon:"gorilla" },
     { id:"tamarins",     cat:"animal", zh:"獠狨",           en:"Tamarins",               x:1303, y:1340, icon:"monkey" },
-    { id:"lemurs",       cat:"animal", zh:"環尾狐猴",       en:"Ring-tailed Lemurs",     x:1841, y:1776, icon:"lemur", area:"Lemur Walk" },
+    { id:"lemurs",       cat:"animal", zoneId:"entry", zh:"環尾狐猴",       en:"Ring-tailed Lemurs",     x:1841, y:1776, icon:"lemur", area:"Lemur Walk" },
     { id:"redpanda",     cat:"animal", zh:"小貓熊",         en:"Red Pandas",             x:2095, y:645,  abbr:"貓" },
     { id:"otters",       cat:"animal", zh:"水獺",           en:"Otters",                 x:2324, y:685,  abbr:"獺" },
     { id:"squirrelmonkey",cat:"animal",zh:"松鼠猴",         en:"Squirrel Monkeys",       x:2374, y:594, icon:"monkey" },
@@ -99,11 +99,11 @@ window.ZOO_DATA = {
     { id:"rhino",        cat:"animal", zh:"獨角犀牛",       en:"Greater One-horned Rhino", x:2274, y:967, abbr:"犀", area:"Rhino Reserve" },
     { id:"leafmonkey",   cat:"animal", zh:"葉猴",           en:"Leaf Monkey",            x:2525, y:876, icon:"monkey", area:"Rainforest Trail" },
     { id:"palmaviary",   cat:"animal", zh:"棕櫚鳥園",       en:"Palm Aviary",            x:2566, y:1007, icon:"parrot", short:"棕櫚鳥園", area:"Rainforest Trail" },
-    { id:"condor",       cat:"animal", zh:"安地斯神鷹",     en:"Andean Condor",          x:2656, y:1088, icon:"bird", abbr:"鷹" },
-    { id:"tortoise",     cat:"animal", zh:"亞達伯拉象龜",   en:"Aldabra Giant Tortoise", x:2616, y:1158, icon:"tortoise" },
+    { id:"condor",       cat:"animal", zoneId:"wildasia", zh:"安地斯神鷹",     en:"Andean Condor",          x:2656, y:1088, icon:"bird", abbr:"鷹" },
+    { id:"tortoise",     cat:"animal", zoneId:"wildasia", zh:"亞達伯拉象龜",   en:"Aldabra Giant Tortoise", x:2616, y:1158, icon:"tortoise" },
     { id:"sunbear",      cat:"animal", zh:"馬來熊",         en:"Sun Bear",               x:2374, y:1279, abbr:"熊" },
     { id:"tiger",        cat:"animal", zh:"老虎",           en:"Tigers – Tiger Trek",    x:2742, y:1681, abbr:"虎" },
-    { id:"fennec",       cat:"animal", zh:"耳廓狐",         en:"Fennec Foxes",           x:2293, y:1495, abbr:"狐" },
+    { id:"fennec",       cat:"animal", zoneId:"savannah", zh:"耳廓狐",         en:"Fennec Foxes",           x:2293, y:1495, abbr:"狐" },
     { id:"meerkat",      cat:"animal", zh:"狐獴",           en:"Meerkats",               x:2407, y:1601, abbr:"獴" },
     { id:"giraffe",      cat:"animal", zh:"長頸鹿",         en:"Giraffe",                x:2327, y:1761, abbr:"鹿", area:"African Savannah" },
     { id:"zebra",        cat:"animal", zh:"斑馬",           en:"Zebra",                  x:2487, y:1801, abbr:"斑", area:"African Savannah" },
@@ -132,8 +132,8 @@ window.ZOO_DATA = {
     /* ---- 餐飲購物 ---- */
     { id:"foodmarket",  cat:"food", zh:"美食市集",        en:"Taronga Food Market",   x:2088, y:1249, glyph:"food" },
     { id:"forage",      cat:"food", zh:"Forage & Graze 咖啡", en:"Forage & Graze Café", x:1121, y:2121, glyph:"cafe", short:"Forage & Graze" },
-    { id:"saltwater",   cat:"food", zh:"Saltwater Bistro", en:"Saltwater Bistro",     x:876,  y:846, glyph:"food", short:"Saltwater" },
-    { id:"pitstop",     cat:"food", zh:"Pit Stop 小吃",    en:"Pit Stop",              x:982,  y:1078, glyph:"cafe", short:"Pit Stop" },
+    { id:"saltwater",   cat:"food", zoneId:"bluemt", zh:"Saltwater Bistro", en:"Saltwater Bistro",     x:876,  y:846, glyph:"food", short:"Saltwater" },
+    { id:"pitstop",     cat:"food", zoneId:"bluemt", zh:"Pit Stop 小吃",    en:"Pit Stop",              x:982,  y:1078, glyph:"cafe", short:"Pit Stop" },
     { id:"topplaza",    cat:"food", zh:"Top Plaza 商店", en:"Top Plaza Shop", x:1251, y:2136, glyph:"shop", short:"Top Plaza 商店", note:"無尾熊合照購票" },
     { id:"midshop",     cat:"food", zh:"Mid Shop 商店",    en:"Mid Shop",              x:1993, y:957, glyph:"shop", short:"Mid Shop" },
 
@@ -146,7 +146,7 @@ window.ZOO_DATA = {
     { id:"busferry",    cat:"entry", zh:"公車（往正門）",  en:"Bus to Main Entrance",   x:2616, y:206, glyph:"bus", short:"公車" },
     { id:"skysafari",   cat:"entry", zh:"Sky Safari 纜車（施工中）", en:"Sky Safari – Under Construction", x:1131, y:2386, glyph:"cable", short:"Sky Safari" },
     { id:"train1",      cat:"entry", zh:"園內小火車（上站）", en:"Train Station 6F",     x:1107, y:1133, glyph:"train", short:"小火車" },
-    { id:"train2",      cat:"entry", zh:"園內小火車（下站）", en:"Train Station 10K",    x:1731, y:1976, glyph:"train", short:"小火車" },
+    { id:"train2",      cat:"entry", zoneId:"entry", zh:"園內小火車（下站）", en:"Train Station 10K",    x:1731, y:1976, glyph:"train", short:"小火車" },
 
     /* ---- 設施（格線代號取自官方圖例） ---- */
     { id:"toilets",     cat:"facility", zh:"廁所",         en:"Toilets",     grids:"5D,7L,4J,8D,11E,11H,12G", glyph:"toilet" },
@@ -156,7 +156,7 @@ window.ZOO_DATA = {
     { id:"adultchange", cat:"facility", zh:"成人更衣室",   en:"Adult Change (MLAK)", grids:"12H", glyph:"access" },
     { id:"hospital",    cat:"facility", zh:"野生動物醫院（施工中）", en:"Taronga Wildlife Hospital", x:2137, y:2166, glyph:"hospital", short:"動物醫院" },
     { id:"function",    cat:"facility", zh:"Function Centre", en:"Taronga Function Centre", x:500, y:1536, short:"宴會中心", glyph:"building", short:"Function Centre" },
-    { id:"theatre",     cat:"facility", zh:"Centenary 劇場", en:"Centenary Theatre", x:2081, y:1801, glyph:"theatre", short:"Centenary 劇場" },
+    { id:"theatre",     cat:"facility", zoneId:"entry", zh:"Centenary 劇場", en:"Centenary Theatre", x:2081, y:1801, glyph:"theatre", short:"Centenary 劇場" },
     { id:"lawns",       cat:"facility", zh:"Harbour View 草坪（野餐）", en:"Harbour View Lawns", x:2737, y:786, glyph:"picnic", short:"Harbour View 草坪" },
     { id:"concert",     cat:"facility", zh:"Concert Lawns 草坪", en:"Concert Lawns", x:856, y:705, glyph:"picnic", short:"Concert 草坪" },
   ],

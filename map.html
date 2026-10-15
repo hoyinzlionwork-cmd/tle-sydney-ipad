@@ -35,9 +35,9 @@ button{cursor:pointer}
 .layer svg{display:block;position:absolute;left:0;top:0}
 #L-base{position:absolute;left:0;top:0;display:block;pointer-events:none;-webkit-user-drag:none;backface-visibility:hidden}
 .zone{fill:rgba(255,255,255,0);stroke:none;pointer-events:all;cursor:pointer}
-#L-outline{stroke-width:calc(2.5 * var(--isc))}
-#L-outline2{stroke-width:calc(1 * var(--isc))}
-@media (hover:hover){.zone:hover{stroke:#fff;stroke-opacity:.5;stroke-width:calc(1.5 * var(--isc))}}
+#L-outline{stroke-width:calc(2.5px * var(--isc))}
+#L-outline2{stroke-width:calc(1px * var(--isc))}
+@media (hover:hover){.zone:hover{stroke:#fff;stroke-opacity:.5;stroke-width:calc(1.5px * var(--isc))}}
 #L-outline{fill:none;stroke:var(--outline);stroke-linejoin:round;stroke-linecap:round;pointer-events:none}
 #L-outline2{fill:none;stroke:var(--outline-inner);pointer-events:none}
 #L-raster{opacity:0}
@@ -69,6 +69,11 @@ button{cursor:pointer}
 .mk.img .n.up{top:auto;bottom:22px}
 .mk.disc .n.up{top:auto;bottom:16px}
 .mk.noicon .n.up{top:auto;bottom:6px}
+.mk .n.r,.mk .n.l{top:-11px;transform:none}
+.mk.img .n.r{left:26px}.mk.disc .n.r{left:18px}.mk.noicon .n.r{left:10px}
+.mk .n.l{left:auto}.mk.img .n.l{right:26px}.mk.disc .n.l{right:18px}.mk.noicon .n.l{right:10px}
+.mk.hide{display:none}
+body.has-place .zl.on .s{background:var(--land)}
 .mk .n.hide{visibility:hidden}
 .mk.img .n{top:22px}
 .mk.disc .n{top:16px}
@@ -114,7 +119,9 @@ button{cursor:pointer}
 .peekrow .lk{flex:1;min-width:0}
 .peekrow .lk .zh{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .peekrow .lk .en{font-size:11px;font-weight:400;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
-.peekrow .pstrip{display:flex;gap:8px;overflow-x:auto;flex-shrink:0;max-width:45%}
+.peekrow .pstrip{display:flex;gap:8px;overflow-x:auto;flex-shrink:0;max-width:45%;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent)}
+.peekrow .pstrip::-webkit-scrollbar,.peekrow .strip::-webkit-scrollbar,.dtabs::-webkit-scrollbar{display:none}
+.peekrow .strip,.dtabs{scrollbar-width:none}
 .peekrow .pstrip img{width:32px;height:32px;flex-shrink:0;padding:4px;box-sizing:content-box}
 .peekrow .right{text-align:right;flex-shrink:0}
 .peekrow .right .tm{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
@@ -134,7 +141,7 @@ button{cursor:pointer}
 .search input{width:100%;height:40px;font-size:16px;font-weight:400;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:8px;padding:0 12px;-webkit-user-select:text;user-select:text}
 .search input:focus{border-color:var(--ink);outline:none}
 .search input::placeholder{color:var(--ink3)}
-.dlist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 0 calc(12px + var(--safe-bottom));touch-action:pan-y}
+.dlist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 0 calc(12px + var(--safe-bottom));touch-action:pan-y;scrollbar-width:thin;scrollbar-color:var(--ink3) transparent}
 .peekrow .strip,.peekrow .pstrip{touch-action:pan-x}
 @media (orientation:portrait) and (min-width:640px){.dlist>*,.peekrow>*{max-width:600px}.dlist>.zr,.dlist>.item,.dlist>.gh,.dlist>.desc,.dlist>.cap,.dlist>.empty{margin-inline:auto}.peekrow{justify-content:center}}
 .zr{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 16px;border-bottom:1px solid var(--line);cursor:pointer;background:#fff}
@@ -276,9 +283,10 @@ const byId=id=>D.places.find(p=>p.id===id);
 function assignZones(){
   D.places.forEach(p=>{ p.pts=pointsOf(p).map(o=>({x:o.x,y:o.y})); });
   /* 同一像素上疊了多個點 → 以 28px 環形錯開 */
-  const bucket={}; D.places.forEach(p=>p.pts.forEach(o=>{ const k=o.x+","+o.y; (bucket[k]=bucket[k]||[]).push(o); }));
-  Object.values(bucket).forEach(arr=>{ if(arr.length<2) return; arr.forEach((o,i)=>{ const a=-Math.PI/2+i*2*Math.PI/arr.length; o.x=Math.round(o.x+28*Math.cos(a)); o.y=Math.round(o.y+28*Math.sin(a)); }); });
-  D.places.forEach(p=>{ p.ptZones=p.pts.map(zoneIdAt); p.zone=p.pts.length===1?p.ptZones[0]:null; });
+  const bucket={}; D.places.forEach(p=>{ if(p.cat==="show"&&p.host) return; p.pts.forEach(o=>{ const k=o.x+","+o.y; (bucket[k]=bucket[k]||[]).push(o); }); });
+  Object.values(bucket).forEach(arr=>{ if(arr.length<2) return; arr.forEach((o,i)=>{ const a=-Math.PI/2+i*2*Math.PI/arr.length; o.x=Math.round(o.x+36*Math.cos(a)); o.y=Math.round(o.y+36*Math.sin(a)); }); });
+  D.places.forEach(p=>{ p.ptZones=p.zoneId?p.pts.map(()=>p.zoneId):p.pts.map(zoneIdAt); p.zone=p.pts.length===1?p.ptZones[0]:null; });
+  if(EDIT) D.zones.forEach(z=>{ const h=z.hero&&byId(z.hero); if(h&&h.zone!==z.id) console.warn("代表動物不在自己的區：",z.id,z.hero,"→",h.zone); });
 }
 assignZones();
 /* 表演併入宿主動物 */
@@ -315,11 +323,12 @@ function buildScene(){
   svg.innerHTML=`${EDIT?`<image id="L-raster" href="${D.img}" x="0" y="0" width="${D.w}" height="${D.h}"/>`:""}
     <g id="L-zones">${D.zones.map(z=>`<path class="zone" data-z="${z.id}" d="${z.blob}"/>`).join("")}</g>
     <path id="L-outline2" d=""/><path id="L-outline" d=""/>`;
-  zlabels.innerHTML=D.zones.map(z=>`<div class="zl" data-z="${z.id}" style="left:${z.anchor.x}px;top:${z.anchor.y}px"><div class="s"><span class="zh">${esc(z.short||z.zh)}</span><span class="en">${esc(z.en)}</span></div></div>`).join("");
+  zlabels.innerHTML=D.zones.map(z=>`<div class="zl" data-z="${z.id}" style="left:${z.anchor.x}px;top:${z.anchor.y}px"><div class="s"><span class="zh">${esc(z.short||z.zh)}</span><span class="en">${esc(z.signEn||z.en)}</span></div></div>`).join("");
 }
 
 /* ---- 相機 ---- */
-const MAX=1.8; let sc=0.2,tx=0,ty=0,minSc=0.1, transitioning=false, pendingVp=null, lastCullSc=0, cullDirty=true, cullQueued=false, camAnim=0, wheeling=false, wheelT=0, VW=0, VH=0;
+const MAX=1.8; let sc=0.2,tx=0,ty=0,minSc=0.1, transitioning=false, pendingVp=null, lastCullSc=0, cullDirty=true, cullQueued=false, camOn=false, wheeling=false, wheelT=0, VW=0, VH=0;
+const minScFor=vp=>Math.max(vp.W/SW,vp.H/SH);
 const probe=document.createElement("div"); probe.style.cssText="position:fixed;left:-9999px;height:var(--safe-bottom)"; document.body.appendChild(probe);
 const safeB=()=>probe.offsetHeight||0;
 let sheet="half", panelOpen=true;
@@ -327,35 +336,35 @@ function measureVp(){ VW=wrap.clientWidth; VH=wrap.clientHeight; }
 const vpNow=()=>{ if(!VW||!VH) measureVp(); return {W:VW,H:VH}; };
 function sheetHeight(state){ const H=body.clientHeight; return state==="peek"?88+safeB():state==="full"?H*0.86:H*0.46; }
 function viewportFor(state){ if(isPhone()) return {W:body.clientWidth,H:Math.max(120,body.clientHeight-sheetHeight(state||sheet))}; const open=state===undefined?panelOpen:state!=="closed"; return {W:Math.max(160,body.clientWidth-(open?320:0)),H:body.clientHeight}; }
-const gestureLive=()=>pts.size>0||wheeling||camAnim>0;
-function queueCull(){ if(cullQueued) return; cullQueued=true; requestAnimationFrame(()=>{ cullQueued=false; cullSigns(); cullLabels(); }); }
+const gestureLive=()=>pts.size>0||wheeling||camOn;
+function queueCull(){ if(cullQueued) return; cullQueued=true; requestAnimationFrame(()=>{ cullQueued=false; cullDirty=false; lastCullSc=sc; cullSigns(); cullLabels(); }); }
 function apply(){
   layer.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`;
   layer.style.setProperty("--isc",1/sc);
   const far=sc<0.19; zlabels.classList.toggle("far",far); marks.classList.toggle("far",far);
-  if(cullDirty||(!gestureLive()&&Math.abs(sc-lastCullSc)>1e-6)){ lastCullSc=sc; cullDirty=false; queueCull(); }
+  if(cullDirty||(!gestureLive()&&Math.abs(sc-lastCullSc)>1e-6)) queueCull();
 }
 let rafApply=0; function scheduleApply(){ if(!rafApply) rafApply=requestAnimationFrame(()=>{ rafApply=0; apply(); }); }
 function clamp(vp){ const {W,H}=vp||pendingVp||vpNow(), w=SW*sc,h=SH*sc; tx=w<=W?(W-w)/2:Math.min(0,Math.max(W-w,tx)); ty=h<=H?(H-h)/2:Math.min(0,Math.max(H-h,ty)); }
 function fit(vp){ if(!vp) measureVp(); const {W,H}=vp||vpNow(); if(!W||!H) return; sc=minSc=Math.max(W/SW,H/SH); tx=W/2-CX*sc; ty=H/2-CY*sc; clamp(vp||vpNow()); apply(); }
 function refit(){ measureVp(); const {W,H}=vpNow(); if(!W||!H) return; minSc=Math.max(W/SW,H/SH); if(sc<minSc){ const k=minSc/sc; tx=W/2-(W/2-tx)*k; ty=H/2-(H/2-ty)*k; sc=minSc; } clamp(); apply(); }
 function goTo(x,y,s,vp){ const {W,H}=vp||vpNow(); sc=Math.min(Math.max(s,minSc),MAX); tx=W/2-x*sc; ty=H/2-y*sc; clamp(vp||vpNow()); apply(); }
-function fitScaleFor(b,pad,vp){ const {W,H}=vp||vpNow(); pad=pad==null?Math.round(Math.min(W,H)*0.12):pad; return Math.min(W/(b.x1-b.x0+pad*2),H/(b.y1-b.y0+pad*2)); }
+function fitScaleFor(b,pad,vp){ const {W,H}=vp||vpNow(); pad=pad==null?Math.max(Math.round(Math.min(W,H)*0.12),isPhone()?72:0):pad; return Math.min(W/(b.x1-b.x0+pad*2),H/(b.y1-b.y0+pad*2)); }
 /* 平滑飛到（ln(scale) 與中心同時 ease-out）；任何手勢會取消 */
 let camId=0;
 function animateTo(x,y,s,vp,ms){ ms=REDUCED?0:(ms==null?280:ms); const {W,H}=vp||vpNow(); const s1=Math.min(Math.max(s,minSc),MAX);
   if(!ms){ goTo(x,y,s1,vp); return; }
-  const cx0=(W/2-tx)/sc, cy0=(H/2-ty)/sc, l0=Math.log(sc), l1=Math.log(s1), t0=performance.now(), id=++camId, ease=t=>1-Math.pow(1-t,3);
-  camAnim++;
+  cancelCam(); const cx0=(W/2-tx)/sc, cy0=(H/2-ty)/sc, l0=Math.log(sc), l1=Math.log(s1), t0=performance.now(), id=camId, ease=t=>1-Math.pow(1-t,3);
+  camOn=true;
   (function step(now){ if(id!==camId){ return; } const t=Math.min(1,(now-t0)/ms), k=ease(t);
     sc=Math.exp(l0+(l1-l0)*k); const cx=cx0+(x-cx0)*k, cy=cy0+(y-cy0)*k; tx=W/2-cx*sc; ty=H/2-cy*sc; clamp(vp); apply();
-    if(t<1) requestAnimationFrame(step); else { camAnim=Math.max(0,camAnim-1); cullDirty=true; queueCull(); } })(t0); }
-function cancelCam(){ if(camAnim>0){ camId++; camAnim=0; } }
+    if(t<1) requestAnimationFrame(step); else { camOn=false; queueCull(); } })(t0); }
+function cancelCam(){ camId++; camOn=false; }
 function fitBounds(b,pad,vp,anim){ const s1=fitScaleFor(b,pad,vp); const x=(b.x0+b.x1)/2, y=(b.y0+b.y1)/2; if(anim) animateTo(x,y,s1,vp); else goTo(x,y,s1,vp); }
 function zoomAt(f,cx,cy,anim){ const ns=Math.min(Math.max(sc*f,minSc),MAX),k=ns/sc; const tx1=cx-(cx-tx)*k, ty1=cy-(cy-ty)*k;
   if(anim){ const {W,H}=vpNow(); animateTo((W/2-tx1)/ns,(H/2-ty1)/ns,ns,null,200); } else { tx=tx1; ty=ty1; sc=ns; clamp(); apply(); } }
 let settleToken=0;
-function settleAfterLayout(vp){ transitioning=true; pendingVp=vp||null; const tok=++settleToken; setTimeout(()=>{ if(tok!==settleToken) return; transitioning=false; pendingVp=null; measureVp(); if(!curZone&&!curPlace) fit(); else refit(); },DUR+50); }
+function settleAfterLayout(vp){ transitioning=true; pendingVp=vp||null; if(vp) minSc=minScFor(vp); const tok=++settleToken; setTimeout(()=>{ if(tok!==settleToken) return; transitioning=false; pendingVp=null; measureVp(); refit(); },DUR+50); }
 
 /* ---- 名牌／圖標碰撞（尺寸只量一次） ---- */
 function rectsOverlap(a,b){ return !(a.x+a.w<b.x||b.x+b.w<a.x||a.y+a.h<b.y||b.y+b.h<a.y); }
@@ -371,15 +380,21 @@ function cullSigns(){
     const exempt=z.id==="main"||z.id==="ferry";
     const estW=[...(z.short||z.zh)].length*(far?12:13)+18;
     if(!exempt&&estW>(z.b.x1-z.b.x0)*sc*1.15){ el.classList.add("hide"); return; }
-    /* 遠景：名牌若壓到代表動物，往遠離動物的方向推開（螢幕 34px），而不是藏起來 */
     el.style.left=z.anchor.x+"px"; el.style.top=z.anchor.y+"px";
     let r=signRect(el,z);
-    const h=z.heroP; if(far&&h&&h.pts[0]){ const hx=tx+h.pts[0].x*sc, hy=ty+h.pts[0].y*sc;
+    const h=z.heroP; const heroEl=h?marks.querySelector(`.mk.hero[data-z="${z.id}"]`):null; if(heroEl) heroEl.classList.remove("hide");
+    if(exempt&&far&&h&&h.pts[0]){ /* 正門／碼頭：名牌直接掛在圓盤正下方；放不下就藏圓盤不藏名牌 */
+      const hx=tx+h.pts[0].x*sc, hy=ty+h.pts[0].y*sc; el.style.left=h.pts[0].x+"px"; el.style.top=((hy+20+r.h/2-ty)/sc)+"px"; r=signRect(el,z);
+      if(r.x<0||r.x+r.w>W||r.y<0||r.y+r.h>H){ el.classList.add("hide"); if(heroEl) heroEl.classList.add("hide"); return; }
+      if(kept.some(k=>rectsOverlap(k,r))) el.classList.add("hide"); else kept.push(r); return; }
+    /* 遠景：名牌若壓到代表動物，往遠離動物的方向推開，而不是藏起來 */
+    if(far&&h&&h.pts[0]){ const hx=tx+h.pts[0].x*sc, hy=ty+h.pts[0].y*sc;
       const hb={x:hx-18,y:hy-18,w:36,h:36};
       if(rectsOverlap(hb,r)){ let dx=(r.x+r.w/2)-hx, dy=(r.y+r.h/2)-hy; const L=Math.hypot(dx,dy); if(L<1){ dx=0; dy=1; } else { dx/=L; dy/=L; }
         for(let step=18+r.h/2+4; step<140 && rectsOverlap(hb,r); step+=8){ const nx=hx+dx*step, ny=hy+dy*step; el.style.left=((nx-tx)/sc)+"px"; el.style.top=((ny-ty)/sc)+"px"; r=signRect(el,z); } } }
-    if(r.x+r.w<0||r.x>W||r.y+r.h<0||r.y>H){ el.classList.add("hide"); return; }
-    if(kept.some(k=>rectsOverlap(k,r))) el.classList.add("hide"); else kept.push(r);
+    if(r.x<0||r.x+r.w>W||r.y<0||r.y+r.h>H){ el.classList.add("hide"); return; }
+    const pad={x:r.x-12,y:r.y-12,w:r.w+24,h:r.h+24};
+    if(kept.some(k=>rectsOverlap(k,pad))) el.classList.add("hide"); else kept.push(r);
   });
 }
 function glyphRect(m){ const r=m.classList.contains("img")?(marks.classList.contains("far")?16:20):m.classList.contains("disc")?13:5; const x=tx+parseFloat(m.style.left)*sc, y=ty+parseFloat(m.style.top)*sc; return {x:x-r,y:y-r,w:2*r,h:2*r}; }
@@ -390,15 +405,20 @@ function cullLabels(){
   const mks=all.filter(m=>m.querySelector(".n"));
   const pri=m=>m.classList.contains("on")?0:m.classList.contains("noicon")?1:m.querySelector(".tm")?2:m.dataset.hot?3:4;
   mks.sort((a,b)=>pri(a)-pri(b)||parseFloat(a.style.top)-parseFloat(b.style.top));
-  const farThr=curZone?fitScaleFor(curZone.b)*1.3:0.6;
-  mks.forEach(m=>{ const n=m.querySelector(".n"); n.classList.remove("hide","up");
+  const farThr=curZone?fitScaleFor(curZone.b)*1.3:0.6, {W}=vpNow();
+  const discRects=new Set(all.filter(m=>m.classList.contains("disc")).map(m=>glyphs.get(m)));
+  mks.forEach(m=>{ const n=m.querySelector(".n"); n.classList.remove("hide","up","r","l"); n.style.left="";
     if(m.dataset.lbl==="far"&&sc<farThr&&!m.classList.contains("on")){ n.classList.add("hide"); return; }
-    const w=+n.dataset.w||60,h=+n.dataset.h||20, top=m.classList.contains("img")?22:m.classList.contains("disc")?16:6;
-    const cx=tx+parseFloat(m.style.left)*sc, cy=ty+parseFloat(m.style.top)*sc, own=glyphs.get(m);
-    const hits=r=>kept.some(k=>k!==own&&rectsOverlap(k,r));
-    let r={x:cx-w/2-2,y:cy+top-2,w:w+4,h:h+4};
-    if(hits(r)){ const ru={x:r.x,y:cy-top-h-2,w:r.w,h:r.h}; if(!hits(ru)){ n.classList.add("up"); r=ru; } else if(pri(m)>1){ n.classList.add("hide"); return; } }
-    kept.push(r); });
+    const w=+n.dataset.w||60,h=+n.dataset.h||20, isImg=m.classList.contains("img"), isDisc=m.classList.contains("disc"), top=isImg?22:isDisc?16:6, side=isImg?26:isDisc?18:10;
+    const cx=tx+parseFloat(m.style.left)*sc, cy=ty+parseFloat(m.style.top)*sc, own=glyphs.get(m), animal=!isDisc;
+    const hits=r=>kept.some(k=>k!==own&&!(animal&&discRects.has(k))&&rectsOverlap(k,r));
+    const cands=[["",{x:cx-w/2-2,y:cy+top-2,w:w+4,h:h+4}],["up",{x:cx-w/2-2,y:cy-top-h-2,w:w+4,h:h+4}],["r",{x:cx+side-2,y:cy-h/2-2,w:w+4,h:h+4}],["l",{x:cx-side-w-2,y:cy-h/2-2,w:w+4,h:h+4}]];
+    let placed=null; for(const [cls,r] of cands){ if(!hits(r)){ placed=[cls,r]; break; } }
+    if(!placed){ if(pri(m)>1){ n.classList.add("hide"); return; } placed=cands[0]; }
+    if(placed[0]) n.classList.add(placed[0]);
+    /* 下／上位置：名片不要被畫面左右邊緣切掉 */
+    if(placed[0]===""||placed[0]==="up"){ const r=placed[1]; let dx=0; if(r.x<4) dx=4-r.x; else if(r.x+r.w>W-4) dx=(W-4)-(r.x+r.w); if(dx){ n.style.left=`calc(50% + ${dx}px)`; r.x+=dx; } }
+    kept.push(placed[1]); });
 }
 
 /* ---- 狀態 ---- */
@@ -410,6 +430,7 @@ function drawZoneState(){
     el.classList.toggle("on",on); el.classList.toggle("dim",!!curZone&&!on);
     el.style.left=z.anchor.x+"px"; el.style.top=(on?z.b.y0:z.anchor.y)+"px"; });
   $("#backpill").classList.toggle("show",!!curZone); $("#backzn").textContent=curZone?(curZone.short||curZone.zh):"";
+  document.body.classList.toggle("has-place",!!curPlace);
   cullDirty=true;
 }
 function markHTML(p,o,opts){
@@ -438,8 +459,8 @@ function renderMarks(){
   }else{
     D.zones.forEach(z=>{ const h=heroOf(z); if(h&&h.pts[0]) html+=markHTML(h,h.pts[0],{hero:z.id}); });
   }
-  if(curPlace&&curPlace.pts.length&&!/data-id="/.test(html.split(`data-id="${curPlace.id}"`).length>1?"x":"")) html+=markHTML(curPlace,curPlace.pts[0]);
-  marks.innerHTML=html;
+  if(curPlace&&curPlace.pts.length&&!html.includes(`data-id="${curPlace.id}"`)) html+=markHTML(curPlace,curPlace.pts[0]);
+  marks.innerHTML=html; document.body.classList.toggle("has-place",!!curPlace);
   marks.querySelectorAll(".mk").forEach(m=>m.classList.toggle("on",!!curPlace&&m.dataset.id===curPlace.id&&!m.classList.contains("hero")));
   marks.querySelectorAll(".mk .n").forEach(n=>{ n.classList.remove("hide","up"); n.dataset.w=n.offsetWidth; n.dataset.h=n.offsetHeight; });
   cullDirty=true; apply();
@@ -455,7 +476,7 @@ function itemHTML(p,opts){ opts=opts||{}; const ts=opts.times||timesOf(p); const
   const grid=EDIT&&(p.grid||p.grids)?`<span class="gd">${esc(p.grid||p.grids)}</span>`:"";
   return `<div class="item${curPlace&&curPlace.id===p.id?" on":""}" data-id="${p.id}">${icHTML(opts.icon||p)}<div class="tx"><div class="zh"><span class="nm">${esc(opts.name||p.zh)}</span>${p.hot?`<span class="tag">必看</span>`:""}</div><div class="en">${esc(sub)} ${grid}</div></div>${ts.length?`<div class="tm">${ts.map(esc).join("<br>")}</div>`:""}</div>`; }
 function zoneRow(z){ const hero=heroOf(z); const an=zoneAnimals(z).filter(p=>p.icon); const th=[]; const seenIcon=new Set();
-  [hero,...an].forEach(p=>{ if(p&&p.icon&&!seenIcon.has(p.icon)&&th.length<4){ seenIcon.add(p.icon); th.push(p); } });
+  [hero&&hero.cat==="animal"?hero:null,...an].forEach(p=>{ if(p&&p.icon&&!seenIcon.has(p.icon)&&th.length<4){ seenIcon.add(p.icon); th.push(p); } });
   return `<div class="zr" data-z="${z.id}"><div class="tx"><div class="zh"><span class="nm">${esc(z.zh)}</span>${z.hot?`<span class="tag">必看</span>`:""}</div><div class="en">${esc(z.en)}</div></div><div class="th">${th.map(p=>iconImg(p)).join("")}</div></div>`; }
 function groupHTML(title,items,opts){ if(!items.length) return ""; return `<div class="gh">${title}</div>`+items.map(p=>itemHTML(p,opts)).join(""); }
 function renderList(){
@@ -463,8 +484,8 @@ function renderList(){
   let html="";
   if(q){ const items=D.places.filter(p=>(p.zh+" "+p.en+" "+(p.area||"")+" "+(p.note||"")+" "+(p.short||"")).toLowerCase().includes(q));
     html=`<div class="gh">搜尋「${esc(query)}」</div>`+(items.length?items.map(p=>itemHTML(p,{zone:true})).join(""):`<div class="empty">找不到「${esc(query)}」</div>`); }
-  else if(tab==="shows"){ const shows=D.places.filter(p=>p.cat==="show").slice().sort((a,b)=>toMin(a.time)-toMin(b.time));
-    html=`<div class="gh">全日時刻（以現場公告為準）</div>`+shows.map(s=>itemHTML(s,{times:[fmt24(s.time)],zone:true,note:true,icon:s.hostRef||s})).join(""); }
+  else if(tab==="shows"){ const rows=D.places.filter(p=>p.cat==="show").flatMap(s=>splitTimes(s.time).map(t=>({s,t}))).sort((a,b)=>toMin(a.t)-toMin(b.t));
+    html=`<div class="gh">全日時刻（以現場公告為準）</div>`+rows.map(({s,t})=>itemHTML(s,{times:[fmt24(t)],zone:true,note:true,icon:s.hostRef||s})).join(""); }
   else if(tab==="facility"){
     const F=D.places.filter(p=>p.cat==="facility"), ids=x=>F.filter(p=>x.includes(p.id));
     html=groupHTML("廁所・飲水",ids(["toilets","water","adultchange"]))+groupHTML("餐飲・購物",D.places.filter(p=>p.cat==="food").concat(ids(["cafes"])))
@@ -489,7 +510,7 @@ function renderList(){
 }
 function renderPeek(){
   const pr=$("#peekrow"); if(!isPhone()){ pr.classList.add("hidden"); return; }
-  if(curPlace){ const p=curShow||curPlace, host=curPlace; const ts=curShow?[fmt24(curShow.time)]:timesOf(host); const note=[p.note||"", ts.length?"時刻以現場公告為準":""].filter(Boolean).join(" · ");
+  if(curPlace){ const p=curShow||curPlace, host=curPlace; const ts=curShow?[fmt24(curShow.time)]:timesOf(host); const note=p.note||"";
     pr.classList.remove("hidden"); pr.innerHTML=`<button class="iconb" id="pkback">${chev("left")}</button>${icHTML(host)}<div class="lk"><div class="zh">${esc(p.zh)}</div><div class="en">${esc([p.en,zoneName(host)].filter(Boolean).join(" · "))}</div></div><div class="right">${ts.length?`<div class="tm">${esc(ts.join(" · "))}</div>`:""}${note?`<div class="nt">${esc(note)}</div>`:""}</div>`;
     $("#pkback").onclick=goBack; return; }
   if(curZone){ const z=curZone, seenI=new Set(), an=zoneAnimals(z).filter(p=>p.icon&&!seenI.has(p.icon)&&seenI.add(p.icon)).slice(0,6);
@@ -503,7 +524,7 @@ function renderPeek(){
 /* ---- 選取 ---- */
 const depth=()=>(history.state&&history.state.i)||0;
 function pushURL(replace){ if(!history.pushState) return; const u=new URL(location.href); u.searchParams.delete("z"); u.searchParams.delete("p"); if(curPlace) u.searchParams.set("p",curPlace.id); else if(curZone) u.searchParams.set("z",curZone.id);
-  const rep=replace||EMBED; const st={z:curZone&&curZone.id,p:curPlace&&curPlace.id,i:rep?depth():depth()+1}; if(rep) history.replaceState(st,"",u); else history.pushState(st,"",u); }
+  const rep=replace||EMBED; const st={z:curZone&&curZone.id,p:curPlace&&curPlace.id,i:rep?depth():depth()+1}; try{ if(rep) history.replaceState(st,"",u); else history.pushState(st,"",u); }catch(e){} }
 function selectZone(z,opts){
   opts=opts||{};
   if(z&&curZone===z&&!curPlace&&!opts.fromHistory){ fitBounds(z.b,undefined,undefined,true); return; }
@@ -512,8 +533,8 @@ function selectZone(z,opts){
   drawZoneState(); renderMarks();
   const target=isPhone()?(z?"peek":"half"):undefined;
   if(isPhone()) setSheet(target,true);
-  const vp=viewportFor(target);
-  if(z){ fitBounds(z.b,undefined,vp,!opts.instant); tab="zones"; } else { if(opts.instant) fit(vp); else animateTo(CX,CY,Math.max(vp.W/SW,vp.H/SH),vp); }
+  const vp=viewportFor(target); minSc=minScFor(vp);
+  if(z){ fitBounds(z.b,undefined,vp,!opts.instant); tab="zones"; } else { if(opts.instant) fit(vp); else animateTo(CX,CY,minSc,vp); }
   settleAfterLayout(vp);
   renderTabs(); renderList();
   if(!opts.fromHistory) pushURL();
@@ -527,7 +548,7 @@ function selectPlace(p,opts){
   curPlace=p; curShow=show; query=""; $("#q").value="";
   drawZoneState(); renderMarks();
   const target=isPhone()?"peek":undefined; if(isPhone()) setSheet(target,true);
-  const vp=viewportFor(target);
+  const vp=viewportFor(target); minSc=minScFor(vp);
   if(p.pts.length===1){ const z=curZone; const s1=Math.max(sc, z?fitScaleFor(z.b,undefined,vp):sc); animateTo(p.pts[0].x,p.pts[0].y,s1,vp); }
   else if(p.pts.length>1){ const xs=p.pts.map(o=>o.x),ys=p.pts.map(o=>o.y); fitBounds({x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)},200,vp,true); }
   settleAfterLayout(vp);
@@ -535,8 +556,10 @@ function selectPlace(p,opts){
   if(!opts.fromHistory) pushURL();
 }
 function applyState(st){ st=st||{}; if(st.p&&byId(st.p)){ selectPlace(byId(st.p),{fromHistory:true}); } else if(st.z&&zoneOf(st.z)){ selectZone(zoneOf(st.z),{fromHistory:true}); } else selectZone(null,{fromHistory:true}); }
-function goBack(){ if(!EMBED&&depth()>0){ history.back(); return; }
-  if(curPlace){ const z=curZone; curPlace=null; curShow=null; if(z) selectZone(z,{fromHistory:true}); else selectZone(null,{fromHistory:true}); } else selectZone(null,{fromHistory:true}); pushURL(true); }
+function goBack(){
+  if(curPlace){ const z=curZone; curPlace=null; curShow=null; selectZone(z||null,{fromHistory:true}); pushURL(true); return; }
+  if(!EMBED&&depth()>0){ history.back(); return; }
+  selectZone(null,{fromHistory:true}); pushURL(true); }
 window.addEventListener("popstate",e=>{ applyState(e.state||Object.fromEntries(new URLSearchParams(location.search))); });
 $("#backpill").onclick=goBack;
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&(curZone||curPlace)) goBack(); });
@@ -549,12 +572,12 @@ wrap.addEventListener("pointerdown",e=>{ if(e.target.closest(".ctl,.editbar,.bac
   cancelCam(); e.preventDefault(); wrap.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); gestureRect=wrap.getBoundingClientRect(); start=snap(); moved=false; downT=performance.now(); });
 wrap.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); const cur=snap(); if(!start||!cur||cur.n!==start.n){ start=snap(); return; }
   const r=gestureRect||wrap.getBoundingClientRect();
-  if(cur.n===2){ const ns=Math.min(Math.max(start.sc*cur.d/start.d,minSc),MAX),k=ns/start.sc,mx=start.mx-r.left,my=start.my-r.top; tx=mx-(mx-start.tx)*k+(cur.mx-start.mx); ty=my-(my-start.ty)*k+(cur.my-start.my); sc=ns; moved=true; }
-  else{ const dx=cur.x-start.x,dy=cur.y-start.y; if(Math.hypot(dx,dy)>10) moved=true; tx=start.tx+dx; ty=start.ty+dy; }
+  if(cur.n===2){ const ns=Math.min(Math.max(start.sc*cur.d/Math.max(start.d,1),minSc),MAX),k=ns/start.sc,mx=start.mx-r.left,my=start.my-r.top; tx=mx-(mx-start.tx)*k+(cur.mx-start.mx); ty=my-(my-start.ty)*k+(cur.my-start.my); sc=ns; moved=true; }
+  else{ const dx=cur.x-start.x,dy=cur.y-start.y; if(!moved){ if(Math.hypot(dx,dy)<=10) return; moved=true; } tx=start.tx+dx; ty=start.ty+dy; }
   clamp(); scheduleApply(); });
 const up=e=>{ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId);
   const held=performance.now()-downT;
-  if(pts.size===0&&moved){ cullDirty=true; queueCull(); }
+  if(pts.size===0&&moved) queueCull();
   if(pts.size===0&&!moved&&held<300){ const r=gestureRect||wrap.getBoundingClientRect(), now=performance.now();
     if(EDIT&&curPlace&&!curPlace.grids&&!e.target.closest(".mk,.zl")){ overrides[curPlace.id]={x:Math.round((e.clientX-r.left-tx)/sc),y:Math.round((e.clientY-r.top-ty)/sc)}; localStorage.setItem("zoo_overrides",JSON.stringify(overrides)); assignZones(); selectPlace(curPlace,{fromHistory:true}); return; }
     const el=document.elementFromPoint(e.clientX,e.clientY);
@@ -569,14 +592,15 @@ const up=e=>{ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId);
     else if(curPlace){ curPlace=null; curShow=null; renderMarks(); renderList(); pushURL(true); }
   }
   start=snap(); };
-wrap.addEventListener("pointerup",up); wrap.addEventListener("pointercancel",up); wrap.addEventListener("lostpointercapture",up);
+const cancelPtr=e=>{ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); moved=true; start=snap(); if(!pts.size) queueCull(); };
+wrap.addEventListener("pointerup",up); wrap.addEventListener("pointercancel",cancelPtr); wrap.addEventListener("lostpointercapture",cancelPtr);
 wrap.addEventListener("contextmenu",e=>e.preventDefault());
 window.addEventListener("blur",()=>{ pts.clear(); start=null; moved=false; });
 document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
 wrap.addEventListener("wheel",e=>{ e.preventDefault(); cancelCam(); const r=wrap.getBoundingClientRect();
   let d=e.deltaY; if(e.deltaMode===1) d*=16; else if(e.deltaMode===2) d*=wrap.clientHeight; d=Math.max(-120,Math.min(120,d));
   const f=Math.exp(-d*(e.ctrlKey?0.01:0.0025));
-  wheeling=true; clearTimeout(wheelT); wheelT=setTimeout(()=>{ wheeling=false; cullDirty=true; queueCull(); },120);
+  wheeling=true; clearTimeout(wheelT); wheelT=setTimeout(()=>{ wheeling=false; queueCull(); },120);
   zoomAt(f,e.clientX-r.left,e.clientY-r.top); },{passive:false});
 $("#zin").onclick=()=>zoomAt(1.4,wrap.clientWidth/2,wrap.clientHeight/2,true);
 $("#zout").onclick=()=>zoomAt(1/1.4,wrap.clientWidth/2,wrap.clientHeight/2,true);
@@ -631,7 +655,7 @@ renderList();
 requestAnimationFrame(()=>{ measureVp(); fit(); drawZoneState(); renderMarks();
   const z=params.get("z"), p=params.get("p");
   if(p&&byId(p)){ selectPlace(byId(p),{fromHistory:true}); } else if(z&&zoneOf(z)){ selectZone(zoneOf(z),{fromHistory:true,instant:true}); }
-  if(history.replaceState) history.replaceState({z:curZone&&curZone.id,p:curPlace&&curPlace.id,i:0},"",location.href); });
+  try{ history.replaceState({z:curZone&&curZone.id,p:curPlace&&curPlace.id,i:0},"",location.href); }catch(e){} });
 </script>
 </body>
 </html>
