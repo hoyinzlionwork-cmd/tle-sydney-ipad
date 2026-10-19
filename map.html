@@ -600,7 +600,7 @@ function goBack(){
   /* 膠囊寫「全部區域」就一律回總覽；瀏覽器／硬體返回鍵仍走 popstate 的歷史 */
   selectZone(null,{fromHistory:true}); pushURL(true); }
 window.addEventListener("popstate",e=>{ applyState(e.state||Object.fromEntries(new URLSearchParams(location.search))); });
-$("#backpill").onclick=goBack;
+$("#backpill").onclick=()=>{ curPlace=null; curShow=null; selectZone(null,{fromHistory:true}); pushURL(true); };   /* 膠囊寫「全部區域」：不論在分區或地點都直接回總覽 */
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&(curZone||curPlace)) goBack(); });
 
 /* ---- 手勢 ---- */

@@ -313,13 +313,14 @@ PAGES.wine=(hdr,scr)=>{
 
 /* ============================================================ 2 飲品點選 */
 const TEMP_EN={ "冰":"Iced", "熱":"Hot", "":"" };
+const SEP="\u0001";   /* 彙總分組鍵的分隔字元：備註是自由輸入，不能用「|」 */
 PAGES.drinks=(hdr,scr)=>{
   hbar(hdr,"Rockpool · 飲品點選");
   const gs=guests(), ds=drinks();
   const counts={};
   /* 以「飲品｜冷熱｜備註」分組：有備註的另成一列，服務生才看得到少冰、不加糖這類要求 */
   const notes={};
-  gs.forEach(g=>{ const o=S.orders[g]; if(o&&o.drink){ const k=`${o.drink}|${o.temp||""}|${(o.note||"").trim()}`; counts[k]=(counts[k]||0)+1; if(o.note) (notes[k]=notes[k]||[]).push(g); } });
+  gs.forEach(g=>{ const o=S.orders[g]; if(o&&o.drink){ const k=[o.drink,o.temp||"",(o.note||"").trim()].join(SEP); counts[k]=(counts[k]||0)+1; if(o.note) (notes[k]=notes[k]||[]).push(g); } });
   const n=Object.values(counts).reduce((a,b)=>a+b,0);
   const el=document.createElement("div");
   el.className="pagepad";
@@ -328,7 +329,7 @@ PAGES.drinks=(hdr,scr)=>{
   <div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px">
       <b style="font-size:14px;flex:1;display:flex;align-items:center;gap:6px">${ic("cup",16)} 彙總（共 ${n} 杯）</b>
       <button class="btn pri" id="waiter" ${n?"":"disabled"}>${ic("team",16)} 給服務生看</button></div>
-    <div class="ordsum">${Object.entries(counts).map(([k,c])=>{ const [d,t,nt]=k.split("|"); return `<div class="oi">${esc(d)}${t?` <span class="pill gray">${t}</span>`:""}${nt?` <span class="pill navy">${esc(nt)}</span>`:""} × <b>${c}</b></div>`; }).join("")||`<span style="color:var(--ink2);font-size:13px">尚無點選</span>`}</div></div>
+    <div class="ordsum">${Object.entries(counts).map(([k,c])=>{ const [d,t,nt]=k.split(SEP); return `<div class="oi">${esc(d)}${t?` <span class="pill gray">${t}</span>`:""}${nt?` <span class="pill navy">${esc(nt)}</span>`:""} × <b>${c}</b></div>`; }).join("")||`<span style="color:var(--ink2);font-size:13px">尚無點選</span>`}</div></div>
   <div class="card"><div style="font-weight:600;margin-bottom:6px;font-size:14px">董事點選</div><div id="rows"></div></div>
   <button class="btn sec" id="clr">清空全部</button>`;
   const rows=el.querySelector("#rows");
@@ -344,7 +345,7 @@ PAGES.drinks=(hdr,scr)=>{
   });
   el.querySelector("#clr").onclick=()=>confirmBox("清空全部飲品點選？",()=>{ S.orders={}; save(); render(); toast("已清空"); });
   el.querySelector("#waiter").onclick=()=>{
-    const enRows=Object.entries(counts).map(([k,c])=>{ const [d,t,nt]=k.split("|"); const dd=ds.find(x=>x.zh===d); return {en:dd?dd.en:d, t:TEMP_EN[t]||"", nt, who:(notes[k]||[]).join("、"), c}; });
+    const enRows=Object.entries(counts).map(([k,c])=>{ const [d,t,nt]=k.split(SEP); const dd=ds.find(x=>x.zh===d); return {en:dd?dd.en:d, t:TEMP_EN[t]||"", nt, who:(notes[k]||[]).join("、"), c}; });
     openModal("For the waiter · 給服務生看",`<div class="waiter"><h2>Drinks Order</h2><div class="sub">${esc(CONFIG.tour)} · ${gs.length} guests · ${n} drinks</div>
       ${enRows.map(r=>`<div class="wrow"><b>${r.c}</b><span>${esc(r.en)}</span>${r.t?`<span class="wt">${r.t}</span>`:""}${r.nt?`<span class="wt note">${esc(r.nt)}${r.who?`（${esc(r.who)}）`:""}</span>`:""}</div>`).join("")}
       <div class="tot">Total ${n}</div></div>`,[["關閉","sec",closeModal]]);
@@ -364,7 +365,7 @@ function openOrderModal(g){
       <div style="display:flex;gap:8px" id="tt">
         ${["","冰","熱"].map(t=>`<button class="tab${sel.temp===t?" on":""}" data-t="${t}">${t||"不指定"}</button>`).join("")}
       </div></div>
-    <div class="field"><label>備註（可空）</label><input type="text" id="onote" value="${esc(sel.note||"")}" placeholder="例：少冰、不加糖"></div>
+    <div class="field"><label>備註（可空）</label><input type="text" id="onote" value="${esc(sel.note||"")}" placeholder="會印在給服務生看的單子上，建議英文，例：less ice、no sugar"></div>
   `,[["取消點選","ghost",()=>{ delete S.orders[g]; save(); closeModal(); render(); }],
      ["確認","pri",()=>{
         if(!sel.drink){ toast("請先選飲品"); return; }
