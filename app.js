@@ -265,7 +265,7 @@ function renderHome(hdr,scr){
   ];
   el.innerHTML=`<div class="tiles">${tiles.map(([id,icn,no,place,tt,td,main])=>`
     <div class="tile${main?" main":""}" data-p="${id}">
-      ${main?kvSvg(400,220,{id:"t3",bg:false,stars:70,seed:5,crux:{x:330,y:150,s:22},arc:"M-10 200 C 110 70, 240 10, 420 30"}).replace("<svg ",'<svg class="sky" '):""}
+      ${main?kvSvg(400,220,{id:"t3",bg:false,stars:70,seed:5,crux:{x:300,y:110,s:20},arc:"M-10 200 C 110 90, 260 45, 420 75"}).replace("<svg ",'<svg class="sky" '):""}
       <span class="no">${no}</span>
       <div class="tic">${ic(icn,22)}</div>
       <div class="tp">${esc(place)}</div>
