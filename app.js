@@ -21,6 +21,7 @@ const P = {
   building:'<path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M4 20h16"/>',
   photo:'<rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m4 17 5-4 3 2.5 3-3.5 5 5"/>',
   check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
 };
 const ic=(n,s)=>`<svg class="ic" viewBox="0 0 24 24" style="font-size:${s||18}px">${P[n]||""}</svg>`;
 const STAR='<svg class="st" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 14 10 22 12 14 14 12 22 10 14 2 12 10 10Z" fill="currentColor"/></svg>';
@@ -35,14 +36,14 @@ function sparkle(id,x,y,r,a=1){
   return `<path d="M${f1(x)} ${f1(y-r)} L${f1(x+r*.2)} ${f1(y-r*.2)} L${f1(x+r)} ${f1(y)} L${f1(x+r*.2)} ${f1(y+r*.2)} L${f1(x)} ${f1(y+r)} L${f1(x-r*.2)} ${f1(y+r*.2)} L${f1(x-r)} ${f1(y)} L${f1(x-r*.2)} ${f1(y-r*.2)}Z" fill="#fff" fill-opacity="${a}"/>`
        + `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r*1.7)}" fill="url(#${id}-glow)" opacity="${(a*.9).toFixed(2)}"/>`;
 }
-function operaSvg({x,y,s,a=.75}){ /* 歌劇院帆影線稿：四片帆由左至右漸高，細輪廓＋帆面肋線，帆面微透的深藍玻璃感 */
+function operaSvg({x,y,s,a=.75,fill="#0A1F5C",fillA=.28}){ /* 歌劇院帆影線稿：四片帆由左至右漸高，細輪廓＋帆面肋線；帆面填色依底色深淺傳入 */
   const shells=[[0,.9,.55],[.42,1.05,.8],[.98,1.15,1],[1.78,.95,.72]];
   let g=`<path d="M${f1(x-s*.3)} ${f1(y)} H${f1(x+s*3.1)}" stroke="#fff" stroke-opacity="${(a*.6).toFixed(2)}" stroke-width="${(s*.006).toFixed(2)}" fill="none"/>`;
   shells.forEach(([dx,w,h])=>{
     const X=x+dx*s, W=w*s, H=h*s, ax=X+W*.66, ay=y-H;
     const d=`M${f1(X)} ${f1(y)} Q${f1(X+W*.12)} ${f1(y-H*.72)} ${f1(ax)} ${f1(ay)} Q${f1(X+W*.84)} ${f1(y-H*.62)} ${f1(X+W)} ${f1(y)}Z`;
     let rib=""; for(let k=1;k<6;k++) rib+=`M${f1(ax)} ${f1(ay)} L${f1(X+W*k/6)} ${f1(y)} `;
-    g+=`<path d="${d}" fill="#0A1F5C" fill-opacity=".28" stroke="#fff" stroke-opacity="${a}" stroke-width="${(s*.013).toFixed(2)}" stroke-linejoin="round"/>`
+    g+=`<path d="${d}" fill="${fill}" fill-opacity="${fillA}" stroke="#fff" stroke-opacity="${a}" stroke-width="${(s*.013).toFixed(2)}" stroke-linejoin="round"/>`
      + `<path d="${rib}" fill="none" stroke="#fff" stroke-opacity="${(a*.45).toFixed(2)}" stroke-width="${(s*.005).toFixed(2)}"/>`;
   });
   return `<g>${g}</g>`;
@@ -52,8 +53,12 @@ function operaSvg({x,y,s,a=.75}){ /* 歌劇院帆影線稿：四片帆由左至�
 function kvSvg(W,H,o={}){
   const id=o.id||"kv", rnd=seeded(o.seed||7), n=o.stars??Math.round(W*H/7000), k=o.k||1;
   let g=o.bg===false?"":`<rect width="${W}" height="${H}" fill="url(#${id}-sky)"/>`;
-  (o.flare||[]).forEach(([fx,fy,fr,c,a])=>{ g+=`<circle cx="${fx}" cy="${fy}" r="${fr}" fill="${c}" opacity="${a}" filter="url(#${id}-blur)"/>`; });
-  for(let i=0;i<n;i++){ const x=rnd()*W, y=rnd()*H*(o.starBand??1), r=(0.5+rnd()*1.3)*k, a=0.2+rnd()*0.7;
+  (o.flare||[]).forEach(([fx,fy,fr,c,a])=>{ g+=`<circle cx="${fx}" cy="${fy}" r="${fr}" fill="${c}" opacity="${a}" filter="url(#${id}-blur)" style="mix-blend-mode:screen"/>`; });
+  /* 星空兩族：多數細星（r 0.35–0.9）＋少數亮星（r 1.4–2.2 帶光暈），才有縱深 */
+  const band=o.starBand??1, nf=Math.round(n*.85);
+  for(let i=0;i<n;i++){ const x=rnd()*W, y=rnd()*H*band, bright=i>=nf;
+    const r=(bright?1.4+rnd()*.8:0.35+rnd()*.55)*k, a=bright?0.7+rnd()*0.3:0.2+rnd()*0.35;
+    if(bright) g+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="${(r*1.6).toFixed(2)}" fill="url(#${id}-glow)" opacity=".25"/>`;
     g+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="${r.toFixed(2)}" fill="#fff" fill-opacity="${a.toFixed(2)}"/>`; }
   if(o.arc) g+=`<path d="${o.arc}" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="${(k*1.1).toFixed(2)}" stroke-linecap="round"/>`;
   if(o.crux){ const c=o.crux, p=CRUX.map(([px,py])=>[c.x+px*c.s,c.y+py*c.s]);
@@ -180,9 +185,11 @@ function render(){
   scr.scrollTop=0;
 }
 function hbar(hdr,title,{back=true,right=""}={}){
+  const parts=String(title).split(" · ");   /* 「地點 · 功能」：手機寬度只留功能名 */
+  const ttl=parts.length>1?`<span class="pl">${esc(parts[0])} · </span>${esc(parts.slice(1).join(" · "))}`:esc(title);
   hdr.innerHTML=`<div class="hbar">${skySvg("hb")}<div class="row">
     <div class="hleft">${back?`<button class="backbtn">${ic("back",16)}</button>`:""}</div>
-    <div class="htitle">${esc(title)}</div>
+    <div class="htitle">${ttl}</div>
     <div class="hright">${right}</div>
   </div></div>`;
   const bk=hdr.querySelector(".backbtn");
@@ -191,7 +198,7 @@ function hbar(hdr,title,{back=true,right=""}={}){
 function openModal(title,body,btns,cls){
   const mb=$("#mbox");
   mb.className="mbox"+(cls?" "+cls:"");
-  mb.innerHTML=`<div class="mh"><span class="t">${esc(title)}</span><button class="x">✕</button></div>
+  mb.innerHTML=`<div class="mh"><span class="t">${esc(title)}</span><button class="x">${ic("x",14)}</button></div>
     <div class="mb">${body}</div>
     ${btns&&btns.length?`<div class="mf"></div>`:""}`;
   mb.querySelector(".x").onclick=closeModal;
@@ -219,7 +226,7 @@ const PAGES={};
 
 /* ============================================================ 首頁 */
 function renderHome(hdr,scr){
-  hdr.innerHTML=`<div class="hbar">${skySvg("hh",{crux:null})}<div class="row">
+  hdr.innerHTML=`<div class="hbar home">${skySvg("hh",{crux:null})}<div class="row">
     <div class="brand"><div class="lion" id="lionmark">獅</div><div class="bt"><div class="b1">導領e化平台</div><div class="b2">LEADER iPAD</div></div></div>
     <div class="hright"><button class="iconbtn" id="setbtn">${ic("gear",20)}</button></div>
   </div></div>`;
@@ -227,11 +234,19 @@ function renderHome(hdr,scr){
   probe(CONFIG.logo).then(im=>{ const m=hdr.querySelector("#lionmark"); if(im&&m) m.innerHTML=`<img src="${esc(CONFIG.logo)}" alt="Lion Travel">`; });
   const hero=document.createElement("div");
   hero.className="hero";
-  hero.innerHTML=`${kvSvg(1200,360,{id:"hero",stars:260,seed:11,diag:true,
-      arc:"M-40 300 C 260 60, 700 -30, 1240 150",
+  /* 寬螢幕與手機各一組構圖，viewBox 比例與 CSS aspect-ratio 一致，南十字與帆影不會被裁掉 */
+  const wide=matchMedia("(min-width:768px)").matches;
+  const heroSvg=wide?kvSvg(1200,360,{id:"hero",stars:260,seed:11,diag:true,
+      arc:"M-40 250 C 300 20, 760 -60, 1240 60",
       crux:{x:1010,y:92,s:62},
-      opera:{x:880,y:352,s:110,a:.8},
-      flare:[[120,380,260,"#FFE2B0",.35],[330,330,170,"#FFC9E0",.28],[60,250,150,"#BFE0FF",.3]]}).replace("<svg ",'<svg class="sky" ')}
+      opera:{x:880,y:336,s:110,a:.8,fill:"#fff",fillA:.07},
+      flare:[[40,330,220,"#BFE0FF",.45],[260,420,240,"#FFC9E0",.4],[150,210,120,"#FFE2B0",.35]]})
+    :kvSvg(600,420,{id:"hero",stars:170,seed:11,diag:true,
+      arc:"M-20 300 C 150 60, 380 -20, 620 120",
+      crux:{x:480,y:110,s:52},
+      opera:{x:380,y:412,s:70,a:.8,fill:"#fff",fillA:.07},
+      flare:[[20,400,170,"#BFE0FF",.45],[200,460,180,"#FFC9E0",.4],[90,300,90,"#FFE2B0",.35]]});
+  hero.innerHTML=`${heroSvg.replace("<svg ",'<svg class="sky" ')}
     <div class="ht">
       <div class="hk">${esc(CONFIG.kicker)}</div>
       <div class="hn">${esc(CONFIG.title)}</div>
@@ -250,7 +265,7 @@ function renderHome(hdr,scr){
   ];
   el.innerHTML=`<div class="tiles">${tiles.map(([id,icn,no,place,tt,td,main])=>`
     <div class="tile${main?" main":""}" data-p="${id}">
-      ${main?kvSvg(400,220,{id:"t3",bg:false,stars:70,seed:5,crux:{x:338,y:52,s:26},arc:"M-10 210 C 120 60, 260 20, 420 90"}).replace("<svg ",'<svg class="sky" '):""}
+      ${main?kvSvg(400,220,{id:"t3",bg:false,stars:70,seed:5,crux:{x:300,y:60,s:26},arc:"M-10 200 C 110 70, 240 10, 420 30"}).replace("<svg ",'<svg class="sky" '):""}
       <span class="no">${no}</span>
       <div class="tic">${ic(icn,22)}</div>
       <div class="tp">${esc(place)}</div>
@@ -302,16 +317,19 @@ PAGES.drinks=(hdr,scr)=>{
   hbar(hdr,"Rockpool · 飲品點選");
   const gs=guests(), ds=drinks();
   const counts={};
-  gs.forEach(g=>{ const o=S.orders[g]; if(o&&o.drink){ const k=`${o.drink}|${o.temp||""}`; counts[k]=(counts[k]||0)+1; } });
+  /* 以「飲品｜冷熱｜備註」分組：有備註的另成一列，服務生才看得到少冰、不加糖這類要求 */
+  const notes={};
+  gs.forEach(g=>{ const o=S.orders[g]; if(o&&o.drink){ const k=`${o.drink}|${o.temp||""}|${(o.note||"").trim()}`; counts[k]=(counts[k]||0)+1; if(o.note) (notes[k]=notes[k]||[]).push(g); } });
   const n=Object.values(counts).reduce((a,b)=>a+b,0);
   const el=document.createElement("div");
   el.className="pagepad";
   el.innerHTML=`<p class="vs">董事於 iPad 瀏覽飲品並點選；領隊按「給服務生看」把英文彙總一次交給 Rockpool 服務生。${ds.length&&gs.length?"":"（名單或飲品尚未設定，請到「設定」頁填入）"}</p>
+  ${S.drinksTxt===DEFAULT_DRINKS?`<div class="demo-note">飲品清單<b>待 Rockpool 提供</b>，目前 8 項為示意（照片為 AI 生成）。拿到正式清單後到「設定」頁貼上即可。</div>`:""}
   <div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px">
       <b style="font-size:14px;flex:1;display:flex;align-items:center;gap:6px">${ic("cup",16)} 彙總（共 ${n} 杯）</b>
       <button class="btn pri" id="waiter" ${n?"":"disabled"}>${ic("team",16)} 給服務生看</button></div>
-    <div class="ordsum">${Object.entries(counts).map(([k,c])=>{ const [d,t]=k.split("|"); return `<div class="oi">${esc(d)}${t?` <span class="pill gray">${t}</span>`:""} × <b>${c}</b></div>`; }).join("")||`<span style="color:#8E8E93;font-size:13px">尚無點選</span>`}</div></div>
-  <div class="card"><div style="font-weight:800;margin-bottom:6px;font-size:14px">董事點選</div><div id="rows"></div></div>
+    <div class="ordsum">${Object.entries(counts).map(([k,c])=>{ const [d,t,nt]=k.split("|"); return `<div class="oi">${esc(d)}${t?` <span class="pill gray">${t}</span>`:""}${nt?` <span class="pill navy">${esc(nt)}</span>`:""} × <b>${c}</b></div>`; }).join("")||`<span style="color:var(--ink2);font-size:13px">尚無點選</span>`}</div></div>
+  <div class="card"><div style="font-weight:600;margin-bottom:6px;font-size:14px">董事點選</div><div id="rows"></div></div>
   <button class="btn sec" id="clr">清空全部</button>`;
   const rows=el.querySelector("#rows");
   gs.forEach(g=>{
@@ -320,15 +338,15 @@ PAGES.drinks=(hdr,scr)=>{
     r.className="ordrow";
     r.innerHTML=`<span class="who">${esc(g)}</span>
       <span class="what">${o&&o.drink?`${esc(o.drink)}${o.temp?`（${o.temp}）`:""}${o.note?` · ${esc(o.note)}`:""}`:"尚未點選"}</span>
-      <button class="btn ${o&&o.drink?"sec":"pri"}" style="padding:7px 14px;font-size:13px">${o&&o.drink?"修改":"點選"}</button>`;
+      <button class="btn ${o&&o.drink?"sec":"pri"}" style="padding:10px 18px;font-size:14px">${o&&o.drink?"修改":"點選"}</button>`;
     r.querySelector("button").onclick=()=>openOrderModal(g);
     rows.appendChild(r);
   });
   el.querySelector("#clr").onclick=()=>confirmBox("清空全部飲品點選？",()=>{ S.orders={}; save(); render(); toast("已清空"); });
   el.querySelector("#waiter").onclick=()=>{
-    const enRows=Object.entries(counts).map(([k,c])=>{ const [d,t]=k.split("|"); const dd=ds.find(x=>x.zh===d); return {en:dd?dd.en:d, t:TEMP_EN[t]||"", c}; });
+    const enRows=Object.entries(counts).map(([k,c])=>{ const [d,t,nt]=k.split("|"); const dd=ds.find(x=>x.zh===d); return {en:dd?dd.en:d, t:TEMP_EN[t]||"", nt, who:(notes[k]||[]).join("、"), c}; });
     openModal("For the waiter · 給服務生看",`<div class="waiter"><h2>Drinks Order</h2><div class="sub">${esc(CONFIG.tour)} · ${gs.length} guests · ${n} drinks</div>
-      ${enRows.map(r=>`<div class="wrow"><b>${r.c}</b><span>${esc(r.en)}</span>${r.t?`<span class="wt">${r.t}</span>`:""}</div>`).join("")}
+      ${enRows.map(r=>`<div class="wrow"><b>${r.c}</b><span>${esc(r.en)}</span>${r.t?`<span class="wt">${r.t}</span>`:""}${r.nt?`<span class="wt note">${esc(r.nt)}${r.who?`（${esc(r.who)}）`:""}</span>`:""}</div>`).join("")}
       <div class="tot">Total ${n}</div></div>`,[["關閉","sec",closeModal]]);
   };
   scr.appendChild(el);
@@ -372,21 +390,21 @@ const SERIF='"Songti TC","Noto Serif TC","Source Han Serif TC","PMingLiU","Micro
 const SCRIPT='"Snell Roundhand","Savoye LET","Apple Chancery","Segoe Script","Brush Script MT",cursive';
 const FULL={x:0,y:0,w:FW,h:FH};
 function crossSvg(){
-  return kvSvg(FW,FH,{id:"fr",bg:false,stars:420,seed:21,starBand:.42,k:1.7,blur:90,
-    arc:"M-60 760 C 300 120, 900 -40, 1660 420",
+  return kvSvg(FW,FH,{id:"fr",bg:false,stars:260,seed:21,starBand:.24,k:1.7,blur:90,
+    arc:"M-60 480 C 400 0, 1000 -160, 1660 220",
     crux:{x:1330,y:300,s:150},
-    opera:{x:1010,y:1905,s:170,a:.7},
+    opera:{x:1010,y:1960,s:130,a:.7},
     flare:[[1480,1980,420,"#FFE2B0",.22],[1250,1900,260,"#FFC9E0",.16],[160,1960,320,"#BFE0FF",.14]]});
 }
 const FRAMES=[
   { id:"cross", name:"星引南十字",
-    text:{align:"left",x:110,nameY:1812,line2Y:1876,nameColor:"#FFFFFF",line2Color:"rgba(255,255,255,.82)",nameSize:74,line2Size:34,maxW:1000,shadow:true,nameFont:FONT,nameWeight:600,nameSpacing:3},
+    text:{align:"left",x:110,nameY:1836,line2Y:1900,nameColor:"#FFFFFF",line2Color:"rgba(255,255,255,.82)",nameSize:74,line2Size:34,maxW:1000,shadow:true,nameFont:FONT,nameWeight:600,nameSpacing:3},
     logo:{x:110,y:100,w:220,h:90},
     layers:[
-      {type:"scrim",y0:0,y1:720,stops:[[0,"rgba(10,31,92,.78)"],[0.55,"rgba(10,31,92,.35)"],[1,"rgba(10,31,92,0)"]]},
-      {type:"scrim",y0:1150,y1:2000,stops:[[0,"rgba(10,31,92,0)"],[0.45,"rgba(10,31,92,.72)"],[1,"rgba(8,24,70,.97)"]]},
+      {type:"scrim",y0:0,y1:460,stops:[[0,"rgba(10,31,92,.68)"],[0.5,"rgba(10,31,92,.28)"],[1,"rgba(10,31,92,0)"]]},
+      {type:"scrim",y0:1300,y1:2000,stops:[[0,"rgba(10,31,92,0)"],[0.45,"rgba(10,31,92,.72)"],[1,"rgba(8,24,70,.97)"]]},
       {type:"svg",svg:crossSvg},
-      {type:"caption",text:"2026 董事會 OUTING · TARONGA ZOO, SYDNEY",x:110,y:1584,align:"left",color:"rgba(255,255,255,.8)",size:26,spacing:7},
+      {type:"caption",text:"2026 董事會 OUTING · TARONGA ZOO, SYDNEY",x:110,y:1556,align:"left",color:"rgba(255,255,255,.8)",size:26,spacing:7},
       {type:"title",text:"星引南十字",x:110,y:1712,size:120,color:"#FFFFFF",spacing:14},
       {type:"script",text:"Sydney + Melbourne",x:"after",gap:40,y:1712,size:60,color:"rgba(255,255,255,.9)"},
       {type:"rule",x0:110,x1:1490,y:1752,color:"rgba(255,255,255,.36)"},
@@ -434,7 +452,7 @@ async function renderOverlay(fr){
       ctx.shadowColor="rgba(0,0,0,.35)"; ctx.shadowBlur=24; ctx.shadowOffsetY=4;
       lastEnd=spacedText(ctx,L.text,L.x,L.y,"left",L.spacing||0); ctx.restore();
     }else if(L.type==="script"){  /* 英文手寫體副標，可接在標題後面 */
-      ctx.save(); ctx.fillStyle=L.color; ctx.font=`italic 400 ${L.size}px ${SCRIPT}`; ctx.textAlign="left";
+      ctx.save(); ctx.fillStyle=L.color; ctx.font=`400 ${L.size}px ${SCRIPT}`; ctx.textAlign="left";   /* 手寫體本身就斜，不再加 italic */
       ctx.shadowColor="rgba(0,0,0,.3)"; ctx.shadowBlur=16; ctx.shadowOffsetY=3;
       ctx.fillText(L.text,L.x==="after"?lastEnd+(L.gap||30):L.x,L.y); ctx.restore();
     }else if(L.type==="svg"){
@@ -641,7 +659,7 @@ async function renderGallery(box){
 /* ============================================================ 4 園區地圖（內嵌 map.html，同一份也分享給旅客） */
 const MAP_URL=new URL("map.html",location.href).href.replace(/\?.*$/,"");
 PAGES.zoo=(hdr,scr)=>{
-  hbar(hdr,"Taronga Zoo · 園區地圖",{right:`<button class="btn pri" id="shareMap" style="padding:7px 12px;font-size:13px">${ic("share",15)} 分享給旅客</button>`});
+  hbar(hdr,"Taronga Zoo · 園區地圖",{right:`<button class="btn pri" id="shareMap" style="padding:9px 14px;font-size:13px">${ic("share",15)} 分享給旅客</button>`});
   const page=document.createElement("div");
   page.className="zoopage";
   page.innerHTML=`<iframe class="zooframe" src="map.html?embed=1" title="Taronga Zoo map" allow="clipboard-write"></iframe>`;

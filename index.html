@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>星引南十字 · 2026 董事會 Outing</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="星引南十字">
@@ -42,12 +43,14 @@ svg.ic{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:1.8;strok
   background:linear-gradient(100deg,var(--sky) 0%,var(--sky2) 70%,#2A57AE 100%)}
 .hbar .sky{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .hbar .row{position:relative;display:flex;align-items:center;gap:10px;padding:0 16px}
-.hbar .htitle{font-size:17px;font-weight:600;flex:1;text-align:center;letter-spacing:.5px}
-.hbar .hleft,.hbar .hright{display:flex;gap:8px;min-width:74px;align-items:center}
+.hbar.home{background:linear-gradient(90deg,#0A1F5C 0%,#1A3B89 100%)}   /* 首頁：右端對齊 hero 頂緣，避免接縫 */
+.hbar .htitle{font-size:17px;font-weight:600;flex:1;min-width:0;text-align:center;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbar .hleft,.hbar .hright{display:flex;gap:8px;min-width:74px;align-items:center;flex-shrink:0}
 .hbar .hright{justify-content:flex-end}
-.iconbtn{width:34px;height:34px;border-radius:50%;border:none;background:none;color:inherit;font-size:19px;
+@media (max-width:480px){.hbar .htitle .pl{display:none}.hbar .hleft,.hbar .hright{min-width:44px}}
+.iconbtn{width:42px;height:42px;border-radius:50%;border:none;background:none;color:inherit;font-size:19px;
   display:flex;align-items:center;justify-content:center;cursor:pointer}
-.backbtn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);font-size:17px;
+.backbtn{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);font-size:17px;
   display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff}
 .hbar .btn.pri{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.45);color:#fff}
 .brand{display:flex;align-items:center;gap:9px;flex:1}
@@ -90,7 +93,7 @@ h3.sect::before{content:"";width:18px;height:1px;background:var(--sky2)}
 .placeholder-page .tt{font-size:15px;font-weight:600;color:var(--ink2)}
 .placeholder-page .dd{font-size:12.5px;margin-top:6px}
 .tabbar{display:flex;gap:8px;padding:11px 14px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto}
-.tab{flex-shrink:0;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:7px 15px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink2)}
+.tab{flex-shrink:0;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink2)}
 .tab.on{background:var(--navy);border-color:var(--navy);color:#fff}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink2);margin-bottom:5px}
@@ -102,7 +105,7 @@ h3.sect::before{content:"";width:18px;height:1px;background:var(--sky2)}
 .camlbl input{display:none}
 
 /* ===== 首頁：主視覺 hero ===== */
-.hero{position:relative;color:#fff;overflow:hidden;min-height:214px;display:flex;flex-direction:column;justify-content:flex-end;
+.hero{position:relative;color:#fff;overflow:hidden;aspect-ratio:600/420;max-height:300px;display:flex;flex-direction:column;justify-content:flex-end;
   background:linear-gradient(170deg,var(--sky) 0%,var(--sky2) 60%,var(--sky3) 100%)}
 .hero .sky{position:absolute;inset:0;width:100%;height:100%;display:block}
 .hero .ht{position:relative;padding:18px 18px 18px}
@@ -128,7 +131,7 @@ h3.sect::before{content:"";width:18px;height:1px;background:var(--sky2)}
 .tile.main{background:linear-gradient(160deg,var(--sky) 0%,var(--sky2) 100%);border-color:transparent;color:#fff}
 .tile.main::before{display:none}
 .tile.main .sky{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.tile.main>*{position:relative}
+.tile.main>:not(.no):not(.sky){position:relative}
 .tile.main .tic{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35)}
 .tile.main .tp,.tile.main .td{color:rgba(255,255,255,.82)}
 .tile.main .tt{color:#fff}
@@ -223,7 +226,7 @@ h3.sect::before{content:"";width:18px;height:1px;background:var(--sky2)}
   .hbar .row,#screen>.pagepad,#screen>.tabbar,.hero .ht{max-width:960px;margin-left:auto;margin-right:auto;width:100%}
   body{font-size:16px}
   .hbar .htitle{font-size:18px}
-  .hero{min-height:260px}
+  .hero{aspect-ratio:1200/360;min-height:260px;max-height:420px}   /* 與 kvSvg(1200,360) 同比例，構圖完整落版 */
   .hero .hn{font-size:54px}
   .hero .hs{font-size:22px}
   .tiles{grid-template-columns:repeat(4,1fr)}
@@ -241,6 +244,8 @@ h3.sect::before{content:"";width:18px;height:1px;background:var(--sky2)}
   .koala2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
   .koala2>div{min-width:0}
 }
+@media (min-width:1200px){ .tile{min-height:200px} .tiles{gap:16px} }
+.waiter .wrow .wt.note{color:var(--sky2)}
 </style>
 </head>
 <body>
