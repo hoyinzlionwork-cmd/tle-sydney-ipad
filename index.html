@@ -105,7 +105,7 @@ h3.sect::before{content:"";width:18px;height:1px;background:var(--sky2)}
 .camlbl input{display:none}
 
 /* ===== 首頁：主視覺 hero ===== */
-.hero{position:relative;color:#fff;overflow:hidden;aspect-ratio:600/420;max-height:300px;display:flex;flex-direction:column;justify-content:flex-end;
+.hero{position:relative;color:#fff;overflow:hidden;width:100%;height:min(70vw,300px);display:flex;flex-direction:column;justify-content:flex-end;
   background:linear-gradient(170deg,var(--sky) 0%,var(--sky2) 60%,var(--sky3) 100%)}
 .hero .sky{position:absolute;inset:0;width:100%;height:100%;display:block}
 .hero .ht{position:relative;padding:18px 18px 18px}
@@ -115,7 +115,8 @@ h3.sect::before{content:"";width:18px;height:1px;background:var(--sky2)}
 .hero .hd{font-size:12.5px;opacity:.85;margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .hero .hd .todo{color:var(--gold);font-weight:600}
 .hero .hd .dot{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.6)}
-.hero.kv{background-size:cover;background-position:center;min-height:300px}   /* 有主視覺原稿時：原稿當底、標題由原稿呈現 */
+@media (min-width:480px){.hero{height:clamp(160px,30vw,420px)}}   /* 480px 起用寬螢幕構圖（1200×360），高度＝0.3×寬 */
+.hero.kv{background-size:cover;background-position:center}   /* 有主視覺原稿時：原稿當底、標題由原稿呈現 */
 .hero.kv .sky{opacity:.2}
 .hero.kv .hn,.hero.kv .hs{display:none}
 .hero.kv .ht{background:linear-gradient(0deg,rgba(10,31,92,.75),rgba(10,31,92,0))}
@@ -226,7 +227,7 @@ h3.sect::before{content:"";width:18px;height:1px;background:var(--sky2)}
   .hbar .row,#screen>.pagepad,#screen>.tabbar,.hero .ht{max-width:960px;margin-left:auto;margin-right:auto;width:100%}
   body{font-size:16px}
   .hbar .htitle{font-size:18px}
-  .hero{aspect-ratio:1200/360;min-height:260px;max-height:420px}   /* 與 kvSvg(1200,360) 同比例，構圖完整落版 */
+  .hero{height:clamp(230px,30vw,420px)}   /* 與 kvSvg(1200,360) 同比例（0.3×寬）；明確給高度，不用 aspect-ratio 以免尺寸轉移成寬度 */
   .hero .hn{font-size:54px}
   .hero .hs{font-size:22px}
   .tiles{grid-template-columns:repeat(4,1fr)}

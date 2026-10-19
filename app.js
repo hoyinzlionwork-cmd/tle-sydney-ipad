@@ -71,7 +71,7 @@ function kvSvg(W,H,o={}){
 <filter id="${id}-blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="${o.blur||40}"/></filter></defs>${g}</svg>`;
 }
 /* 頁首用：只有星星、一條弧線、右側小南十字；底色由 CSS 漸層負責 */
-const skySvg=(id,o={})=>kvSvg(900,120,Object.assign({id,bg:false,stars:80,seed:3,arc:"M-20 112 C 240 10, 620 -14, 930 76",crux:{x:842,y:58,s:30}},o)).replace("<svg ",'<svg class="sky" ');
+const skySvg=(id,o={})=>kvSvg(900,120,Object.assign({id,bg:false,stars:80,seed:3,arc:"M-20 112 C 260 6, 640 -10, 930 26",crux:{x:860,y:64,s:17}},o)).replace("<svg ",'<svg class="sky" ');
 const probe=src=>new Promise(res=>{ if(!src) return res(null); const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src=src; });
 
 /* ============================================================ CONFIG（待補處不自行填） */
@@ -226,7 +226,7 @@ const PAGES={};
 
 /* ============================================================ 首頁 */
 function renderHome(hdr,scr){
-  hdr.innerHTML=`<div class="hbar home">${skySvg("hh",{crux:null})}<div class="row">
+  hdr.innerHTML=`<div class="hbar home">${skySvg("hh",{crux:null,arc:null})}<div class="row">
     <div class="brand"><div class="lion" id="lionmark">獅</div><div class="bt"><div class="b1">導領e化平台</div><div class="b2">LEADER iPAD</div></div></div>
     <div class="hright"><button class="iconbtn" id="setbtn">${ic("gear",20)}</button></div>
   </div></div>`;
@@ -234,16 +234,16 @@ function renderHome(hdr,scr){
   probe(CONFIG.logo).then(im=>{ const m=hdr.querySelector("#lionmark"); if(im&&m) m.innerHTML=`<img src="${esc(CONFIG.logo)}" alt="Lion Travel">`; });
   const hero=document.createElement("div");
   hero.className="hero";
-  /* 寬螢幕與手機各一組構圖，viewBox 比例與 CSS aspect-ratio 一致，南十字與帆影不會被裁掉 */
-  const wide=matchMedia("(min-width:768px)").matches;
+  /* 寬螢幕與手機各一組構圖，viewBox 比例與 CSS 高度（0.3×寬／0.7×寬）一致，南十字與帆影不會被裁掉 */
+  const wide=matchMedia("(min-width:480px)").matches;   /* 與 index.html 的 .hero 高度斷點一致 */
   const heroSvg=wide?kvSvg(1200,360,{id:"hero",stars:260,seed:11,diag:true,
-      arc:"M-40 250 C 300 20, 760 -60, 1240 60",
-      crux:{x:1010,y:92,s:62},
+      arc:"M-40 260 C 280 60, 720 0, 1240 100",
+      crux:{x:1030,y:110,s:60},
       opera:{x:880,y:336,s:110,a:.8,fill:"#fff",fillA:.07},
       flare:[[40,330,220,"#BFE0FF",.45],[260,420,240,"#FFC9E0",.4],[150,210,120,"#FFE2B0",.35]]})
     :kvSvg(600,420,{id:"hero",stars:170,seed:11,diag:true,
       arc:"M-20 300 C 150 60, 380 -20, 620 120",
-      crux:{x:480,y:110,s:52},
+      crux:{x:500,y:150,s:46},
       opera:{x:380,y:412,s:70,a:.8,fill:"#fff",fillA:.07},
       flare:[[20,400,170,"#BFE0FF",.45],[200,460,180,"#FFC9E0",.4],[90,300,90,"#FFE2B0",.35]]});
   hero.innerHTML=`${heroSvg.replace("<svg ",'<svg class="sky" ')}
@@ -265,7 +265,7 @@ function renderHome(hdr,scr){
   ];
   el.innerHTML=`<div class="tiles">${tiles.map(([id,icn,no,place,tt,td,main])=>`
     <div class="tile${main?" main":""}" data-p="${id}">
-      ${main?kvSvg(400,220,{id:"t3",bg:false,stars:70,seed:5,crux:{x:300,y:60,s:26},arc:"M-10 200 C 110 70, 240 10, 420 30"}).replace("<svg ",'<svg class="sky" '):""}
+      ${main?kvSvg(400,220,{id:"t3",bg:false,stars:70,seed:5,crux:{x:330,y:150,s:22},arc:"M-10 200 C 110 70, 240 10, 420 30"}).replace("<svg ",'<svg class="sky" '):""}
       <span class="no">${no}</span>
       <div class="tic">${ic(icn,22)}</div>
       <div class="tp">${esc(place)}</div>
