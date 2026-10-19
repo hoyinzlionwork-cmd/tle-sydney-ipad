@@ -514,7 +514,7 @@ async function startCam(video){
 
 PAGES.koala=(hdr,scr)=>{
   hbar(hdr,"Taronga Zoo · 無尾熊紀念照");
-  const K=S.koala; if(!K.date) K.date=today();
+  const K=S.koala; if(!K.date||!K.dateEdited) K.date=today();   /* 每次進頁都用今天；領隊手動改過才保留 */
   const fr=FRAMES.find(f=>f.id===K.frame)||FRAMES[0];
   const el=document.createElement("div");
   el.className="pagepad";
@@ -556,7 +556,7 @@ PAGES.koala=(hdr,scr)=>{
   const kg=el.querySelector("#kg"), kn=el.querySelector("#kn"), kd=el.querySelector("#kd");
   kg.onchange=()=>{ K.guest=kg.value; if(kg.value){ K.name=kg.value.replace(/（示意）/g,""); kn.value=K.name; } save(); };
   kn.oninput=()=>{ K.name=kn.value; save(); };
-  kd.oninput=()=>{ K.date=kd.value; save(); };
+  kd.oninput=()=>{ K.date=kd.value; K.dateEdited=true; save(); };
   frameUrl(fr).then(u=>{ const ov=el.querySelector("#ov"), th=el.querySelector("#frthumb"); if(ov) ov.src=u; if(th) th.src=u; });
 
   const video=el.querySelector("#cam"), nocam=el.querySelector("#nocam"), shot=el.querySelector("#shot");
