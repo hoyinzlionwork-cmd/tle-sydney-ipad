@@ -24,55 +24,15 @@ const P = {
   x:'<path d="M6 6l12 12M18 6 6 18"/>',
 };
 const ic=(n,s)=>`<svg class="ic" viewBox="0 0 24 24" style="font-size:${s||18}px">${P[n]||""}</svg>`;
-const STAR='<svg class="st" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 14 10 22 12 14 14 12 22 10 14 2 12 10 10Z" fill="currentColor"/></svg>';
+let STAR='';   /* 區塊標題前的小星，等 KV 定義後指定 */
 
-/* ============================================================ 主視覺「星引南十字」共用圖形
- * 深藍星空、南十字座、一條細弧線、歌劇院帆影線稿、虹彩微光。
- * 首頁 hero、各頁頁首、主磁磚與紀念框都呼叫同一個 kvSvg()，風格才會一致。 */
-function seeded(seed){ let s=(seed>>>0)||1; return ()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
-const CRUX=[[0,-1],[0.12,1],[-0.78,-0.08],[0.7,-0.32],[0.36,0.3]];   /* Gacrux、Acrux、Mimosa、δ Cru、ε Cru 的相對位置 */
-const f1=v=>(+v).toFixed(1);
-function sparkle(id,x,y,r,a=1){
-  return `<path d="M${f1(x)} ${f1(y-r)} L${f1(x+r*.2)} ${f1(y-r*.2)} L${f1(x+r)} ${f1(y)} L${f1(x+r*.2)} ${f1(y+r*.2)} L${f1(x)} ${f1(y+r)} L${f1(x-r*.2)} ${f1(y+r*.2)} L${f1(x-r)} ${f1(y)} L${f1(x-r*.2)} ${f1(y-r*.2)}Z" fill="#fff" fill-opacity="${a}"/>`
-       + `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(r*1.7)}" fill="url(#${id}-glow)" opacity="${(a*.9).toFixed(2)}"/>`;
-}
-function operaSvg({x,y,s,a=.75,fill="#0A1F5C",fillA=.28}){ /* 歌劇院帆影線稿：四片帆由左至右漸高，細輪廓＋帆面肋線；帆面填色依底色深淺傳入 */
-  const shells=[[0,.9,.55],[.42,1.05,.8],[.98,1.15,1],[1.78,.95,.72]];
-  let g=`<path d="M${f1(x-s*.3)} ${f1(y)} H${f1(x+s*3.1)}" stroke="#fff" stroke-opacity="${(a*.6).toFixed(2)}" stroke-width="${(s*.006).toFixed(2)}" fill="none"/>`;
-  shells.forEach(([dx,w,h])=>{
-    const X=x+dx*s, W=w*s, H=h*s, ax=X+W*.66, ay=y-H;
-    const d=`M${f1(X)} ${f1(y)} Q${f1(X+W*.12)} ${f1(y-H*.72)} ${f1(ax)} ${f1(ay)} Q${f1(X+W*.84)} ${f1(y-H*.62)} ${f1(X+W)} ${f1(y)}Z`;
-    let rib=""; for(let k=1;k<6;k++) rib+=`M${f1(ax)} ${f1(ay)} L${f1(X+W*k/6)} ${f1(y)} `;
-    g+=`<path d="${d}" fill="${fill}" fill-opacity="${fillA}" stroke="#fff" stroke-opacity="${a}" stroke-width="${(s*.013).toFixed(2)}" stroke-linejoin="round"/>`
-     + `<path d="${rib}" fill="none" stroke="#fff" stroke-opacity="${(a*.45).toFixed(2)}" stroke-width="${(s*.005).toFixed(2)}"/>`;
-  });
-  return `<g>${g}</g>`;
-}
-/* o：id（同頁多個 svg 時避免漸層 id 撞名）、bg（false＝不畫底色，交給 CSS）、stars、seed、starBand（星星只分布在上方比例）、k（線條粗細倍率）、
- *    arc（弧線 path d）、crux {x,y,s}、opera {x,y,s,a}、flare [[x,y,r,color,opacity]]、blur、diag（底色斜向） */
-function kvSvg(W,H,o={}){
-  const id=o.id||"kv", rnd=seeded(o.seed||7), n=o.stars??Math.round(W*H/7000), k=o.k||1;
-  let g=o.bg===false?"":`<rect width="${W}" height="${H}" fill="url(#${id}-sky)"/>`;
-  (o.flare||[]).forEach(([fx,fy,fr,c,a])=>{ g+=`<circle cx="${fx}" cy="${fy}" r="${fr}" fill="${c}" opacity="${a}" filter="url(#${id}-blur)" style="mix-blend-mode:screen"/>`; });
-  /* 星空兩族：多數細星（r 0.35–0.9）＋少數亮星（r 1.4–2.2 帶光暈），才有縱深 */
-  const band=o.starBand??1, nf=Math.round(n*.85);
-  for(let i=0;i<n;i++){ const x=rnd()*W, y=rnd()*H*band, bright=i>=nf;
-    const r=(bright?1.4+rnd()*.8:0.35+rnd()*.55)*k, a=bright?0.7+rnd()*0.3:0.2+rnd()*0.35;
-    if(bright) g+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="${(r*1.6).toFixed(2)}" fill="url(#${id}-glow)" opacity=".25"/>`;
-    g+=`<circle cx="${f1(x)}" cy="${f1(y)}" r="${r.toFixed(2)}" fill="#fff" fill-opacity="${a.toFixed(2)}"/>`; }
-  if(o.arc) g+=`<path d="${o.arc}" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="${(k*1.1).toFixed(2)}" stroke-linecap="round"/>`;
-  if(o.crux){ const c=o.crux, p=CRUX.map(([px,py])=>[c.x+px*c.s,c.y+py*c.s]);
-    g+=`<path d="M${f1(p[0][0])} ${f1(p[0][1])} L${f1(p[1][0])} ${f1(p[1][1])} M${f1(p[2][0])} ${f1(p[2][1])} L${f1(p[3][0])} ${f1(p[3][1])}" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="${(c.s*.012).toFixed(2)}"/>`;
-    p.forEach((q,i)=>{ g+=sparkle(id,q[0],q[1],(i===4?.035:i===1?.075:.06)*c.s); }); }
-  if(o.opera) g+=operaSvg(o.opera);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-<defs><linearGradient id="${id}-sky" x1="0" y1="0" x2="${o.diag?1:0}" y2="1"><stop offset="0" stop-color="#0A1F5C"/><stop offset=".6" stop-color="#1C3F8F"/><stop offset="1" stop-color="#3D6CC4"/></linearGradient>
-<radialGradient id="${id}-glow"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
-<filter id="${id}-blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="${o.blur||40}"/></filter></defs>${g}</svg>`;
-}
-/* 頁首用：只有星星、一條弧線、右側小南十字；底色由 CSS 漸層負責 */
-const skySvg=(id,o={})=>kvSvg(900,120,Object.assign({id,bg:false,stars:80,seed:3,arc:"M-20 112 C 260 6, 640 -10, 930 26",crux:{x:860,y:64,s:17}},o)).replace("<svg ",'<svg class="sky" ');
-const probe=src=>new Promise(res=>{ if(!src) return res(null); const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src=src; });
+/* ============================================================ 主視覺「星引南十字」元素
+ * 設計師提供的去背 PNG（Drive 資料夾），由 tools/prep_kv.py 處理到 app/img/kv/。程式不自己畫圖，首頁、頁首、磁磚、紀念框、
+ * 旅客地圖頁首與 App 圖示都用同一批檔案。 */
+const KV={bg:"img/kv/bg.jpg",title:"img/kv/title.png",board:"img/kv/board.png",sub:"img/kv/sub.png",
+          opera:"img/kv/opera.webp",crux:"img/kv/crux.webp",logo:"img/kv/logo.png",mark:"img/kv/mark.png",star:"img/kv/star.png"};
+const STAR_IMG=(cls="st")=>`<img class="${cls}" src="${KV.star}" alt="" aria-hidden="true">`;   /* 南十字裁下的一顆星，當小裝飾用 */
+STAR=STAR_IMG();
 
 /* ============================================================ CONFIG（待補處不自行填） */
 const CONFIG = {
@@ -81,8 +41,6 @@ const CONFIG = {
   kicker: "2026 董事會 OUTING",
   sub:    "Sydney + Melbourne",
   dates:  "",                   /* 出團日期，例 "2026/xx/xx – xx/xx"，待補 */
-  logo:   "",                   /* 雄獅旅遊 Logo，待補：去背 PNG 放到 app/img/logo.png 後把這裡填 "img/logo.png"，頁首與紀念照就會帶入；空白＝不印 */
-  kv:     "",                   /* 主視覺原稿，待補：放到 app/img/kv.jpg 後填 "img/kv.jpg"，首頁 hero 會改用原稿當底圖；空白＝用程式重現的星空 */
   zooLine:"Taronga Zoo, Sydney",/* 紀念照第二行固定字樣 */
 };
 
@@ -172,7 +130,7 @@ const idbClear=st=>new Promise((res,rej)=>{
 /* ============================================================ SHELL */
 const $=s=>document.querySelector(s);
 function toast(msg){
-  const t=$("#toast"); t.textContent=msg; t.classList.add("on");
+  const t=$("#toast"); t.innerHTML=STAR_IMG("ts")+esc(msg); t.classList.add("on");
   clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("on"),1900);
 }
 function goPage(p){ S.page=p; save(); render(); }
@@ -184,14 +142,16 @@ function render(){
   else renderHome(hdr,scr);
   scr.scrollTop=0;
 }
-function hbar(hdr,title,{back=true,right=""}={}){
+function hbar(hdr,title,{back=true,right="",hero=null}={}){
   const parts=String(title).split(" · ");   /* 「地點 · 功能」：手機寬度只留功能名 */
   const ttl=parts.length>1?`<span class="pl">${esc(parts[0])} · </span>${esc(parts.slice(1).join(" · "))}`:esc(title);
-  hdr.innerHTML=`<div class="hbar">${skySvg("hb")}<div class="row">
+  /* hero：頁首往下延伸成主視覺漸層帶，放場地名（細明體）與英文小字、南十字 */
+  const sub=hero?`<div class="row hsub"><div><div class="hz">${esc(hero.zh)}</div><div class="he">${esc(hero.en)}</div></div><img class="hcrux" src="${KV.crux}" alt=""></div>`:"";
+  hdr.innerHTML=`<div class="hbar${hero?" tall":""}"><div class="row">
     <div class="hleft">${back?`<button class="backbtn">${ic("back",16)}</button>`:""}</div>
     <div class="htitle">${ttl}</div>
     <div class="hright">${right}</div>
-  </div></div>`;
+  </div>${sub}</div>`;
   const bk=hdr.querySelector(".backbtn");
   if(bk) bk.onclick=()=>goPage(null);
 }
@@ -226,34 +186,21 @@ const PAGES={};
 
 /* ============================================================ 首頁 */
 function renderHome(hdr,scr){
-  hdr.innerHTML=`<div class="hbar home">${skySvg("hh",{crux:null,arc:null})}<div class="row">
-    <div class="brand"><div class="lion" id="lionmark">獅</div><div class="bt"><div class="b1">導領e化平台</div><div class="b2">LEADER iPAD</div></div></div>
+  hdr.innerHTML=`<div class="hbar home"><div class="row">
+    <div class="brand"><div class="lion"><img src="${KV.mark}" alt="雄獅旅遊"></div><div class="bt"><div class="b1">導領e化平台</div><div class="b2">LEADER iPAD</div></div></div>
     <div class="hright"><button class="iconbtn" id="setbtn">${ic("gear",20)}</button></div>
   </div></div>`;
   hdr.querySelector("#setbtn").onclick=()=>goPage("settings");
-  probe(CONFIG.logo).then(im=>{ const m=hdr.querySelector("#lionmark"); if(im&&m) m.innerHTML=`<img src="${esc(CONFIG.logo)}" alt="Lion Travel">`; });
+  /* hero：主視覺底圖（CSS background）＋設計師的南十字、歌劇院、標題字、英文字 */
   const hero=document.createElement("div");
   hero.className="hero";
-  /* 寬螢幕與手機各一組構圖，viewBox 比例與 CSS 高度（0.3×寬／0.7×寬）一致，南十字與帆影不會被裁掉 */
-  const wide=matchMedia("(min-width:480px)").matches;   /* 與 index.html 的 .hero 高度斷點一致 */
-  const heroSvg=wide?kvSvg(1200,360,{id:"hero",stars:260,seed:11,diag:true,
-      arc:"M-40 260 C 280 60, 720 0, 1240 100",
-      crux:{x:1030,y:110,s:60},
-      opera:{x:880,y:336,s:110,a:.8,fill:"#fff",fillA:.07},
-      flare:[[40,330,220,"#BFE0FF",.45],[260,420,240,"#FFC9E0",.4],[150,210,120,"#FFE2B0",.35]]})
-    :kvSvg(600,420,{id:"hero",stars:170,seed:11,diag:true,
-      arc:"M-20 300 C 150 60, 380 -20, 620 120",
-      crux:{x:500,y:150,s:46},
-      opera:{x:380,y:412,s:70,a:.8,fill:"#fff",fillA:.07},
-      flare:[[20,400,170,"#BFE0FF",.45],[200,460,180,"#FFC9E0",.4],[90,300,90,"#FFE2B0",.35]]});
-  hero.innerHTML=`${heroSvg.replace("<svg ",'<svg class="sky" ')}
+  hero.innerHTML=`<img class="kvc" src="${KV.crux}" alt=""><img class="kvo" src="${KV.opera}" alt="">
     <div class="ht">
-      <div class="hk">${esc(CONFIG.kicker)}</div>
-      <div class="hn">${esc(CONFIG.title)}</div>
-      <div class="hs">${esc(CONFIG.sub)}</div>
+      <img class="kvb" src="${KV.board}" alt="${esc(CONFIG.kicker)}">
+      <img class="kvt" src="${KV.title}" alt="${esc(CONFIG.title)}">
+      <img class="kvs" src="${KV.sub}" alt="${esc(CONFIG.sub)}">
       <div class="hd"><span>${esc(CONFIG.tour)}</span><span class="dot"></span><span>${CONFIG.dates?esc(CONFIG.dates):`出團日期 <span class="todo">待補</span>`}</span></div>
     </div>`;
-  probe(CONFIG.kv).then(im=>{ if(im){ hero.classList.add("kv"); hero.style.backgroundImage=`url("${CONFIG.kv}")`; } });
   scr.appendChild(hero);
   const el=document.createElement("div");
   el.className="pagepad";
@@ -265,7 +212,7 @@ function renderHome(hdr,scr){
   ];
   el.innerHTML=`<div class="tiles">${tiles.map(([id,icn,no,place,tt,td,main])=>`
     <div class="tile${main?" main":""}" data-p="${id}">
-      ${main?kvSvg(400,220,{id:"t3",bg:false,stars:70,seed:5,crux:{x:300,y:110,s:20},arc:"M-10 200 C 110 90, 260 45, 420 75"}).replace("<svg ",'<svg class="sky" '):""}
+      ${main?`<img class="kvc" src="${KV.crux}" alt="">`:""}
       <span class="no">${no}</span>
       <div class="tic">${ic(icn,22)}</div>
       <div class="tp">${esc(place)}</div>
@@ -280,7 +227,7 @@ function renderHome(hdr,scr){
 
 /* ============================================================ 1 酒單 */
 PAGES.wine=(hdr,scr)=>{
-  hbar(hdr,"喜鳳台 · 酒單 Wine List");
+  hbar(hdr,"電子酒單",{hero:{zh:"喜鳳台",en:"WINE LIST"}});
   const list=wines();
   const cats=["全部",...new Set(list.map(w=>w.cat))];
   if(!cats.includes(S.wineCat)) S.wineCat="全部";
@@ -315,7 +262,7 @@ PAGES.wine=(hdr,scr)=>{
 const TEMP_EN={ "冰":"Iced", "熱":"Hot", "":"" };
 const SEP="\u0001";   /* 彙總分組鍵的分隔字元：備註是自由輸入，不能用「|」 */
 PAGES.drinks=(hdr,scr)=>{
-  hbar(hdr,"Rockpool · 飲品點選");
+  hbar(hdr,"飲品點選",{hero:{zh:"Rockpool",en:"DRINKS ORDER"}});
   const gs=guests(), ds=drinks();
   const counts={};
   /* 以「飲品｜冷熱｜備註」分組：有備註的另成一列，服務生才看得到少冰、不加糖這類要求 */
@@ -383,32 +330,32 @@ function openOrderModal(g){
 }
 
 /* ============================================================ 3 無尾熊紀念照 */
-/* 紀念框「星引南十字」：1600×2000（4:5）、無邊框。照片滿版；上緣淡入深藍星空、南十字座與一條細弧線，
- * 下緣深藍夜色托住文字；右下歌劇院帆影線稿、虹彩微光。疊層只算一次（renderOverlay），取景畫面、縮圖與合成共用。 */
+/* 紀念框「星引南十字」：1600×2000（4:5）、無邊框。照片滿版；上下各鋪一段主視覺底圖的星空（邊緣漸隱），
+ * 右上南十字、左上雄獅、下方標題字／英文字（設計師原圖）、姓名與日期、右下歌劇院。疊層只算一次（renderOverlay）。
+ * imgfade 的 sx/sy/sw/sh 是 img/kv/bg.jpg（2400×1710）上的裁切範圍。 */
 const FW=1600, FH=2000;
 const FONT='"PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif';
-const SERIF='"Songti TC","Noto Serif TC","Source Han Serif TC","PMingLiU","Microsoft JhengHei",serif';
-const SCRIPT='"Snell Roundhand","Savoye LET","Apple Chancery","Segoe Script","Brush Script MT",cursive';
 const FULL={x:0,y:0,w:FW,h:FH};
-function crossSvg(){
-  return kvSvg(FW,FH,{id:"fr",bg:false,stars:260,seed:21,starBand:.24,k:1.7,blur:90,
-    arc:"M-60 480 C 400 0, 1000 -160, 1660 220",
-    crux:{x:1330,y:300,s:150},
-    opera:{x:1010,y:1960,s:130,a:.7},
-    flare:[[1480,1980,420,"#FFE2B0",.22],[1250,1900,260,"#FFC9E0",.16],[160,1960,320,"#BFE0FF",.14]]});
-}
 const FRAMES=[
   { id:"cross", name:"星引南十字",
-    text:{align:"left",x:110,nameY:1836,line2Y:1900,nameColor:"#FFFFFF",line2Color:"rgba(255,255,255,.82)",nameSize:74,line2Size:34,maxW:1000,shadow:true,nameFont:FONT,nameWeight:600,nameSpacing:3},
-    logo:{x:110,y:100,w:220,h:90},
+    text:{align:"center",x:560,nameY:1858,line2Y:1912,nameColor:"#FFFFFF",line2Color:"rgba(255,255,255,.9)",nameSize:74,line2Size:38,maxW:760,shadow:true,nameFont:FONT,nameWeight:600,nameSpacing:3},   /* 沒有姓名時日期行印在 nameY-10 */
     layers:[
-      {type:"scrim",y0:0,y1:460,stops:[[0,"rgba(10,31,92,.68)"],[0.5,"rgba(10,31,92,.28)"],[1,"rgba(10,31,92,0)"]]},
-      {type:"scrim",y0:1300,y1:2000,stops:[[0,"rgba(10,31,92,0)"],[0.45,"rgba(10,31,92,.72)"],[1,"rgba(8,24,70,.97)"]]},
-      {type:"svg",svg:crossSvg},
-      {type:"caption",text:"2026 董事會 OUTING · TARONGA ZOO, SYDNEY",x:110,y:1556,align:"left",color:"rgba(255,255,255,.8)",size:26,spacing:7},
-      {type:"title",text:"星引南十字",x:110,y:1712,size:120,color:"#FFFFFF",spacing:14},
-      {type:"script",text:"Sydney + Melbourne",x:"after",gap:40,y:1712,size:60,color:"rgba(255,255,255,.9)"},
-      {type:"rule",x0:110,x1:1490,y:1752,color:"rgba(255,255,255,.36)"},
+      /* 四邊星空暗角：照片像嵌在夜空裡（中心透明、往四角漸深） */
+      {type:"imgmask",src:KV.bg,sx:1150,sy:0,sw:1250,sh:1562,dx:0,dy:0,dw:1600,dh:2000,r0:.5,r1:1,a0:0,a1:.72},
+      /* 上緣星空帶 */
+      {type:"imgfade",src:KV.bg,sx:1000,sy:0,sw:1400,sh:490,dx:0,dy:0,dw:1600,dh:560,fade:[[0,.97],[.45,.7],[1,0]]},
+      /* 下緣夜空帶＋加深托字 */
+      {type:"imgfade",src:KV.bg,sx:1200,sy:40,sw:1200,sh:570,dx:0,dy:1240,dw:1600,dh:760,fade:[[0,0],[.28,.82],[1,1]]},
+      {type:"scrim",y0:1480,y1:2000,stops:[[0,"rgba(8,24,70,0)"],[1,"rgba(8,24,70,.5)"]]},
+      /* 右下虹彩光：主視覺的水晶折射，以 screen 打在歌劇院後面 */
+      {type:"imgmask",src:KV.bg,sx:150,sy:850,sw:1500,sh:860,dx:560,dy:1300,dw:1240,dh:760,r0:0,r1:.55,a0:.85,a1:0,blend:"screen",opacity:.75},
+      {type:"img",src:KV.crux,x:1300,y:110,w:170,opacity:1},
+      {type:"img",src:KV.mark,x:110,y:100,w:110,opacity:1},
+      {type:"img",src:KV.opera,x:880,y:1700,w:720,opacity:.96},
+      /* 標題鎖定組合，視覺置中於 x=560：小字、大標（含金色飾線與星芒）、英文手寫、日期 */
+      {type:"img",src:KV.board,x:400,y:1468,w:320,opacity:.92},
+      {type:"img",src:KV.title,x:200,y:1510,w:640,opacity:1},
+      {type:"img",src:KV.sub,x:345,y:1740,w:430,opacity:.95},
     ]},
 ];
 const assetCache={};
@@ -426,12 +373,11 @@ function spacedText(ctx,text,x,y,align,spacing){
   let cx=align==="right"?x-total:align==="center"?x-total/2:x;
   ctx.textAlign="left";
   chars.forEach((c,i)=>{ ctx.fillText(c,cx,y); cx+=ws[i]+spacing; });
-  return cx-spacing;   /* 文字結尾 x，給接在後面的元素用 */
+  return cx-spacing;
 }
 async function renderOverlay(fr){
   const cv=document.createElement("canvas"); cv.width=FW; cv.height=FH;
   const ctx=cv.getContext("2d");
-  let lastEnd=0;
   for(const L of fr.layers){
     if(L.type==="scrim"){
       const g=ctx.createLinearGradient(0,L.y0,0,L.y1); L.stops.forEach(([o,c])=>g.addColorStop(o,c));
@@ -443,21 +389,26 @@ async function renderOverlay(fr){
       if(L.flip){ ctx.translate(L.x+w,L.y); ctx.scale(-1,1); ctx.drawImage(im,0,0,w,h); }
       else ctx.drawImage(im,L.x,L.y,w,h);
       ctx.restore();
+    }else if(L.type==="imgmask"){   /* 裁一塊底圖，套放射狀遮罩（中心 a0 → 邊緣 a1），可指定混合模式 */
+      const im=await loadAsset(L.src); if(!im) continue;
+      const t=document.createElement("canvas"); t.width=L.dw; t.height=L.dh; const tc=t.getContext("2d");
+      tc.drawImage(im,L.sx,L.sy,L.sw,L.sh,0,0,L.dw,L.dh);
+      tc.globalCompositeOperation="destination-in";
+      const R=Math.hypot(L.dw,L.dh)/2, g=tc.createRadialGradient(L.dw/2,L.dh/2,R*L.r0,L.dw/2,L.dh/2,R*L.r1);
+      g.addColorStop(0,`rgba(0,0,0,${L.a0})`); g.addColorStop(1,`rgba(0,0,0,${L.a1})`); tc.fillStyle=g; tc.fillRect(0,0,L.dw,L.dh);
+      ctx.save(); ctx.globalAlpha=L.opacity??1; ctx.globalCompositeOperation=L.blend||"source-over"; ctx.drawImage(t,L.dx,L.dy); ctx.restore();
+    }else if(L.type==="imgfade"){   /* 從主視覺底圖裁一塊，上下漸隱後貼上 */
+      const im=await loadAsset(L.src); if(!im) continue;
+      const t=document.createElement("canvas"); t.width=L.dw; t.height=L.dh; const tc=t.getContext("2d");
+      tc.drawImage(im,L.sx,L.sy,L.sw,L.sh,0,0,L.dw,L.dh);
+      tc.globalCompositeOperation="destination-in";
+      const g=tc.createLinearGradient(0,0,0,L.dh); L.fade.forEach(([o,a])=>g.addColorStop(o,`rgba(0,0,0,${a})`)); tc.fillStyle=g; tc.fillRect(0,0,L.dw,L.dh);
+      ctx.save(); ctx.globalAlpha=L.opacity??1; ctx.drawImage(t,L.dx,L.dy); ctx.restore();
     }else if(L.type==="rule"){
       ctx.fillStyle=L.color; ctx.fillRect(L.x0,L.y-1,L.x1-L.x0,2);
     }else if(L.type==="caption"){
       ctx.save(); ctx.fillStyle=L.color; ctx.font=`600 ${L.size}px Helvetica,Arial,${FONT}`;
       spacedText(ctx,L.text,L.x,L.y,L.align,L.spacing||0); ctx.restore();
-    }else if(L.type==="title"){   /* 主視覺標題：細明體、字距寬、柔和陰影 */
-      ctx.save(); ctx.fillStyle=L.color; ctx.font=`400 ${L.size}px ${SERIF}`;
-      ctx.shadowColor="rgba(0,0,0,.35)"; ctx.shadowBlur=24; ctx.shadowOffsetY=4;
-      lastEnd=spacedText(ctx,L.text,L.x,L.y,"left",L.spacing||0); ctx.restore();
-    }else if(L.type==="script"){  /* 英文手寫體副標，可接在標題後面 */
-      ctx.save(); ctx.fillStyle=L.color; ctx.font=`400 ${L.size}px ${SCRIPT}`; ctx.textAlign="left";   /* 手寫體本身就斜，不再加 italic */
-      ctx.shadowColor="rgba(0,0,0,.3)"; ctx.shadowBlur=16; ctx.shadowOffsetY=3;
-      ctx.fillText(L.text,L.x==="after"?lastEnd+(L.gap||30):L.x,L.y); ctx.restore();
-    }else if(L.type==="svg"){
-      ctx.drawImage(await svgImage(L.svg()),0,0,FW,FH);
     }
   }
   return cv;
@@ -470,13 +421,6 @@ function frameUrl(fr){  /* 疊層縮圖（800×1000 PNG）給取景畫面與縮�
     s.getContext("2d").drawImage(cv,0,0,800,1000);
     s.toBlob(b=>res(URL.createObjectURL(b)),"image/png");
   })));
-}
-let logoImg=null, logoTried=false;
-function logoImage(){
-  if(!CONFIG.logo) return Promise.resolve(null);
-  if(logoTried) return Promise.resolve(logoImg);
-  logoTried=true;
-  return new Promise(res=>{ const im=new Image(); im.onload=()=>{ logoImg=im; res(im); }; im.onerror=()=>res(null); im.src=CONFIG.logo; });
 }
 const srcW=s=>s.videoWidth||s.naturalWidth||s.width, srcH=s=>s.videoHeight||s.naturalHeight||s.height;
 /* 合成：照片 cover 填滿視窗（可平移／縮放）→ 疊框 → 姓名與日期 → Logo */
@@ -502,9 +446,6 @@ async function compose(src,fr,opt,cv){
     if(t.nameSpacing) spacedText(ctx,name,t.x,t.nameY,t.align,t.nameSpacing); else ctx.fillText(name,t.x,t.nameY); }
   if(line2){ ctx.fillStyle=t.line2Color; ctx.textAlign=t.align; fit(line2,t.line2Size,600,FONT); ctx.fillText(line2,t.x,name?t.line2Y:t.nameY-10); }
   ctx.shadowColor="transparent";
-  const lg=await logoImage();
-  if(lg&&fr.logo){ const L=fr.logo, s=Math.min(L.w/lg.naturalWidth,L.h/lg.naturalHeight), lw=lg.naturalWidth*s, lh=lg.naturalHeight*s;
-    ctx.drawImage(lg,L.x+(L.w-lw)/2,L.y+(L.h-lh)/2,lw,lh); }
   return cv;
 }
 const toBlob=(cv,q)=>new Promise(r=>cv.toBlob(r,"image/jpeg",q||0.92));
@@ -532,8 +473,8 @@ async function startCam(video){
 }
 
 PAGES.koala=(hdr,scr)=>{
-  hbar(hdr,"Taronga Zoo · 無尾熊紀念照");
-  const K=S.koala; if(!K.date||!K.dateEdited) K.date=today();   /* 每次進頁都用今天；領隊手動改過才保留 */
+  hbar(hdr,"無尾熊紀念照",{hero:{zh:"Taronga Zoo",en:"KOALA PHOTO"}});
+  const K=S.koala; K.date=today();   /* 照片只印當天日期與 Taronga Zoo，不印姓名、不用選人 */
   const fr=FRAMES.find(f=>f.id===K.frame)||FRAMES[0];
   const el=document.createElement("div");
   el.className="pagepad";
@@ -541,16 +482,12 @@ PAGES.koala=(hdr,scr)=>{
   <div class="koala2">
     <div>
       <div class="card">
-        <div class="ct">${STAR} 這張是誰的</div>
-        <div class="field"><label>董事</label><select id="kg"><option value="">— 自行輸入 —</option>${guests().map(g=>`<option${K.guest===g?" selected":""}>${esc(g)}</option>`).join("")}</select></div>
-        <div class="field"><label>照片上的姓名（可改、可留空）</label><input type="text" id="kn" value="${esc(K.name)}" placeholder="例：王大明 董事"></div>
-        <div class="field" style="margin-bottom:0"><label>日期</label><input type="text" id="kd" value="${esc(K.date)}"></div>
-      </div>
-      <div class="card">
         <div class="ct">${STAR} 紀念框</div>
         <div class="framenote"><div class="fbox"><img id="frthumb" alt=""></div>
-          <div><div class="fn">${esc(fr.name)}</div><div class="fd">依本次董事會主視覺發想：深藍星空與南十字座、一條星軌細線、歌劇院帆影與虹彩微光。照片滿版、無邊框，姓名與日期自動印上。</div></div></div>
+          <div><div class="fn">${esc(fr.name)}</div><div class="fd">使用本次董事會主視覺的原始元素：星空底圖、南十字座、歌劇院、「星引南十字」標題字與雄獅 Logo。照片滿版、無邊框，自動印上日期（${esc(K.date)}）與 ${esc(CONFIG.zooLine)}。</div></div></div>
       </div>
+      <h3 class="sect">已製作的紀念照</h3>
+      <div class="gal" id="gal">讀取中…</div>
     </div>
     <div>
       <div class="card">
@@ -567,15 +504,9 @@ PAGES.koala=(hdr,scr)=>{
         </div>
       </div>
     </div>
-  </div>
-  <h3 class="sect">已製作的紀念照</h3>
-  <div class="gal" id="gal">讀取中…</div>`;
+  </div>`;
   scr.appendChild(el);
 
-  const kg=el.querySelector("#kg"), kn=el.querySelector("#kn"), kd=el.querySelector("#kd");
-  kg.onchange=()=>{ K.guest=kg.value; if(kg.value){ K.name=kg.value.replace(/（示意）/g,""); kn.value=K.name; } save(); };
-  kn.oninput=()=>{ K.name=kn.value; save(); };
-  kd.oninput=()=>{ K.date=kd.value; K.dateEdited=true; save(); };
   frameUrl(fr).then(u=>{ const ov=el.querySelector("#ov"), th=el.querySelector("#frthumb"); if(ov) ov.src=u; if(th) th.src=u; });
 
   const video=el.querySelector("#cam"), nocam=el.querySelector("#nocam"), shot=el.querySelector("#shot");
@@ -600,7 +531,7 @@ PAGES.koala=(hdr,scr)=>{
   renderGallery(el.querySelector("#gal"));
 };
 function koalaOpt(){
-  const K=S.koala; return { name:(K.name||"").trim(), line2:[K.date||today(),CONFIG.zooLine].filter(Boolean).join("  ·  "), dx:0, dy:0, zoom:1 };
+  return { name:"", line2:[today(),CONFIG.zooLine].filter(Boolean).join("  ·  "), dx:0, dy:0, zoom:1 };
 }
 function openCompose(src,{zoomable}){
   const fr=FRAMES.find(f=>f.id===S.koala.frame)||FRAMES[0];
@@ -615,7 +546,7 @@ function openCompose(src,{zoomable}){
      [`${ic("check",16)} 存入紀念照`,"sec",async()=>{ await ensureFile(); await savePhoto(file,fr); toast("已存入紀念照"); }],
      [`${ic("share",16)} 分享／AirDrop`,"pri",async()=>{
         if(!file){ await ensureFile(); }
-        const ok=await shareFile(file,`${opt.name||"紀念照"} · Taronga Zoo`);
+        const ok=await shareFile(file,"星引南十字 · Taronga Zoo");
         if(ok){ await savePhoto(file,fr); toast("已分享並存入紀念照"); }
      }]]);
   const cv=$("#cc"), cz=$("#cz");
@@ -625,7 +556,7 @@ function openCompose(src,{zoomable}){
     try{ await compose(src,fr,opt,cv); file=null; }
     finally{ busy=false; if(dirty){ dirty=false; draw(); } else makeFile(); }
   }
-  async function makeFile(){ const b=await toBlob(cv); file=new File([b],`${(opt.name||"koala").replace(/[\\/:*?"<>|]/g,"")}_TarongaZoo.jpg`,{type:"image/jpeg"}); }
+  async function makeFile(){ const b=await toBlob(cv); file=new File([b],`TarongaZoo_${stamp()}.jpg`,{type:"image/jpeg"}); }
   async function ensureFile(){ while(busy) await new Promise(r=>setTimeout(r,50)); if(!file) await makeFile(); }
   draw();
   let drag=null;
@@ -636,9 +567,10 @@ function openCompose(src,{zoomable}){
   cv.addEventListener("pointercancel",()=>drag=null);
   if(cz) cz.oninput=()=>{ opt.zoom=+cz.value; draw(); };
 }
+const stamp=()=>{ const d=new Date(); return `${today()}_${String(d.getHours()).padStart(2,"0")}${String(d.getMinutes()).padStart(2,"0")}${String(d.getSeconds()).padStart(2,"0")}`; };
 async function savePhoto(file,fr){
-  const K=S.koala;
-  await idbPut("photos",{ id:"k"+Date.now(), name:(K.name||"").trim()||"（未填姓名）", guest:K.guest||"", frame:fr.id, blob:file, ts:Date.now() });
+  const d=new Date(), label=`${today()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  await idbPut("photos",{ id:"k"+Date.now(), name:label, guest:"", frame:fr.id, blob:file, ts:Date.now() });
   const gal=$("#gal"); if(gal) renderGallery(gal);
 }
 async function renderGallery(box){
@@ -686,7 +618,7 @@ PAGES.settings=(hdr,scr)=>{
     <div class="card"><div class="field"><label>Rockpool 飲品（中文｜English｜備註｜圖檔）</label><textarea id="td">${esc(S.drinksTxt)}</textarea></div></div>
     <div class="card"><div class="field"><label>喜鳳台 酒單（分類｜名稱｜產地／年份｜描述｜價格｜圖檔）</label><textarea id="tw" style="min-height:180px">${esc(S.winesTxt)}</textarea></div></div>
     <div class="btnrow"><button class="btn pri" id="sv">儲存</button><button class="btn sec" id="exp">匯出紀錄</button><button class="btn danger" id="rst">重置全部</button></div>
-    <p class="vs" style="margin-top:16px">版本 tle-syd-v8 · 主視覺「星引南十字」。出團日期、雄獅 Logo（img/logo.png）、主視覺原稿（img/kv.jpg）都在 app.js 的 CONFIG 設定（待補）。</p>`;
+    <p class="vs" style="margin-top:16px">版本 tle-syd-v9 · 主視覺「星引南十字」（元素在 img/kv/）。出團日期在 app.js 的 CONFIG 設定（待補）。</p>`;
   el.querySelector("#sv").onclick=()=>{ S.guestsTxt=$("#tg").value; S.drinksTxt=$("#td").value; S.winesTxt=$("#tw").value; save(); toast("已儲存"); };
   el.querySelector("#exp").onclick=()=>{
     const a=document.createElement("a");

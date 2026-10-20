@@ -25,8 +25,7 @@ button{cursor:pointer}
 /* ---- 頂欄 ---- */
 /* 頁首：與領隊 iPad App 同一套「星引南十字」深藍星空；內嵌在 App 內時整個隱藏（App 自己有頁首） */
 .top{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:calc(6px + var(--safe-top)) 16px 6px;min-height:calc(var(--top-h) + var(--safe-top));color:#fff;position:relative;overflow:hidden;z-index:6;
-  background:linear-gradient(100deg,#0A1F5C 0%,#1C3F8F 70%,#2A57AE 100%)}
-.top .sky{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  background:#0A1F5C url(img/kv/bg.jpg) 100% 15% / 230% auto no-repeat}
 .top>*{position:relative}
 .top .t{flex:1;min-width:0;font-size:17px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.5px}
 .top .t small{font-size:11px;letter-spacing:2.5px;opacity:.8;margin-left:10px;font-weight:600}
@@ -51,6 +50,8 @@ body.embed .top{display:none}
 .ov{position:absolute;left:0;top:0;width:0;height:0}
 /* 區域名牌 */
 .zl,.mk{transform:scale(var(--isc));will-change:transform}
+.zl,.mk .n{transition:opacity .15s}
+.layer.zooming .zl,.layer.zooming .mk .n{opacity:0}   /* 縮放中先淡掉名牌與文字，手勢結束再重新排版 */
 .zl{position:absolute;width:0;height:0;pointer-events:none;transition:opacity var(--dur)}
 .zl .s{position:absolute;left:0;top:0;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;background:var(--land);color:#fff;border-radius:6px;padding:4px 9px;text-align:center;white-space:nowrap;line-height:1.15;box-shadow:0 1px 0 rgba(0,0,0,.18);transition:background var(--dur)}
 .zl .s::before{content:"";position:absolute;left:-8px;right:-8px;top:-12px;bottom:-12px}
@@ -108,6 +109,7 @@ body.has-place .zl.on .s{background:var(--land)}
 .edit .editbar{display:block}
 /* ---- 側欄／底部抽屜 ---- */
 .drawer{position:relative;background:#fff;display:flex;flex-direction:column;min-height:0;z-index:5}
+.drawer::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;z-index:7;background:linear-gradient(90deg,#BFE0FF,#D8CCFF,#FFC9E0,#FFE2B0)}   /* 與 App 磁磚同一條虹彩細線 */
 .dinner{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden}
 .dhandle{display:none;position:absolute;left:-32px;top:16px;width:32px;height:88px;background:#fff;border:1px solid var(--line);border-right:none;border-radius:10px 0 0 10px;box-shadow:var(--shadow-ctl);align-items:center;justify-content:center;z-index:7;padding:0}
 .dhandle svg{width:16px;height:16px;stroke:var(--ink);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
@@ -138,7 +140,7 @@ body.has-place .zl.on .s{background:var(--land)}
 .seg{display:flex;gap:4px;height:48px;flex:1}
 .seg .dt{position:relative;flex:0 0 auto;padding:0 10px;height:48px;background:transparent;border:none;font-size:14px;font-weight:400;color:var(--ink2)}
 .seg .dt.on{color:var(--ink);font-weight:600}
-.seg .dt.on::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:var(--ink)}
+.seg .dt.on::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:linear-gradient(90deg,#0A1F5C,#3D6CC4)}
 .seg .dt:active{opacity:.6}
 .sbtn{width:40px;height:40px;border:none;background:transparent;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0}
 .sbtn svg{width:20px;height:20px;stroke:var(--ink);stroke-width:1.75;fill:none;stroke-linecap:round}
@@ -161,6 +163,7 @@ body.has-place .zl.on .s{background:var(--land)}
 .zr .th{display:flex;gap:6px;flex-shrink:0}
 .zr .th img{width:32px;height:32px;display:block}
 .tag{display:inline-block;flex-shrink:0;margin-left:0;padding:1px 5px;border:1px solid var(--ink);border-radius:3px;font-size:10.5px;font-weight:600;color:var(--ink);vertical-align:2px;line-height:1.2}
+.tag img{width:11px;height:11px;margin-right:3px;vertical-align:-1px;filter:brightness(.55) saturate(1.4)}
 .backrow{height:40px;display:flex;align-items:center;gap:6px;padding:0 12px;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;width:100%}
 .backrow svg{width:16px;height:16px;stroke:var(--ink);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .zhd{padding:4px 16px 10px}
@@ -245,15 +248,7 @@ const params=new URLSearchParams(location.search);
 const EDIT=params.get("edit")==="1", EMBED=params.get("embed")==="1";
 if(EDIT) document.body.classList.add("edit");
 if(EMBED){ document.body.classList.add("embed"); $("#sharebtn").style.display="none"; }
-/* 頁首星空（與 App 的 kvSvg 同一組元素：星點、一條弧線、右側小南十字） */
-(function(){ let s=3; const rnd=()=>{ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; let g="";
-  for(let i=0;i<80;i++){ const x=rnd()*900, y=rnd()*120, r=0.5+rnd()*1.3, a=0.2+rnd()*0.7; g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(2)}" fill="#fff" fill-opacity="${a.toFixed(2)}"/>`; }
-  g+='<path d="M-20 112 C 240 10, 620 -14, 930 76" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.1" stroke-linecap="round"/>';
-  const C=[[0,-1],[0.12,1],[-0.78,-0.08],[0.7,-0.32],[0.36,0.3]], cx=842, cy=58, sc=30, p=C.map(([a,b])=>[cx+a*sc,cy+b*sc]);
-  g+=`<path d="M${p[0]} L${p[1]} M${p[2]} L${p[3]}" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width=".36"/>`;
-  p.forEach(([x,y],i)=>{ const r=(i===4?.035:i===1?.075:.06)*sc; g+=`<path d="M${x} ${y-r} L${x+r*.2} ${y-r*.2} L${x+r} ${y} L${x+r*.2} ${y+r*.2} L${x} ${y+r} L${x-r*.2} ${y+r*.2} L${x-r} ${y} L${x-r*.2} ${y-r*.2}Z" fill="#fff"/>`; });
-  $(".top").insertAdjacentHTML("afterbegin",`<svg class="sky" viewBox="0 0 900 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${g}</svg>`);
-})();
+/* 頁首底圖：主視覺 img/kv/bg.jpg，由 CSS .top 負責 */
 const LANDQ=matchMedia("(orientation:landscape) and (min-width:640px)");
 const isPhone=()=>!LANDQ.matches;
 const REDUCED=matchMedia("(prefers-reduced-motion:reduce)").matches;
@@ -376,7 +371,7 @@ function animateTo(x,y,s,vp,ms){ ms=REDUCED?0:(ms==null?280:ms); const {W,H}=vp|
   (function step(now){ if(id!==camId){ return; } const t=Math.min(1,(now-t0)/ms), k=ease(t);
     sc=Math.exp(l0+(l1-l0)*k); const cx=cx0+(x-cx0)*k, cy=cy0+(y-cy0)*k; tx=W/2-cx*sc; ty=H/2-cy*sc; clamp(vp); apply();
     if(t<1) requestAnimationFrame(step); else { camOn=false; queueCull(); } })(t0); }
-function cancelCam(){ camId++; camOn=false; }
+function cancelCam(){ camId++; camOn=false; if(flingId) cancelFling(); }
 function fitBounds(b,pad,vp,anim){ const s1=fitScaleFor(b,pad,vp); const x=(b.x0+b.x1)/2, y=(b.y0+b.y1)/2; if(anim) animateTo(x,y,s1,vp); else goTo(x,y,s1,vp); }
 function zoomAt(f,cx,cy,anim){ const ns=Math.min(Math.max(sc*f,minSc),MAX),k=ns/sc; const tx1=cx-(cx-tx)*k, ty1=cy-(cy-ty)*k;
   if(anim){ const {W,H}=vpNow(); animateTo((W/2-tx1)/ns,(H/2-ty1)/ns,ns,null,200); } else { tx=tx1; ty=ty1; sc=ns; clamp(); apply(); } }
@@ -516,7 +511,7 @@ function itemHTML(p,opts){ opts=opts||{}; const ts=opts.times||timesOf(p); const
   return `<div class="item${curPlace&&curPlace.id===p.id?" on":""}" data-id="${p.id}">${icHTML(opts.icon||p)}<div class="tx"><div class="zh"><span class="nm">${esc(opts.name||p.zh)}</span>${p.hot?`<span class="tag">必看</span>`:""}</div><div class="en">${esc(sub)} ${grid}</div></div>${ts.length?`<div class="tm">${ts.map(esc).join("<br>")}</div>`:""}</div>`; }
 function zoneRow(z){ const hero=heroOf(z); const an=zoneAnimals(z).filter(p=>p.icon); const th=[]; const seenIcon=new Set();
   [hero&&hero.cat==="animal"?hero:null,...an].forEach(p=>{ if(p&&p.icon&&!seenIcon.has(p.icon)&&th.length<4){ seenIcon.add(p.icon); th.push(p); } });
-  return `<div class="zr" data-z="${z.id}"><div class="tx"><div class="zh"><span class="nm">${esc(z.zh)}</span>${z.hot?`<span class="tag">必看</span>`:""}</div><div class="en">${esc(z.en)}</div></div><div class="th">${th.map(p=>iconImg(p)).join("")}</div></div>`; }
+  return `<div class="zr" data-z="${z.id}"><div class="tx"><div class="zh"><span class="nm">${esc(z.zh)}</span>${z.hot?`<span class="tag"><img src="img/kv/star.png" alt="">必看</span>`:""}</div><div class="en">${esc(z.en)}</div></div><div class="th">${th.map(p=>iconImg(p)).join("")}</div></div>`; }
 function groupHTML(title,items,opts){ if(!items.length) return ""; return `<div class="gh">${title}</div>`+items.map(p=>itemHTML(p,opts)).join(""); }
 function renderList(){
   const list=$("#dlist"), q=query.trim().toLowerCase();
@@ -604,19 +599,28 @@ $("#backpill").onclick=()=>{ curPlace=null; curShow=null; selectZone(null,{fromH
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&(curZone||curPlace)) goBack(); });
 
 /* ---- 手勢 ---- */
-const pts=new Map(); let start=null,lastTap=0,moved=false,downT=0,gestureRect=null;
+const pts=new Map(); let start=null,lastTap=0,moved=false,downT=0,gestureRect=null, vTrack=[], flingId=0;
+function cancelFling(){ if(flingId){ cancelAnimationFrame(flingId); flingId=0; } }
+/* 放手後的慣性：以最後 90ms 的平均速度起步，每 16ms 衰減 6%，碰到邊界就停 */
+function fling(vx,vy){ let last=performance.now(); const step=now=>{ const dt=Math.min(40,now-last); last=now; const k=Math.pow(0.94,dt/16);
+    const ptx=tx,pty=ty; tx+=vx*dt; ty+=vy*dt; clamp(); if(Math.abs(tx-ptx)<Math.abs(vx*dt)*.5) vx=0; if(Math.abs(ty-pty)<Math.abs(vy*dt)*.5) vy=0;
+    vx*=k; vy*=k; apply(); if(Math.hypot(vx,vy)>0.02) flingId=requestAnimationFrame(step); else { flingId=0; queueCull(); } };
+  flingId=requestAnimationFrame(step); }
 const snap=()=>{ const a=[...pts.values()]; if(a.length>=2) return {n:2,d:Math.hypot(a[1].x-a[0].x,a[1].y-a[0].y),mx:(a[0].x+a[1].x)/2,my:(a[0].y+a[1].y)/2,sc,tx,ty}; if(a.length===1) return {n:1,x:a[0].x,y:a[0].y,tx,ty}; return null; };
 wrap.addEventListener("pointerdown",e=>{ if(e.target.closest(".ctl,.editbar,.backpill")) return; if(e.pointerType==="mouse"&&e.button!==0) return; if(pts.size>=2) return;
   if(document.activeElement===$("#q")) $("#q").blur();
-  cancelCam(); e.preventDefault(); wrap.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); gestureRect=wrap.getBoundingClientRect(); start=snap(); moved=false; downT=performance.now(); });
+  cancelCam(); cancelFling(); e.preventDefault(); wrap.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); gestureRect=wrap.getBoundingClientRect(); start=snap(); moved=false; downT=performance.now(); vTrack=[{x:e.clientX,y:e.clientY,t:downT}]; });
 wrap.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); const cur=snap(); if(!start||!cur||cur.n!==start.n){ start=snap(); return; }
   const r=gestureRect||wrap.getBoundingClientRect();
-  if(cur.n===2){ const ns=Math.min(Math.max(start.sc*cur.d/Math.max(start.d,1),minSc),MAX),k=ns/start.sc,mx=start.mx-r.left,my=start.my-r.top; tx=mx-(mx-start.tx)*k+(cur.mx-start.mx); ty=my-(my-start.ty)*k+(cur.my-start.my); sc=ns; moved=true; }
-  else{ const dx=cur.x-start.x,dy=cur.y-start.y; if(!moved){ if(Math.hypot(dx,dy)<=10) return; moved=true; } tx=start.tx+dx; ty=start.ty+dy; }
+  if(cur.n===2){ const ns=Math.min(Math.max(start.sc*cur.d/Math.max(start.d,1),minSc),MAX),k=ns/start.sc,mx=start.mx-r.left,my=start.my-r.top; tx=mx-(mx-start.tx)*k+(cur.mx-start.mx); ty=my-(my-start.ty)*k+(cur.my-start.my); sc=ns; moved=true; layer.classList.add("zooming"); }
+  else{ const dx=cur.x-start.x,dy=cur.y-start.y; if(!moved){ if(Math.hypot(dx,dy)<=10) return; moved=true; } tx=start.tx+dx; ty=start.ty+dy;
+    const now=performance.now(); vTrack.push({x:cur.x,y:cur.y,t:now}); while(vTrack.length>6||(vTrack.length>1&&now-vTrack[0].t>120)) vTrack.shift(); }
   clamp(); scheduleApply(); });
 const up=e=>{ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId);
   const held=performance.now()-downT;
-  if(pts.size===0&&moved) queueCull();
+  if(pts.size===0){ layer.classList.remove("zooming"); }
+  if(pts.size===0&&moved){ const a=vTrack[0], b=vTrack[vTrack.length-1];
+    if(a&&b&&b!==a&&performance.now()-b.t<60&&b.t-a.t>0){ const vx=(b.x-a.x)/(b.t-a.t), vy=(b.y-a.y)/(b.t-a.t); if(Math.hypot(vx,vy)>0.25){ fling(vx,vy); vTrack=[]; } else queueCull(); } else queueCull(); }
   if(pts.size===0&&!moved&&held<300){ const r=gestureRect||wrap.getBoundingClientRect(), now=performance.now();
     if(EDIT&&curPlace&&!curPlace.grids&&!e.target.closest(".mk,.zl")){ overrides[curPlace.id]={x:Math.round((e.clientX-r.left-tx)/sc),y:Math.round((e.clientY-r.top-ty)/sc)}; localStorage.setItem("zoo_overrides",JSON.stringify(overrides)); assignZones(); selectPlace(curPlace,{fromHistory:true}); return; }
     const el=document.elementFromPoint(e.clientX,e.clientY);
@@ -631,15 +635,15 @@ const up=e=>{ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId);
     else if(curPlace){ curPlace=null; curShow=null; renderMarks(); renderList(); pushURL(true); }
   }
   start=snap(); };
-const cancelPtr=e=>{ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); moved=true; start=snap(); if(!pts.size) queueCull(); };
+const cancelPtr=e=>{ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId); moved=true; start=snap(); if(!pts.size){ layer.classList.remove("zooming"); queueCull(); } };
 wrap.addEventListener("pointerup",up); wrap.addEventListener("pointercancel",cancelPtr); wrap.addEventListener("lostpointercapture",cancelPtr);
 wrap.addEventListener("contextmenu",e=>e.preventDefault());
 window.addEventListener("blur",()=>{ pts.clear(); start=null; moved=false; });
 document.addEventListener("gesturestart",e=>e.preventDefault(),{passive:false});
-wrap.addEventListener("wheel",e=>{ e.preventDefault(); cancelCam(); const r=wrap.getBoundingClientRect();
+wrap.addEventListener("wheel",e=>{ e.preventDefault(); cancelCam(); cancelFling(); const r=wrap.getBoundingClientRect(); layer.classList.add("zooming");
   let d=e.deltaY; if(e.deltaMode===1) d*=16; else if(e.deltaMode===2) d*=wrap.clientHeight; d=Math.max(-120,Math.min(120,d));
   const f=Math.exp(-d*(e.ctrlKey?0.01:0.0025));
-  wheeling=true; clearTimeout(wheelT); wheelT=setTimeout(()=>{ wheeling=false; queueCull(); },120);
+  wheeling=true; clearTimeout(wheelT); wheelT=setTimeout(()=>{ wheeling=false; layer.classList.remove("zooming"); queueCull(); },120);
   zoomAt(f,e.clientX-r.left,e.clientY-r.top); },{passive:false});
 $("#zin").onclick=()=>zoomAt(1.4,wrap.clientWidth/2,wrap.clientHeight/2,true);
 $("#zout").onclick=()=>zoomAt(1/1.4,wrap.clientWidth/2,wrap.clientHeight/2,true);
