@@ -169,7 +169,7 @@ function openModal(title,body,btns,cls){
   });
   $("#modal").classList.add("on");
 }
-function closeModal(){ $("#modal").classList.remove("on"); if(modalOnClose){ const f=modalOnClose; modalOnClose=null; f(); } }
+function closeModal(){ $("#modal").classList.remove("on"); const cc=$("#cc"); if(cc){ cc.width=cc.height=0; }   /* 釋放預覽畫布（原尺寸很大） */ if(modalOnClose){ const f=modalOnClose; modalOnClose=null; f(); } }
 let modalOnClose=null;
 $("#modal").addEventListener("click",e=>{ if(e.target.id==="modal") closeModal(); });
 function confirmBox(msg,onOk){
@@ -412,7 +412,8 @@ async function renderOverlay(fr,W,H){
 const overlayCache=new Map();
 function frameImage(fr,W,H){
   const key=`${fr.id}@${W}x${H}`;
-  if(!overlayCache.has(key)){ overlayCache.set(key,renderOverlay(fr,W,H)); if(overlayCache.size>4) overlayCache.delete(overlayCache.keys().next().value); }
+  if(!overlayCache.has(key)){ overlayCache.set(key,renderOverlay(fr,W,H));
+    if(overlayCache.size>2){ const old=overlayCache.keys().next().value; overlayCache.get(old).then(cv=>{ cv.width=cv.height=0; }); overlayCache.delete(old); } }   /* 全尺寸畫布很大，只留 2 組並立刻釋放 */
   return overlayCache.get(key);
 }
 const overlayUrl={};
@@ -498,14 +499,18 @@ PAGES.koala=(hdr,scr)=>{
   </div>`;
   scr.appendChild(el);
 
-  frameUrl(fr).then(u=>{ const ov=el.querySelector("#ov"), th=el.querySelector("#frthumb"); if(ov) ov.src=u; if(th) th.src=u; });
+  let ovSeq=0;   /* 疊層預覽：只接受最新一次的結果，避免預設 3:4 版晚到蓋掉相機比例版 */
+  const setOv=(W,H)=>{ const seq=++ovSeq; return frameUrl(fr,W,H).then(u=>{ const ov=el.querySelector("#ov"); if(ov&&seq===ovSeq) ov.src=u; return u; }); };
+  setOv().then(u=>{ const th=el.querySelector("#frthumb"); if(th) th.src=u; });
 
   const video=el.querySelector("#cam"), nocam=el.querySelector("#nocam"), shot=el.querySelector("#shot"), stage=el.querySelector("#stage");
-  video.addEventListener("loadedmetadata",()=>{   /* 取景框比例＝相機畫面比例，所見即所得；疊層預覽也依此比例重算 */
-    if(!video.videoWidth) return; stage.style.aspectRatio=`${video.videoWidth} / ${video.videoHeight}`;
-    const long=1600, vw=video.videoWidth, vh=video.videoHeight, sc=long/Math.max(vw,vh);
-    frameUrl(fr,Math.round(vw*sc),Math.round(vh*sc)).then(u=>{ const ov=el.querySelector("#ov"); if(ov) ov.src=u; });
-  });
+  let lastVw=0, lastVh=0;
+  const fitStage=()=>{   /* 取景框比例＝相機畫面比例，所見即所得；轉向時 iPad 只發 resize 不發 loadedmetadata，所以兩個都掛 */
+    const vw=video.videoWidth, vh=video.videoHeight; if(!vw||!vh||(vw===lastVw&&vh===lastVh)) return; lastVw=vw; lastVh=vh;
+    stage.style.aspectRatio=`${vw} / ${vh}`;
+    const sc=1600/Math.max(vw,vh); setOv(Math.round(vw*sc),Math.round(vh*sc));
+  };
+  video.addEventListener("loadedmetadata",fitStage); video.addEventListener("resize",fitStage);
   startCam(video).catch(e=>{
     nocam.hidden=false; shot.style.display="none";
     nocam.innerHTML = e&&e.message==="nocam"
@@ -600,7 +605,7 @@ PAGES.settings=(hdr,scr)=>{
     <div class="card"><div class="field"><label>Rockpool 飲品（中文｜English｜備註｜圖檔）</label><textarea id="td">${esc(S.drinksTxt)}</textarea></div></div>
     <div class="card"><div class="field"><label>喜鳳台 酒單（分類｜名稱｜產地／年份｜描述｜價格｜圖檔）</label><textarea id="tw" style="min-height:180px">${esc(S.winesTxt)}</textarea></div></div>
     <div class="btnrow"><button class="btn pri" id="sv">儲存</button><button class="btn sec" id="exp">匯出紀錄</button><button class="btn danger" id="rst">重置全部</button></div>
-    <p class="vs" style="margin-top:16px">版本 tle-syd-v9 · 主視覺「星引南十字」（元素在 img/kv/）。出團日期在 app.js 的 CONFIG 設定（待補）。</p>`;
+    <p class="vs" style="margin-top:16px">版本 tle-syd-v10 · 主視覺「星引南十字」（元素在 img/kv/）。出團日期在 app.js 的 CONFIG 設定（待補）。</p>`;
   el.querySelector("#sv").onclick=()=>{ S.guestsTxt=$("#tg").value; S.drinksTxt=$("#td").value; S.winesTxt=$("#tw").value; save(); toast("已儲存"); };
   el.querySelector("#exp").onclick=()=>{
     const a=document.createElement("a");
