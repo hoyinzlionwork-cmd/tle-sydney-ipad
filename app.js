@@ -82,6 +82,8 @@ const parseLines = txt => String(txt||"").split(/\r?\n/).map(l=>l.trim()).filter
 const guests = () => parseLines(S.guestsTxt).map(r=>r[0]).filter(Boolean);
 const drinks = () => parseLines(S.drinksTxt).map(r=>({zh:r[0],en:r[1]||r[0],note:r[2]||"",img:r[3]||""})).filter(d=>d.zh);
 const wines  = () => parseLines(S.winesTxt).map(r=>({cat:r[0]||"其他",name:r[1]||"",origin:r[2]||"",desc:r[3]||"",price:r[4]||"",img:r[5]||""})).filter(w=>w.name);
+/* 紀念照用的英文日期：07 NOV 2026 */
+function dateEN(){ const d=new Date(), M=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]; return `${String(d.getDate()).padStart(2,"0")} ${M[d.getMonth()]} ${d.getFullYear()}`; }
 function today(){ const d=new Date(); return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")}`; }
 
 /* ============================================================ IndexedDB（照片、影片；file:// 時改記憶體備援） */
@@ -351,7 +353,7 @@ const FRAMES=[
       {type:"imgmask",src:KV.bg,sx:150,sy:850,sw:1500,sh:860,anchor:"br",x:-200,y:-120,w:1160,h:720,r0:0,r1:.55,a0:.9,a1:0,blend:"screen",opacity:.85},
       {type:"img",src:KV.crux,anchor:"tr",x:130,y:96,w:160},
       {type:"img",src:KV.mark,anchor:"tl",x:110,y:96,w:96},
-      {type:"img",src:KV.opera,anchor:"br",x:0,y:-13,w:620,opacity:.96},
+      {type:"img",src:KV.opera,anchor:"br",x:0,y:146,w:660,opacity:.96},   /* 底邊與 Sydney + Melbourne 的底切齊（設計師回饋） */
       /* 標題字組：文字軸線一律 x=230（飾線尾巴延到 110 的邊界，與左上雄獅同一條線） */
       {type:"img",src:KV.board,anchor:"bl",x:230,y:428,w:300,opacity:.92},
       {type:"img",src:KV.title,anchor:"bl",x:110,y:202,w:640},
@@ -475,7 +477,7 @@ PAGES.koala=(hdr,scr)=>{
       <div class="card">
         <div class="ct">${STAR} 紀念框</div>
         <div class="framenote"><div class="fbox"><img id="frthumb" alt=""></div>
-          <div><div class="fn">${esc(fr.name)}</div><div class="fd">使用本次董事會主視覺的原始元素：星空底圖、南十字座、歌劇院、「星引南十字」標題字與雄獅 Logo。照片滿版、無邊框，自動印上日期（${esc(K.date)}）與 ${esc(CONFIG.zooLine)}。</div></div></div>
+          <div><div class="fn">${esc(fr.name)}</div><div class="fd">使用本次董事會主視覺的原始元素：星空底圖、南十字座、歌劇院、「星引南十字」標題字與雄獅 Logo。照片滿版、無邊框，自動印上日期（${esc(dateEN())} · ${esc(CONFIG.zooLine)}）。</div></div></div>
       </div>
       <h3 class="sect">已製作的紀念照</h3>
       <div class="gal" id="gal">讀取中…</div>
@@ -532,7 +534,7 @@ PAGES.koala=(hdr,scr)=>{
   renderGallery(el.querySelector("#gal"));
 };
 function koalaOpt(){
-  return { line2:[today(),CONFIG.zooLine].filter(Boolean).join("  ·  ") };
+  return { line2:[dateEN(),CONFIG.zooLine].filter(Boolean).join(" · ") };
 }
 function openCompose(src){
   const fr=FRAMES.find(f=>f.id===S.koala.frame)||FRAMES[0];
