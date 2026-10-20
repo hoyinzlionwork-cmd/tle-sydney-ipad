@@ -176,7 +176,7 @@ h3.sect::before{content:"";width:18px;height:18px;background:url(img/kv/star.png
 .mitem .en{color:var(--ink2);font-size:11.5px;margin-top:2px}
 .mitem{position:relative}
 .mitem.on{border-color:var(--sky2);background:var(--sel)}
-.mitem.on::after{content:"";position:absolute;right:6px;top:6px;width:22px;height:22px;background:url(img/kv/star.png) center/contain no-repeat;filter:brightness(.55) saturate(1.4);animation:pop .35s ease-out}
+.mitem.on::after{content:"";position:absolute;right:6px;top:6px;width:24px;height:24px;border-radius:50%;background:var(--navy) url(img/kv/star.png) center/18px no-repeat;box-shadow:0 1px 4px rgba(0,0,0,.25);animation:pop .35s ease-out}
 .wine{position:relative;overflow:hidden}
 .tab.on{position:relative}
 .ordsum{display:flex;gap:8px;flex-wrap:wrap}
@@ -199,17 +199,19 @@ h3.sect::before{content:"";width:18px;height:18px;background:url(img/kv/star.png
 .stage{position:relative;width:100%;max-width:440px;aspect-ratio:4/5;background:#0A1F5C;border-radius:14px;overflow:hidden}
 .stage video{position:absolute;object-fit:cover;background:#000}
 .stage .ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.stage .nocam{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,.85);font-size:13px;gap:8px;padding:20px 20px 170px;text-align:center;line-height:1.6}
+.stage .nocam{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(255,255,255,.85);font-size:13px;gap:8px;padding:20px 20px 60px;text-align:center;line-height:1.6}
+.stage .shutter{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:2}   /* 快門疊在取景框內，像 iOS 相機，不會被推到摺線下 */
 .shutter{width:72px;height:72px;border-radius:50%;background:#fff;border:5px solid var(--red);cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-.shutter:active{transform:scale(.94)}
-.camrow{display:flex;align-items:center;justify-content:center;gap:18px;padding:14px 0 6px;flex-wrap:wrap}
+.shutter:active{transform:translateX(-50%) scale(.94)}
+.camrow{height:8px}
+@media (orientation:landscape){.stagewrap .stage{max-width:min(520px,calc((100dvh - 300px) * .8))}}   /* 橫放：取景框＋按鈕要在一屏內 */
 .framenote{display:flex;gap:12px;align-items:center}
 .framenote .fbox{width:84px;height:105px;border-radius:10px;overflow:hidden;flex-shrink:0;background:linear-gradient(170deg,#7FA6D8 0%,#3D6CC4 50%,#0A1F5C 100%)}
 .framenote .fbox img{width:100%;height:100%;display:block}
 .framenote .fn{font-family:var(--serif);font-size:18px;color:var(--navy);letter-spacing:2px}
 .framenote .fd{font-size:12px;color:var(--ink2);line-height:1.6;margin-top:3px}
 .compose{display:flex;flex-direction:column;align-items:center;gap:10px}
-.compose canvas{width:100%;max-width:400px;border-radius:12px;touch-action:none;cursor:grab;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.compose canvas{width:auto;height:auto;max-width:min(400px,100%);max-height:calc(92dvh - 230px);border-radius:12px;touch-action:none;cursor:grab;box-shadow:0 6px 20px rgba(0,0,0,.18)}   /* 畫布＋提示＋拉桿一屏放完 */
 .compose .hint{font-size:12px;color:var(--ink2)}
 .compose input[type=range]{width:100%;max-width:400px;accent-color:var(--sky2)}
 .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
@@ -256,7 +258,7 @@ h3.sect::before{content:"";width:18px;height:18px;background:url(img/kv/star.png
   .ordrow{font-size:15.5px}
   .ordrow .who{min-width:120px}
   .stage{max-width:520px}
-  .compose canvas{max-width:460px}
+  .compose canvas{max-width:min(460px,100%)}
   .gal{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
   .koala2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
   .koala2>div{min-width:0}

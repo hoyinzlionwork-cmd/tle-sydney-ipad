@@ -496,8 +496,9 @@ PAGES.koala=(hdr,scr)=>{
           <video id="cam" playsinline muted autoplay style="left:0;top:0;width:100%;height:100%"></video>
           <img class="ov" id="ov" alt="">
           <div class="nocam" id="nocam" hidden></div>
+          <button class="shutter" id="shot" title="拍照"></button>
         </div></div>
-        <div class="camrow"><button class="shutter" id="shot" title="拍照"></button></div>
+        <div class="camrow"></div>
         <div class="btnrow" style="justify-content:center">
           <label class="camlbl">${ic("camera",16)} 用相機 App 拍<input type="file" accept="image/*" capture="environment" id="fcap"></label>
           <label class="camlbl">${ic("photo",16)} 從相簿選<input type="file" accept="image/*" id="fpick"></label>
@@ -569,7 +570,7 @@ function openCompose(src,{zoomable}){
 }
 const stamp=()=>{ const d=new Date(); return `${today()}_${String(d.getHours()).padStart(2,"0")}${String(d.getMinutes()).padStart(2,"0")}${String(d.getSeconds()).padStart(2,"0")}`; };
 async function savePhoto(file,fr){
-  const d=new Date(), label=`${today()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  const d=new Date(), label=`紀念照 ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;   /* 日期由 .gt 顯示，標題只放時間 */
   await idbPut("photos",{ id:"k"+Date.now(), name:label, guest:"", frame:fr.id, blob:file, ts:Date.now() });
   const gal=$("#gal"); if(gal) renderGallery(gal);
 }
@@ -580,7 +581,7 @@ async function renderGallery(box){
     const u=URL.createObjectURL(rec.blob);
     const g=document.createElement("div");
     g.className="gi";
-    g.innerHTML=`<img src="${u}" alt=""><div class="gn">${esc(rec.name)}</div><div class="gt">${new Date(rec.ts).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}</div>`;
+    g.innerHTML=`<img src="${u}" alt=""><div class="gn">${esc(rec.name)}</div><div class="gt">${new Date(rec.ts).toLocaleDateString("zh-TW",{year:"numeric",month:"numeric",day:"numeric"})}</div>`;
     g.onclick=()=>openModal(rec.name,`<img src="${u}" style="max-width:100%;max-height:62dvh;display:block;margin:0 auto;border-radius:12px">`,
       [["刪除","ghost",()=>confirmBox(`刪除「${rec.name}」這張紀念照？`,async()=>{ await idbDel("photos",rec.id); renderGallery(box); toast("已刪除"); })],
        ["關閉","sec",closeModal],
