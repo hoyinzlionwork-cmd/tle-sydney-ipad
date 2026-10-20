@@ -40,7 +40,7 @@ const CONFIG = {
   title:  "星引南十字",          /* 本次董事會主視覺標題（來自主視覺稿） */
   kicker: "2026 董事會 OUTING",
   sub:    "Sydney + Melbourne",
-  dates:  "",                   /* 出團日期，例 "2026/xx/xx – xx/xx"，待補 */
+  dates:  "2026.11.04 出發",     /* 出團日期（使用者 2026-10-20 告知） */
   zooLine:"Taronga Zoo, Sydney",/* 紀念照第二行固定字樣 */
 };
 
@@ -330,32 +330,32 @@ function openOrderModal(g){
 }
 
 /* ============================================================ 3 無尾熊紀念照 */
-/* 紀念框「星引南十字」：1600×2000（4:5）、無邊框。照片滿版；上下各鋪一段主視覺底圖的星空（邊緣漸隱），
- * 右上南十字、左上雄獅、下方標題字／英文字（設計師原圖）、姓名與日期、右下歌劇院。疊層只算一次（renderOverlay）。
- * imgfade／imgmask 的 sx/sy/sw/sh 是底圖 bg.jpg（2400×1710）上的裁切範圍。 */
-const FW=1600, FH=2000;
+/* 紀念框「星引南十字」：輸出尺寸＝照片原尺寸（最長邊上限 4096），不裁切。疊層以 1600×2000 的設計稿為基準，
+ * k＝min(W/1600, H/2000)，每層用 anchor 釘在邊上：tl／tr／bl／br；x＝到左（或右）邊的距離、y＝到上（或下）邊的距離，
+ * 都是設計稿單位；右／下錨點量的是元素的右／下緣。band 層鋪滿整個寬度。
+ * imgfade／imgmask 的 sx/sy/sw/sh 是底圖 bg.jpg（2400×1710）上的裁切範圍，貼上時以 cover 填滿目的框。 */
+const DW=1600, DH=2000, MAX_SIDE=4096;
 const FONT='"PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif';
-const FULL={x:0,y:0,w:FW,h:FH};
 const FRAMES=[
   { id:"cross", name:"星引南十字",
-    text:{align:"left",x:230,nameY:1922,line2Y:1976,nameColor:"#FFFFFF",line2Color:"rgba(255,255,255,.9)",nameSize:74,line2Size:36,maxW:760,shadow:true,nameFont:FONT,nameWeight:600,nameSpacing:3},   /* 沒有姓名時日期行印在 nameY-10 */
+    text:{x:230,yb:88,size:36,maxW:760,color:"rgba(255,255,255,.9)"},   /* 日期行：距左 230、基線距底 88 */
     layers:[
       /* 四邊星空暗角：照片像嵌在夜空裡（中心透明、往四角漸深；中上段人臉處幾乎不壓） */
-      {type:"imgmask",src:KV.bg,sx:1150,sy:0,sw:1250,sh:1562,dx:0,dy:0,dw:1600,dh:2000,r0:.58,r1:1,a0:0,a1:.6},
-      /* 上緣星空帶（薄）：只到 21%，不壓到人臉 */
-      {type:"imgfade",src:KV.bg,sx:1000,sy:0,sw:1400,sh:368,dx:0,dy:0,dw:1600,dh:420,fade:[[0,.96],[.4,.55],[1,0]]},
+      {type:"imgmask",src:KV.bg,sx:1150,sy:0,sw:1250,sh:1562,full:true,r0:.58,r1:1,a0:0,a1:.6},
+      /* 上緣星空帶（薄）：約 21%，不壓到人臉 */
+      {type:"imgfade",src:KV.bg,sx:1000,sy:0,sw:1400,sh:368,band:"top",h:420,fade:[[0,.96],[.4,.55],[1,0]]},
       /* 下緣夜空帶＋加深托字 */
-      {type:"imgfade",src:KV.bg,sx:1200,sy:40,sw:1200,sh:450,dx:0,dy:1400,dw:1600,dh:600,fade:[[0,0],[.32,.86],[1,1]]},
-      {type:"scrim",y0:1600,y1:2000,stops:[[0,"rgba(8,24,70,0)"],[1,"rgba(8,24,70,.5)"]]},
-      /* 右下虹彩光：主視覺的水晶折射，以 screen 打在歌劇院後面 */
-      {type:"imgmask",src:KV.bg,sx:150,sy:850,sw:1500,sh:860,dx:640,dy:1400,dw:1160,dh:720,r0:0,r1:.55,a0:.9,a1:0,blend:"screen",opacity:.85},
-      {type:"img",src:KV.crux,x:1310,y:96,w:160,opacity:1},
-      {type:"img",src:KV.mark,x:110,y:96,w:96,opacity:1},
-      {type:"img",src:KV.opera,x:980,y:1750,w:620,opacity:.96},
+      {type:"imgfade",src:KV.bg,sx:1200,sy:40,sw:1200,sh:450,band:"bottom",h:600,fade:[[0,0],[.32,.86],[1,1]]},
+      {type:"scrim",band:"bottom",h:400,stops:[[0,"rgba(8,24,70,0)"],[1,"rgba(8,24,70,.5)"]]},
+      /* 右下虹彩光：主視覺的水晶折射，以 screen 打在歌劇院後面（允許出血） */
+      {type:"imgmask",src:KV.bg,sx:150,sy:850,sw:1500,sh:860,anchor:"br",x:-200,y:-120,w:1160,h:720,r0:0,r1:.55,a0:.9,a1:0,blend:"screen",opacity:.85},
+      {type:"img",src:KV.crux,anchor:"tr",x:130,y:96,w:160},
+      {type:"img",src:KV.mark,anchor:"tl",x:110,y:96,w:96},
+      {type:"img",src:KV.opera,anchor:"br",x:0,y:-13,w:620,opacity:.96},
       /* 標題字組：文字軸線一律 x=230（飾線尾巴延到 110 的邊界，與左上雄獅同一條線） */
-      {type:"img",src:KV.board,x:230,y:1540,w:300,opacity:.92},
-      {type:"img",src:KV.title,x:110,y:1578,w:640,opacity:1},
-      {type:"img",src:KV.sub,x:230,y:1806,w:400,opacity:.95},
+      {type:"img",src:KV.board,anchor:"bl",x:230,y:428,w:300,opacity:.92},
+      {type:"img",src:KV.title,anchor:"bl",x:110,y:202,w:640},
+      {type:"img",src:KV.sub,anchor:"bl",x:230,y:146,w:400,opacity:.95},
     ]},
 ];
 const assetCache={};
@@ -363,89 +363,79 @@ function loadAsset(src){
   if(!assetCache[src]) assetCache[src]=new Promise(res=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=()=>{ console.warn("素材缺少",src); res(null); }; im.src=src; });
   return assetCache[src];
 }
-function svgImage(svg){
-  return new Promise((res,rej)=>{ const u=URL.createObjectURL(new Blob([svg],{type:"image/svg+xml"})); const im=new Image(); im.onload=()=>res(im); im.onerror=rej; im.src=u; });
+/* 把底圖裁切範圍以 cover 方式畫滿 dw×dh 的暫存畫布；align 決定多出來的部分往哪裁 */
+function coverDraw(im,L,dw,dh,align){
+  const t=document.createElement("canvas"); t.width=Math.max(1,Math.round(dw)); t.height=Math.max(1,Math.round(dh)); const tc=t.getContext("2d");
+  const sc=Math.max(t.width/L.sw,t.height/L.sh), w=L.sw*sc, h=L.sh*sc;
+  const ox=(t.width-w)/2, oy=align==="top"?0:align==="bottom"?t.height-h:(t.height-h)/2;
+  tc.drawImage(im,L.sx,L.sy,L.sw,L.sh,ox,oy,w,h);
+  return t;
 }
-/* 字距版文字（canvas letterSpacing 支援不一，手動逐字畫） */
-function spacedText(ctx,text,x,y,align,spacing){
-  const chars=[...text]; const ws=chars.map(c=>ctx.measureText(c).width);
-  const total=ws.reduce((a,b)=>a+b,0)+spacing*(chars.length-1);
-  let cx=align==="right"?x-total:align==="center"?x-total/2:x;
-  ctx.textAlign="left";
-  chars.forEach((c,i)=>{ ctx.fillText(c,cx,y); cx+=ws[i]+spacing; });
-  return cx-spacing;
+/* 依畫面尺寸算出一層的目的框（像素） */
+function placeOf(L,W,H,k,imW,imH){
+  let w,h;
+  if(L.full){ return {x:0,y:0,w:W,h:H}; }
+  if(L.band){ h=L.h*k; return {x:0,y:L.band==="top"?0:H-h,w:W,h}; }
+  w=L.w*k; h=L.h!=null?L.h*k:w*imH/imW;
+  const x=L.anchor[1]==="r"?W-L.x*k-w:L.x*k, y=L.anchor[0]==="b"?H-L.y*k-h:L.y*k;
+  return {x,y,w,h};
 }
-async function renderOverlay(fr){
-  const cv=document.createElement("canvas"); cv.width=FW; cv.height=FH;
-  const ctx=cv.getContext("2d");
+async function renderOverlay(fr,W,H){
+  const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+  const ctx=cv.getContext("2d"), k=Math.min(W/DW,H/DH);
   for(const L of fr.layers){
     if(L.type==="scrim"){
-      const g=ctx.createLinearGradient(0,L.y0,0,L.y1); L.stops.forEach(([o,c])=>g.addColorStop(o,c));
-      ctx.fillStyle=g; ctx.fillRect(0,L.y0,FW,L.y1-L.y0);
+      const P=placeOf(L,W,H,k); const g=ctx.createLinearGradient(0,P.y,0,P.y+P.h); L.stops.forEach(([o,c])=>g.addColorStop(o,c));
+      ctx.fillStyle=g; ctx.fillRect(P.x,P.y,P.w,P.h);
     }else if(L.type==="img"){
       const im=await loadAsset(L.src); if(!im) continue;
-      const w=L.w, h=L.h||w*im.naturalHeight/im.naturalWidth;
-      ctx.save(); ctx.globalAlpha=L.opacity??1;
-      if(L.flip){ ctx.translate(L.x+w,L.y); ctx.scale(-1,1); ctx.drawImage(im,0,0,w,h); }
-      else ctx.drawImage(im,L.x,L.y,w,h);
-      ctx.restore();
-    }else if(L.type==="imgmask"){   /* 裁一塊底圖，套放射狀遮罩（中心 a0 → 邊緣 a1），可指定混合模式 */
+      const P=placeOf(L,W,H,k,im.naturalWidth,im.naturalHeight);
+      ctx.save(); ctx.globalAlpha=L.opacity??1; ctx.drawImage(im,P.x,P.y,P.w,P.h); ctx.restore();
+    }else if(L.type==="imgmask"){   /* 裁一塊底圖 cover 貼滿，套放射狀遮罩（中心 a0 → 邊緣 a1），可指定混合模式 */
       const im=await loadAsset(L.src); if(!im) continue;
-      const t=document.createElement("canvas"); t.width=L.dw; t.height=L.dh; const tc=t.getContext("2d");
-      tc.drawImage(im,L.sx,L.sy,L.sw,L.sh,0,0,L.dw,L.dh);
+      const P=placeOf(L,W,H,k,im.naturalWidth,im.naturalHeight), t=coverDraw(im,L,P.w,P.h,"center"), tc=t.getContext("2d");
       tc.globalCompositeOperation="destination-in";
-      const R=Math.hypot(L.dw,L.dh)/2, g=tc.createRadialGradient(L.dw/2,L.dh/2,R*L.r0,L.dw/2,L.dh/2,R*L.r1);
-      g.addColorStop(0,`rgba(0,0,0,${L.a0})`); g.addColorStop(1,`rgba(0,0,0,${L.a1})`); tc.fillStyle=g; tc.fillRect(0,0,L.dw,L.dh);
-      ctx.save(); ctx.globalAlpha=L.opacity??1; ctx.globalCompositeOperation=L.blend||"source-over"; ctx.drawImage(t,L.dx,L.dy); ctx.restore();
-    }else if(L.type==="imgfade"){   /* 從主視覺底圖裁一塊，上下漸隱後貼上 */
+      const R=Math.hypot(t.width,t.height)/2, g=tc.createRadialGradient(t.width/2,t.height/2,R*L.r0,t.width/2,t.height/2,R*L.r1);
+      g.addColorStop(0,`rgba(0,0,0,${L.a0})`); g.addColorStop(1,`rgba(0,0,0,${L.a1})`); tc.fillStyle=g; tc.fillRect(0,0,t.width,t.height);
+      ctx.save(); ctx.globalAlpha=L.opacity??1; ctx.globalCompositeOperation=L.blend||"source-over"; ctx.drawImage(t,P.x,P.y); ctx.restore();
+    }else if(L.type==="imgfade"){   /* 從主視覺底圖裁一塊 cover 鋪滿整寬，上下漸隱後貼上 */
       const im=await loadAsset(L.src); if(!im) continue;
-      const t=document.createElement("canvas"); t.width=L.dw; t.height=L.dh; const tc=t.getContext("2d");
-      tc.drawImage(im,L.sx,L.sy,L.sw,L.sh,0,0,L.dw,L.dh);
+      const P=placeOf(L,W,H,k), t=coverDraw(im,L,P.w,P.h,L.band), tc=t.getContext("2d");
       tc.globalCompositeOperation="destination-in";
-      const g=tc.createLinearGradient(0,0,0,L.dh); L.fade.forEach(([o,a])=>g.addColorStop(o,`rgba(0,0,0,${a})`)); tc.fillStyle=g; tc.fillRect(0,0,L.dw,L.dh);
-      ctx.save(); ctx.globalAlpha=L.opacity??1; ctx.drawImage(t,L.dx,L.dy); ctx.restore();
-    }else if(L.type==="rule"){
-      ctx.fillStyle=L.color; ctx.fillRect(L.x0,L.y-1,L.x1-L.x0,2);
-    }else if(L.type==="caption"){
-      ctx.save(); ctx.fillStyle=L.color; ctx.font=`600 ${L.size}px Helvetica,Arial,${FONT}`;
-      spacedText(ctx,L.text,L.x,L.y,L.align,L.spacing||0); ctx.restore();
+      const g=tc.createLinearGradient(0,0,0,t.height); L.fade.forEach(([o,a])=>g.addColorStop(o,`rgba(0,0,0,${a})`)); tc.fillStyle=g; tc.fillRect(0,0,t.width,t.height);
+      ctx.save(); ctx.globalAlpha=L.opacity??1; ctx.drawImage(t,P.x,P.y); ctx.restore();
     }
   }
   return cv;
 }
-const overlayCache={}, overlayUrl={};
-function frameImage(fr){ return overlayCache[fr.id]||(overlayCache[fr.id]=renderOverlay(fr)); }
-function frameUrl(fr){  /* 疊層縮圖（800×1000 PNG）給取景畫面與縮圖用 */
-  return overlayUrl[fr.id]||(overlayUrl[fr.id]=frameImage(fr).then(cv=>new Promise(res=>{
-    const s=document.createElement("canvas"); s.width=800; s.height=1000;
-    s.getContext("2d").drawImage(cv,0,0,800,1000);
-    s.toBlob(b=>res(URL.createObjectURL(b)),"image/png");
-  })));
+/* 疊層快取：以尺寸為鍵，只留最近 4 組 */
+const overlayCache=new Map();
+function frameImage(fr,W,H){
+  const key=`${fr.id}@${W}x${H}`;
+  if(!overlayCache.has(key)){ overlayCache.set(key,renderOverlay(fr,W,H)); if(overlayCache.size>4) overlayCache.delete(overlayCache.keys().next().value); }
+  return overlayCache.get(key);
+}
+const overlayUrl={};
+function frameUrl(fr,W,H){   /* 疊層預覽（PNG blob URL）給取景畫面與縮圖用；預設直式 3:4 */
+  W=W||1200; H=H||1600; const key=`${fr.id}@${W}x${H}`;
+  return overlayUrl[key]||(overlayUrl[key]=frameImage(fr,W,H).then(cv=>new Promise(res=>cv.toBlob(b=>res(URL.createObjectURL(b)),"image/png"))));
 }
 const srcW=s=>s.videoWidth||s.naturalWidth||s.width, srcH=s=>s.videoHeight||s.naturalHeight||s.height;
-/* 合成：照片 cover 填滿視窗（可平移／縮放）→ 疊框 → 姓名與日期 → Logo */
+/* 合成：畫布＝照片原尺寸（最長邊上限 4096）→ 疊框 → 日期行 */
 async function compose(src,fr,opt,cv){
   cv=cv||document.createElement("canvas");
-  cv.width=FW; cv.height=FH;
+  let W=srcW(src), H=srcH(src); const m=Math.max(W,H); if(m>MAX_SIDE){ W=Math.round(W*MAX_SIDE/m); H=Math.round(H*MAX_SIDE/m); }
+  cv.width=W; cv.height=H;
   const ctx=cv.getContext("2d");
-  ctx.fillStyle="#fff"; ctx.fillRect(0,0,FW,FH);
-  const sw=srcW(src), sh=srcH(src), {x,y,w,h}=fr.win||FULL;
-  const base=Math.max(w/sw,h/sh)*(opt.zoom||1);
-  const dw=sw*base, dh=sh*base;
-  let ox=x+(w-dw)/2+(opt.dx||0), oy=y+(h-dh)/2+(opt.dy||0);
-  ox=Math.min(x,Math.max(x+w-dw,ox)); oy=Math.min(y,Math.max(y+h-dh,oy));
-  opt.dx=ox-(x+(w-dw)/2); opt.dy=oy-(y+(h-dh)/2);   /* 回寫夾限後的位移 */
-  ctx.save(); ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip(); ctx.drawImage(src,ox,oy,dw,dh); ctx.restore();
-  ctx.drawImage(await frameImage(fr),0,0);
-  const t=fr.text;
-  ctx.textAlign=t.align; ctx.textBaseline="alphabetic";
-  if(t.shadow){ ctx.shadowColor="rgba(0,0,0,.45)"; ctx.shadowBlur=18; ctx.shadowOffsetY=4; }
-  const fit=(txt,size,weight,fam,sp)=>{ let s=size; do{ ctx.font=`${weight} ${s}px ${fam}`; if(ctx.measureText(txt).width+(sp||0)*([...txt].length-1)<=t.maxW) break; s-=4; }while(s>24); };
-  const name=(opt.name||"").trim(), line2=(opt.line2||"").trim();
-  if(name){ ctx.fillStyle=t.nameColor; fit(name,t.nameSize,t.nameWeight||900,t.nameFont||FONT,t.nameSpacing);
-    if(t.nameSpacing) spacedText(ctx,name,t.x,t.nameY,t.align,t.nameSpacing); else ctx.fillText(name,t.x,t.nameY); }
-  if(line2){ ctx.fillStyle=t.line2Color; ctx.textAlign=t.align; fit(line2,t.line2Size,600,FONT); ctx.fillText(line2,t.x,name?t.line2Y:t.nameY-10); }
-  ctx.shadowColor="transparent";
+  ctx.drawImage(src,0,0,W,H);
+  ctx.drawImage(await frameImage(fr,W,H),0,0);
+  const k=Math.min(W/DW,H/DH), t=fr.text, line2=(opt.line2||"").trim();
+  if(line2){
+    ctx.save(); ctx.fillStyle=t.color; ctx.textAlign="left"; ctx.textBaseline="alphabetic";
+    ctx.shadowColor="rgba(0,0,0,.45)"; ctx.shadowBlur=18*k; ctx.shadowOffsetY=4*k;
+    let fs=t.size*k; do{ ctx.font=`600 ${fs}px ${FONT}`; if(ctx.measureText(line2).width<=t.maxW*k) break; fs-=2; }while(fs>12);
+    ctx.fillText(line2,t.x*k,H-t.yb*k); ctx.restore();
+  }
   return cv;
 }
 const toBlob=(cv,q)=>new Promise(r=>cv.toBlob(r,"image/jpeg",q||0.92));
@@ -510,7 +500,12 @@ PAGES.koala=(hdr,scr)=>{
 
   frameUrl(fr).then(u=>{ const ov=el.querySelector("#ov"), th=el.querySelector("#frthumb"); if(ov) ov.src=u; if(th) th.src=u; });
 
-  const video=el.querySelector("#cam"), nocam=el.querySelector("#nocam"), shot=el.querySelector("#shot");
+  const video=el.querySelector("#cam"), nocam=el.querySelector("#nocam"), shot=el.querySelector("#shot"), stage=el.querySelector("#stage");
+  video.addEventListener("loadedmetadata",()=>{   /* 取景框比例＝相機畫面比例，所見即所得；疊層預覽也依此比例重算 */
+    if(!video.videoWidth) return; stage.style.aspectRatio=`${video.videoWidth} / ${video.videoHeight}`;
+    const long=1600, vw=video.videoWidth, vh=video.videoHeight, sc=long/Math.max(vw,vh);
+    frameUrl(fr,Math.round(vw*sc),Math.round(vh*sc)).then(u=>{ const ov=el.querySelector("#ov"); if(ov) ov.src=u; });
+  });
   startCam(video).catch(e=>{
     nocam.hidden=false; shot.style.display="none";
     nocam.innerHTML = e&&e.message==="nocam"
@@ -521,52 +516,38 @@ PAGES.koala=(hdr,scr)=>{
     if(!video.videoWidth){ toast("相機尚未就緒"); return; }
     const snap=document.createElement("canvas"); snap.width=video.videoWidth; snap.height=video.videoHeight;
     snap.getContext("2d").drawImage(video,0,0);
-    openCompose(snap,{zoomable:false});
+    openCompose(snap);
   };
   const pick=async e=>{
     const f=e.target.files[0]; e.target.value=""; if(!f) return;
-    try{ openCompose(await loadImage(f),{zoomable:true}); }catch(err){ toast("照片無法讀取"); }
+    try{ openCompose(await loadImage(f)); }catch(err){ toast("照片無法讀取"); }
   };
   el.querySelector("#fcap").onchange=pick;
   el.querySelector("#fpick").onchange=pick;
   renderGallery(el.querySelector("#gal"));
 };
 function koalaOpt(){
-  return { name:"", line2:[today(),CONFIG.zooLine].filter(Boolean).join("  ·  "), dx:0, dy:0, zoom:1 };
+  return { line2:[today(),CONFIG.zooLine].filter(Boolean).join("  ·  ") };
 }
-function openCompose(src,{zoomable}){
+function openCompose(src){
   const fr=FRAMES.find(f=>f.id===S.koala.frame)||FRAMES[0];
   const opt=koalaOpt();
-  let file=null, busy=false, dirty=false;
+  let file=null;
   openModal("紀念照預覽",`<div class="compose">
       <canvas id="cc"></canvas>
-      <div class="hint">拖曳照片調整位置${zoomable?"，下方拉桿縮放":""}</div>
-      ${zoomable?`<input type="range" id="cz" min="1" max="2.2" step="0.01" value="1">`:""}
+      <div class="hint" id="chint">合成中…</div>
     </div>`,
     [["重拍","ghost",closeModal],
      [`${ic("check",16)} 存入紀念照`,"sec",async()=>{ await ensureFile(); await savePhoto(file,fr); toast("已存入紀念照"); }],
      [`${ic("share",16)} 分享／AirDrop`,"pri",async()=>{
-        if(!file){ await ensureFile(); }
+        await ensureFile();
         const ok=await shareFile(file,"星引南十字 · Taronga Zoo");
         if(ok){ await savePhoto(file,fr); toast("已分享並存入紀念照"); }
      }]]);
-  const cv=$("#cc"), cz=$("#cz");
-  async function draw(){
-    if(busy){ dirty=true; return; }
-    busy=true;
-    try{ await compose(src,fr,opt,cv); file=null; }
-    finally{ busy=false; if(dirty){ dirty=false; draw(); } else makeFile(); }
-  }
+  const cv=$("#cc");
+  const ready=compose(src,fr,opt,cv).then(()=>{ const h=$("#chint"); if(h) h.textContent=`照片以原尺寸輸出 ${cv.width}×${cv.height}，不裁切`; return makeFile(); });
   async function makeFile(){ const b=await toBlob(cv); file=new File([b],`TarongaZoo_${stamp()}.jpg`,{type:"image/jpeg"}); }
-  async function ensureFile(){ while(busy) await new Promise(r=>setTimeout(r,50)); if(!file) await makeFile(); }
-  draw();
-  let drag=null;
-  cv.addEventListener("pointerdown",e=>{ e.preventDefault(); cv.setPointerCapture(e.pointerId); drag={x:e.clientX,y:e.clientY,dx:opt.dx,dy:opt.dy}; });
-  cv.addEventListener("pointermove",e=>{ if(!drag) return; const k=FW/cv.getBoundingClientRect().width;
-    opt.dx=drag.dx+(e.clientX-drag.x)*k; opt.dy=drag.dy+(e.clientY-drag.y)*k; draw(); });
-  cv.addEventListener("pointerup",()=>drag=null);
-  cv.addEventListener("pointercancel",()=>drag=null);
-  if(cz) cz.oninput=()=>{ opt.zoom=+cz.value; draw(); };
+  async function ensureFile(){ await ready; if(!file) await makeFile(); }
 }
 const stamp=()=>{ const d=new Date(); return `${today()}_${String(d.getHours()).padStart(2,"0")}${String(d.getMinutes()).padStart(2,"0")}${String(d.getSeconds()).padStart(2,"0")}`; };
 async function savePhoto(file,fr){
