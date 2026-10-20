@@ -338,24 +338,24 @@ const FONT='"PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-ser
 const FULL={x:0,y:0,w:FW,h:FH};
 const FRAMES=[
   { id:"cross", name:"星引南十字",
-    text:{align:"center",x:560,nameY:1858,line2Y:1912,nameColor:"#FFFFFF",line2Color:"rgba(255,255,255,.9)",nameSize:74,line2Size:38,maxW:760,shadow:true,nameFont:FONT,nameWeight:600,nameSpacing:3},   /* 沒有姓名時日期行印在 nameY-10 */
+    text:{align:"left",x:230,nameY:1922,line2Y:1976,nameColor:"#FFFFFF",line2Color:"rgba(255,255,255,.9)",nameSize:74,line2Size:36,maxW:760,shadow:true,nameFont:FONT,nameWeight:600,nameSpacing:3},   /* 沒有姓名時日期行印在 nameY-10 */
     layers:[
-      /* 四邊星空暗角：照片像嵌在夜空裡（中心透明、往四角漸深） */
-      {type:"imgmask",src:KV.bg,sx:1150,sy:0,sw:1250,sh:1562,dx:0,dy:0,dw:1600,dh:2000,r0:.5,r1:1,a0:0,a1:.72},
-      /* 上緣星空帶 */
-      {type:"imgfade",src:KV.bg,sx:1000,sy:0,sw:1400,sh:490,dx:0,dy:0,dw:1600,dh:560,fade:[[0,.97],[.45,.7],[1,0]]},
+      /* 四邊星空暗角：照片像嵌在夜空裡（中心透明、往四角漸深；中上段人臉處幾乎不壓） */
+      {type:"imgmask",src:KV.bg,sx:1150,sy:0,sw:1250,sh:1562,dx:0,dy:0,dw:1600,dh:2000,r0:.58,r1:1,a0:0,a1:.6},
+      /* 上緣星空帶（薄）：只到 21%，不壓到人臉 */
+      {type:"imgfade",src:KV.bg,sx:1000,sy:0,sw:1400,sh:368,dx:0,dy:0,dw:1600,dh:420,fade:[[0,.96],[.4,.55],[1,0]]},
       /* 下緣夜空帶＋加深托字 */
-      {type:"imgfade",src:KV.bg,sx:1200,sy:40,sw:1200,sh:570,dx:0,dy:1240,dw:1600,dh:760,fade:[[0,0],[.28,.82],[1,1]]},
-      {type:"scrim",y0:1480,y1:2000,stops:[[0,"rgba(8,24,70,0)"],[1,"rgba(8,24,70,.5)"]]},
+      {type:"imgfade",src:KV.bg,sx:1200,sy:40,sw:1200,sh:450,dx:0,dy:1400,dw:1600,dh:600,fade:[[0,0],[.32,.86],[1,1]]},
+      {type:"scrim",y0:1600,y1:2000,stops:[[0,"rgba(8,24,70,0)"],[1,"rgba(8,24,70,.5)"]]},
       /* 右下虹彩光：主視覺的水晶折射，以 screen 打在歌劇院後面 */
-      {type:"imgmask",src:KV.bg,sx:150,sy:850,sw:1500,sh:860,dx:560,dy:1300,dw:1240,dh:760,r0:0,r1:.55,a0:.85,a1:0,blend:"screen",opacity:.75},
-      {type:"img",src:KV.crux,x:1300,y:110,w:170,opacity:1},
-      {type:"img",src:KV.mark,x:110,y:100,w:110,opacity:1},
-      {type:"img",src:KV.opera,x:880,y:1700,w:720,opacity:.96},
-      /* 標題鎖定組合，視覺置中於 x=560：小字、大標（含金色飾線與星芒）、英文手寫、日期 */
-      {type:"img",src:KV.board,x:400,y:1468,w:320,opacity:.92},
-      {type:"img",src:KV.title,x:200,y:1510,w:640,opacity:1},
-      {type:"img",src:KV.sub,x:345,y:1740,w:430,opacity:.95},
+      {type:"imgmask",src:KV.bg,sx:150,sy:850,sw:1500,sh:860,dx:640,dy:1400,dw:1160,dh:720,r0:0,r1:.55,a0:.9,a1:0,blend:"screen",opacity:.85},
+      {type:"img",src:KV.crux,x:1310,y:96,w:160,opacity:1},
+      {type:"img",src:KV.mark,x:110,y:96,w:96,opacity:1},
+      {type:"img",src:KV.opera,x:980,y:1750,w:620,opacity:.96},
+      /* 標題字組：文字軸線一律 x=230（飾線尾巴延到 110 的邊界，與左上雄獅同一條線） */
+      {type:"img",src:KV.board,x:230,y:1540,w:300,opacity:.92},
+      {type:"img",src:KV.title,x:110,y:1578,w:640,opacity:1},
+      {type:"img",src:KV.sub,x:230,y:1806,w:400,opacity:.95},
     ]},
 ];
 const assetCache={};
