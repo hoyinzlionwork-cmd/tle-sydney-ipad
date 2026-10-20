@@ -332,7 +332,7 @@ function openOrderModal(g){
 /* ============================================================ 3 無尾熊紀念照 */
 /* 紀念框「星引南十字」：1600×2000（4:5）、無邊框。照片滿版；上下各鋪一段主視覺底圖的星空（邊緣漸隱），
  * 右上南十字、左上雄獅、下方標題字／英文字（設計師原圖）、姓名與日期、右下歌劇院。疊層只算一次（renderOverlay）。
- * imgfade 的 sx/sy/sw/sh 是 img/kv/bg.jpg（2400×1710）上的裁切範圍。 */
+ * imgfade／imgmask 的 sx/sy/sw/sh 是底圖 bg.jpg（2400×1710）上的裁切範圍。 */
 const FW=1600, FH=2000;
 const FONT='"PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif';
 const FULL={x:0,y:0,w:FW,h:FH};
@@ -584,7 +584,7 @@ async function renderGallery(box){
     g.onclick=()=>openModal(rec.name,`<img src="${u}" style="max-width:100%;max-height:62dvh;display:block;margin:0 auto;border-radius:12px">`,
       [["刪除","ghost",()=>confirmBox(`刪除「${rec.name}」這張紀念照？`,async()=>{ await idbDel("photos",rec.id); renderGallery(box); toast("已刪除"); })],
        ["關閉","sec",closeModal],
-       [`${ic("share",16)} 分享／AirDrop`,"pri",()=>{ const f=rec.blob instanceof File?rec.blob:new File([rec.blob],`${rec.name}_TarongaZoo.jpg`,{type:"image/jpeg"}); shareFile(f,`${rec.name} · Taronga Zoo`); }]]);
+       [`${ic("share",16)} 分享／AirDrop`,"pri",()=>{ const f=rec.blob instanceof File?rec.blob:new File([rec.blob],`TarongaZoo_${String(rec.name).replace(/\D/g,"")}.jpg`,{type:"image/jpeg"}); shareFile(f,`${rec.name} · Taronga Zoo`); }]]);
     box.appendChild(g);
   });
 }
