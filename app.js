@@ -340,26 +340,30 @@ const DW=1600, DH=2000, MAX_SIDE=4096;
 const FONT='"PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif';
 const FRAMES=[
   { id:"cross", name:"星引南十字",
-    text:{x:230,yb:88,size:36,maxW:760,color:"rgba(255,255,255,.9)"},   /* 日期行：距左 230、基線距底 88 */
+    text:{x:230,yb:196,size:36,maxW:760,color:"rgba(255,255,255,.9)"},   /* 日期行：距左 230、基線距底 196 */
     layers:[
       /* 四邊星空暗角：照片像嵌在夜空裡（中心透明、往四角漸深；中上段人臉處幾乎不壓） */
       {type:"imgmask",src:KV.bg,sx:1150,sy:0,sw:1250,sh:1562,full:true,r0:.58,r1:1,a0:0,a1:.6},
       /* 上緣星空帶（薄）：約 21%，不壓到人臉 */
       {type:"imgfade",src:KV.bg,sx:1000,sy:0,sw:1400,sh:368,band:"top",h:420,fade:[[0,.96],[.4,.55],[1,0]]},
       /* 下緣夜空帶＋加深托字 */
-      {type:"imgfade",src:KV.bg,sx:1200,sy:40,sw:1200,sh:450,band:"bottom",h:600,fade:[[0,0],[.32,.86],[1,1]]},
-      {type:"scrim",band:"bottom",h:400,stops:[[0,"rgba(8,24,70,0)"],[1,"rgba(8,24,70,.5)"]]},
-      /* 右下虹彩光：主視覺的水晶折射，以 screen 打在歌劇院後面（允許出血） */
-      {type:"imgmask",src:KV.bg,sx:150,sy:850,sw:1500,sh:860,anchor:"br",x:-200,y:-120,w:1160,h:720,r0:0,r1:.55,a0:.9,a1:0,blend:"screen",opacity:.85},
+      {type:"imgfade",src:KV.bg,sx:1200,sy:40,sw:1200,sh:525,band:"bottom",h:700,fade:[[0,0],[.3,.86],[1,1]]},
+      {type:"scrim",band:"bottom",h:480,stops:[[0,"rgba(8,24,70,0)"],[1,"rgba(8,24,70,.45)"]]},
+      /* 地平線光：底圖裡夜空轉成淡紫虹彩的過渡帶，鋪在底部 320px；上緣與左側都漸隱到 0，右、下兩邊貼框，所以不會有色塊邊 */
+      {type:"imgfade",src:KV.bg,sx:1000,sy:480,sw:1400,sh:620,band:"bottom",h:320,fade:[[0,0],[.4,.8],[1,1]],xfade:[[0,0],[.3,.15],[.58,1],[1,1]]},
+      /* 地平線下的水晶切面：很淡，只在右半、貼底 110px，左緣與上緣同樣漸隱 */
+      {type:"imgfade",src:KV.bg,sx:600,sy:1300,sw:1800,sh:410,band:"bottom",h:110,fade:[[0,0],[.5,.55],[1,.7]],xfade:[[0,0],[.5,0],[.75,1],[1,1]],opacity:.75},
       {type:"img",src:KV.crux,anchor:"tr",x:130,y:96,w:160},
       {type:"img",src:KV.mark,anchor:"tl",x:110,y:96,w:96},
-      /* 歌劇院腳下的水面：底圖的水晶虹彩面，往上漸隱、screen 疊色，一路接到框底 */
-      {type:"imgfade",src:KV.bg,sx:600,sy:1180,sw:1800,sh:530,anchor:"br",x:-40,y:-10,w:1120,h:200,fade:[[0,0],[.45,.7],[1,.95]],blend:"screen",opacity:.72},
-      {type:"img",src:KV.opera,anchor:"br",x:0,y:146,w:660,opacity:.96,reflect:{h:.62,a:.46}},   /* 底邊與 Sydney + Melbourne 的底切齊；倒影往下接到框底 */
-      /* 標題字組：文字軸線一律 x=230（飾線尾巴延到 110 的邊界，與左上雄獅同一條線） */
-      {type:"img",src:KV.board,anchor:"bl",x:230,y:428,w:300,opacity:.92},
-      {type:"img",src:KV.title,anchor:"bl",x:110,y:202,w:640},
-      {type:"img",src:KV.sub,anchor:"bl",x:230,y:146,w:400,opacity:.95},
+      /* 歌劇院：底邊在地平線上（距底 150），倒影往下漸隱 */
+      {type:"img",src:KV.opera,anchor:"br",x:0,y:150,w:660,opacity:.98,reflect:{h:.5,a:.45}},
+      /* 標題字組：文字軸線 x=230（飾線尾巴延到 110，與左上雄獅同一條線）；整組抬到地平線之上 */
+      {type:"img",src:KV.board,anchor:"bl",x:230,y:532,w:300,opacity:.92},
+      {type:"img",src:KV.title,anchor:"bl",x:110,y:306,w:640},
+      {type:"img",src:KV.sub,anchor:"bl",x:230,y:250,w:400,opacity:.95},
+      /* 兩顆設計師的星：帆尖右上、日期行右側 */
+      {type:"img",src:KV.star,anchor:"br",x:150,y:470,w:70,opacity:.95},
+      {type:"img",src:KV.star,anchor:"br",x:640,y:250,w:44,opacity:.8},
     ]},
 ];
 const assetCache={};
@@ -413,6 +417,7 @@ async function renderOverlay(fr,W,H){
       const P=placeOf(L,W,H,k), t=coverDraw(im,L,P.w,P.h,L.band||"bottom"), tc=t.getContext("2d");
       tc.globalCompositeOperation="destination-in";
       const g=tc.createLinearGradient(0,0,0,t.height); L.fade.forEach(([o,a])=>g.addColorStop(o,`rgba(0,0,0,${a})`)); tc.fillStyle=g; tc.fillRect(0,0,t.width,t.height);
+      if(L.xfade){ const gx=tc.createLinearGradient(0,0,t.width,0); L.xfade.forEach(([o,a])=>gx.addColorStop(o,`rgba(0,0,0,${a})`)); tc.fillStyle=gx; tc.fillRect(0,0,t.width,t.height); }   /* 可再加左右方向的漸隱 */
       ctx.save(); ctx.globalAlpha=L.opacity??1; ctx.globalCompositeOperation=L.blend||"source-over"; ctx.drawImage(t,P.x,P.y); ctx.restore();
     }
   }
