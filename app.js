@@ -353,7 +353,9 @@ const FRAMES=[
       {type:"imgmask",src:KV.bg,sx:150,sy:850,sw:1500,sh:860,anchor:"br",x:-200,y:-120,w:1160,h:720,r0:0,r1:.55,a0:.9,a1:0,blend:"screen",opacity:.85},
       {type:"img",src:KV.crux,anchor:"tr",x:130,y:96,w:160},
       {type:"img",src:KV.mark,anchor:"tl",x:110,y:96,w:96},
-      {type:"img",src:KV.opera,anchor:"br",x:0,y:146,w:660,opacity:.96},   /* 底邊與 Sydney + Melbourne 的底切齊（設計師回饋） */
+      /* 歌劇院腳下的水面：底圖的水晶虹彩面，往上漸隱、screen 疊色，一路接到框底 */
+      {type:"imgfade",src:KV.bg,sx:600,sy:1180,sw:1800,sh:530,anchor:"br",x:-40,y:-10,w:1120,h:200,fade:[[0,0],[.45,.7],[1,.95]],blend:"screen",opacity:.72},
+      {type:"img",src:KV.opera,anchor:"br",x:0,y:146,w:660,opacity:.96,reflect:{h:.62,a:.46}},   /* 底邊與 Sydney + Melbourne 的底切齊；倒影往下接到框底 */
       /* 標題字組：文字軸線一律 x=230（飾線尾巴延到 110 的邊界，與左上雄獅同一條線） */
       {type:"img",src:KV.board,anchor:"bl",x:230,y:428,w:300,opacity:.92},
       {type:"img",src:KV.title,anchor:"bl",x:110,y:202,w:640},
@@ -392,6 +394,12 @@ async function renderOverlay(fr,W,H){
     }else if(L.type==="img"){
       const im=await loadAsset(L.src); if(!im) continue;
       const P=placeOf(L,W,H,k,im.naturalWidth,im.naturalHeight);
+      if(L.reflect){   /* 倒影：垂直鏡射貼在元素正下方，往下漸隱 */
+        const rh=Math.max(1,Math.round(P.h*L.reflect.h)), t=document.createElement("canvas"); t.width=Math.max(1,Math.round(P.w)); t.height=rh; const tc=t.getContext("2d");
+        tc.translate(0,rh); tc.scale(1,-1); tc.drawImage(im,0,rh-P.h,P.w,P.h); tc.setTransform(1,0,0,1,0,0);
+        tc.globalCompositeOperation="destination-in"; const g=tc.createLinearGradient(0,0,0,rh); g.addColorStop(0,`rgba(0,0,0,${L.reflect.a})`); g.addColorStop(1,"rgba(0,0,0,0)"); tc.fillStyle=g; tc.fillRect(0,0,t.width,rh);
+        ctx.save(); ctx.globalAlpha=L.opacity??1; ctx.drawImage(t,P.x,P.y+P.h); ctx.restore();
+      }
       ctx.save(); ctx.globalAlpha=L.opacity??1; ctx.drawImage(im,P.x,P.y,P.w,P.h); ctx.restore();
     }else if(L.type==="imgmask"){   /* 裁一塊底圖 cover 貼滿，套放射狀遮罩（中心 a0 → 邊緣 a1），可指定混合模式 */
       const im=await loadAsset(L.src); if(!im) continue;
@@ -402,10 +410,10 @@ async function renderOverlay(fr,W,H){
       ctx.save(); ctx.globalAlpha=L.opacity??1; ctx.globalCompositeOperation=L.blend||"source-over"; ctx.drawImage(t,P.x,P.y); ctx.restore();
     }else if(L.type==="imgfade"){   /* 從主視覺底圖裁一塊 cover 鋪滿整寬，上下漸隱後貼上 */
       const im=await loadAsset(L.src); if(!im) continue;
-      const P=placeOf(L,W,H,k), t=coverDraw(im,L,P.w,P.h,L.band), tc=t.getContext("2d");
+      const P=placeOf(L,W,H,k), t=coverDraw(im,L,P.w,P.h,L.band||"bottom"), tc=t.getContext("2d");
       tc.globalCompositeOperation="destination-in";
       const g=tc.createLinearGradient(0,0,0,t.height); L.fade.forEach(([o,a])=>g.addColorStop(o,`rgba(0,0,0,${a})`)); tc.fillStyle=g; tc.fillRect(0,0,t.width,t.height);
-      ctx.save(); ctx.globalAlpha=L.opacity??1; ctx.drawImage(t,P.x,P.y); ctx.restore();
+      ctx.save(); ctx.globalAlpha=L.opacity??1; ctx.globalCompositeOperation=L.blend||"source-over"; ctx.drawImage(t,P.x,P.y); ctx.restore();
     }
   }
   return cv;
