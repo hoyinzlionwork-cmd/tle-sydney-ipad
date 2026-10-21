@@ -41,6 +41,7 @@ const CONFIG = {
   kicker: "2026 董事會 OUTING",
   sub:    "Sydney + Melbourne",
   dates:  "2026.11.04 出發",     /* 出團日期（使用者 2026-10-20 告知） */
+  photoDate:"07 NOV 2026",      /* 紀念照上印的日期（Taronga Zoo 當天，使用者指定）；留空＝拍照當天 */
   zooLine:"Taronga Zoo, Sydney",/* 紀念照第二行固定字樣 */
 };
 
@@ -83,7 +84,7 @@ const guests = () => parseLines(S.guestsTxt).map(r=>r[0]).filter(Boolean);
 const drinks = () => parseLines(S.drinksTxt).map(r=>({zh:r[0],en:r[1]||r[0],note:r[2]||"",img:r[3]||""})).filter(d=>d.zh);
 const wines  = () => parseLines(S.winesTxt).map(r=>({cat:r[0]||"其他",name:r[1]||"",origin:r[2]||"",desc:r[3]||"",price:r[4]||"",img:r[5]||""})).filter(w=>w.name);
 /* 紀念照用的英文日期：07 NOV 2026 */
-function dateEN(){ const d=new Date(), M=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]; return `${String(d.getDate()).padStart(2,"0")} ${M[d.getMonth()]} ${d.getFullYear()}`; }
+function dateEN(){ if(CONFIG.photoDate) return CONFIG.photoDate; const d=new Date(), M=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]; return `${String(d.getDate()).padStart(2,"0")} ${M[d.getMonth()]} ${d.getFullYear()}`; }
 function today(){ const d=new Date(); return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")}`; }
 
 /* ============================================================ IndexedDB（照片、影片；file:// 時改記憶體備援） */
