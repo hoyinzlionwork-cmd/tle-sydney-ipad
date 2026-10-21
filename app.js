@@ -341,8 +341,9 @@ const DW=1600, DH=2000, MAX_SIDE=4096;
 const FONT='"PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif';
 const FRAMES=[
   { id:"cross", name:"星引南十字",
-    text:{x:230,yb:196,size:36,maxW:760,color:"rgba(255,255,255,.9)"},   /* 日期行：距左 230、基線距底 196 */
     layers:[
+      /* 日期行（放最後畫，在疊層裡所以取景預覽也看得到）：距左 230、基線距底 196 */
+      {type:"text",text:()=>[dateEN(),CONFIG.zooLine].filter(Boolean).join(" · "),anchor:"bl",x:230,y:196,size:36,maxW:760,color:"rgba(255,255,255,.9)",last:true},
       /* 四邊星空暗角：照片像嵌在夜空裡（中心透明、往四角漸深；中上段人臉處幾乎不壓） */
       {type:"imgmask",src:KV.bg,sx:1150,sy:0,sw:1250,sh:1562,full:true,r0:.58,r1:1,a0:0,a1:.6},
       /* 上緣星空帶（薄）：約 21%，不壓到人臉 */
@@ -356,8 +357,12 @@ const FRAMES=[
       {type:"imgfade",src:KV.bg,sx:600,sy:1300,sw:1800,sh:410,band:"bottom",h:110,fade:[[0,0],[.5,.55],[1,.7]],xfade:[[0,0],[.5,0],[.75,1],[1,1]],opacity:.75},
       {type:"img",src:KV.crux,anchor:"tr",x:130,y:96,w:160},
       {type:"img",src:KV.mark,anchor:"tl",x:110,y:96,w:96},
-      /* 歌劇院：底邊在地平線上（距底 150），倒影往下漸隱 */
-      {type:"img",src:KV.opera,anchor:"br",x:0,y:150,w:660,opacity:.98,reflect:{h:.5,a:.45}},
+      /* 晶石：主視覺中下段的切面水晶鋪在右下（正常混合），往左、往上漸隱——左下文字區維持深藍，右下轉成晶石，像主視覺的斜向過渡 */
+      {type:"imgfade",src:KV.bg,sx:400,sy:900,sw:1500,sh:800,anchor:"br",x:-100,y:-60,w:1300,h:640,fade:[[0,0],[.45,.45],[.8,.85],[1,1]],xfade:[[0,0],[.3,0],[.7,.85],[1,1]],opacity:.85},
+      /* 右下角一束主視覺的金色光（screen），很淡 */
+      {type:"imgmask",src:KV.bg,sx:1600,sy:1000,sw:800,sh:420,anchor:"br",x:-60,y:-40,w:760,h:380,r0:0,r1:.6,a0:.5,a1:0,blend:"screen",opacity:.45},
+      /* 歌劇院：底邊在地平線上（距底 150），倒影映在晶石面上 */
+      {type:"img",src:KV.opera,anchor:"br",x:0,y:150,w:660,opacity:.98,reflect:{h:.5,a:.55}},
       /* 標題字組：文字軸線 x=230（飾線尾巴延到 110，與左上雄獅同一條線）；整組抬到地平線之上 */
       {type:"img",src:KV.board,anchor:"bl",x:230,y:532,w:300,opacity:.92},
       {type:"img",src:KV.title,anchor:"bl",x:110,y:306,w:640},
@@ -392,8 +397,16 @@ function placeOf(L,W,H,k,imW,imH){
 async function renderOverlay(fr,W,H){
   const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
   const ctx=cv.getContext("2d"), k=Math.min(W/DW,H/DH);
-  for(const L of fr.layers){
-    if(L.type==="scrim"){
+  const order=[...fr.layers.filter(L=>!L.last),...fr.layers.filter(L=>L.last)];
+  for(const L of order){
+    if(L.type==="text"){   /* 文字層：以設計稿字級×k，超過 maxW 就縮字 */
+      const txt=(typeof L.text==="function"?L.text():L.text||"").trim(); if(!txt) continue;
+      ctx.save(); ctx.fillStyle=L.color; ctx.textAlign="left"; ctx.textBaseline="alphabetic";
+      ctx.shadowColor="rgba(0,0,0,.45)"; ctx.shadowBlur=18*k; ctx.shadowOffsetY=4*k;
+      let fs=L.size*k; do{ ctx.font=`600 ${fs}px ${FONT}`; if(ctx.measureText(txt).width<=L.maxW*k) break; fs-=2; }while(fs>12);
+      const x=L.anchor[1]==="r"?W-L.x*k-ctx.measureText(txt).width:L.x*k, y=L.anchor[0]==="b"?H-L.y*k:L.y*k;
+      ctx.fillText(txt,x,y); ctx.restore();
+    }else if(L.type==="scrim"){
       const P=placeOf(L,W,H,k); const g=ctx.createLinearGradient(0,P.y,0,P.y+P.h); L.stops.forEach(([o,c])=>g.addColorStop(o,c));
       ctx.fillStyle=g; ctx.fillRect(P.x,P.y,P.w,P.h);
     }else if(L.type==="img"){
@@ -445,14 +458,7 @@ async function compose(src,fr,opt,cv){
   cv.width=W; cv.height=H;
   const ctx=cv.getContext("2d");
   ctx.drawImage(src,0,0,W,H);
-  ctx.drawImage(await frameImage(fr,W,H),0,0);
-  const k=Math.min(W/DW,H/DH), t=fr.text, line2=(opt.line2||"").trim();
-  if(line2){
-    ctx.save(); ctx.fillStyle=t.color; ctx.textAlign="left"; ctx.textBaseline="alphabetic";
-    ctx.shadowColor="rgba(0,0,0,.45)"; ctx.shadowBlur=18*k; ctx.shadowOffsetY=4*k;
-    let fs=t.size*k; do{ ctx.font=`600 ${fs}px ${FONT}`; if(ctx.measureText(line2).width<=t.maxW*k) break; fs-=2; }while(fs>12);
-    ctx.fillText(line2,t.x*k,H-t.yb*k); ctx.restore();
-  }
+  ctx.drawImage(await frameImage(fr,W,H),0,0);   /* 日期行已在疊層內 */
   return cv;
 }
 const toBlob=(cv,q)=>new Promise(r=>cv.toBlob(r,"image/jpeg",q||0.92));
