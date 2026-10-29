@@ -172,7 +172,7 @@ window.ZOO_DATA = {
     { id:"water",       cat:"facility", zh:"飲水機",       en:"Water Refill & Bubbler", points:[[1324,2193],[1729,2140],[1871,1056],[2184,1861],[1677,1611],[2737,1247],[866,603],[355,475],[674,1839]], glyph:"water" },   /* 官方 8L,10L,11F,12J,10I,16G,5D,3C,4K */
     { id:"selfie",      cat:"facility", zh:"拍照景點",     en:"Selfie with a View", points:[[2042,1978],[2163,1963],[744,798],[2787,748],[2782,1182]], glyph:"camera" },   /* 官方 12K（兩處）,5E,15E,16G */
     { id:"cash",        cat:"facility", zh:"現金提款",     en:"Cash Kiosk",  points:[[1210,2256],[1603,654]], glyph:"cash" },   /* 官方 7L,9D */
-    { id:"adultchange", cat:"facility", zh:"成人更衣室",   en:"Adult Change (MLAK)", points:[[2146,1419]], glyph:"access" },   /* 官方 12H */
+    { id:"adultchange", cat:"facility", zh:"更衣室",       en:"Adult Change (MLAK)", points:[[2146,1419]], glyph:"access" },   /* 官方 12H */
     { id:"hospital",    cat:"facility", zh:"野生動物醫院（施工中）", en:"Taronga Wildlife Hospital", x:2137, y:2166, glyph:"hospital", short:"動物醫院" },
     { id:"function",    cat:"facility", zh:"Function Centre", en:"Taronga Function Centre", x:500, y:1536, short:"宴會中心", glyph:"building", short:"Function Centre" },
     { id:"theatre",     cat:"facility", zoneId:"entry", zh:"Centenary 劇場", en:"Centenary Theatre", x:2088, y:1775, glyph:"theatre", short:"Centenary 劇場" },

@@ -256,19 +256,27 @@ body.has-place .zl.on .s .zh::before{filter:brightness(.55) saturate(1.4)}
 body.route #L-route{display:block}
 #L-route path{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;transition:stroke-opacity var(--dur),stroke var(--dur);pointer-events:none}
 #L-route .halo{pointer-events:stroke;cursor:pointer}
-#L-route .halo{stroke:var(--lc);stroke-opacity:.3;stroke-width:18px}
-#L-route .glow{stroke:var(--lc);stroke-opacity:.8;stroke-width:11px}
-#L-route .rim{stroke:rgba(10,31,92,.55);stroke-width:7px}
-#L-route .core{stroke:#fff;stroke-width:3.5px}
-#L-route .leg.dim .halo{stroke-opacity:0}#L-route .leg.dim .glow{stroke-opacity:.18}#L-route .leg.dim .rim{stroke-opacity:.22}#L-route .leg.dim .core{stroke-opacity:.4}
-#L-route .leg.on .halo{stroke-opacity:.4;stroke-width:22px}#L-route .leg.on .glow{stroke-opacity:.95;stroke-width:12px}#L-route .leg.on .rim{stroke:rgba(28,63,143,.7);stroke-width:8px}#L-route .leg.on .core{stroke:#fff;stroke-width:4px}
-/* 2. 流動的光：一小段亮線沿著路線往前跑（pathLength 正規化，跟縮放無關），看了就知道方向 */
-#L-route .flowglow{stroke:#fff;stroke-opacity:.5;stroke-width:12px;stroke-dasharray:45 955;animation:rflow var(--fdur,8s) linear infinite}
-#L-route .flow{stroke:#FFF8E6;stroke-opacity:1;stroke-width:4.5px;stroke-dasharray:45 955;animation:rflow var(--fdur,8s) linear infinite}
-#L-route .leg.dim .flow,#L-route .leg.dim .flowglow{stroke-opacity:0}
-#L-route .leg.on .flowglow{stroke:var(--lc);stroke-opacity:.9;stroke-width:16px}#L-route .leg.on .flow{stroke-width:5.5px}
+/* 線：細白核＋很淡的深藍影，光暈分三層由寬到窄漸弱（像柔光不像螢光筆） */
+#L-route .halo{stroke:var(--lc);stroke-opacity:.1;stroke-width:26px}
+#L-route .glow2{stroke:var(--lc);stroke-opacity:.2;stroke-width:15px}
+#L-route .glow{stroke:var(--lc);stroke-opacity:.42;stroke-width:8px}
+#L-route .rim{stroke:rgba(10,31,92,.42);stroke-width:4.5px}
+#L-route .core{stroke:#fff;stroke-width:2.4px}
+#L-route .leg.dim .halo{stroke-opacity:0}#L-route .leg.dim .glow2{stroke-opacity:.05}#L-route .leg.dim .glow{stroke-opacity:.12}#L-route .leg.dim .rim{stroke-opacity:.14}#L-route .leg.dim .core{stroke-opacity:.3}
+#L-route .leg.on .halo{stroke-opacity:.2;stroke-width:32px}#L-route .leg.on .glow2{stroke-opacity:.38;stroke-width:20px}#L-route .leg.on .glow{stroke-opacity:.8;stroke-width:10px}#L-route .leg.on .rim{stroke:rgba(28,63,143,.55);stroke-width:5.5px}#L-route .leg.on .core{stroke:#fff;stroke-width:3px}
+/* 流動的光：彗星——亮頭＋越來越細越來越淡的尾。五層 dash 長度不同、以負的 animation-delay 對齊頭部；pathLength=1000 正規化，跟縮放無關 */
+#L-route .fl{animation:rflow var(--fdur,8s) linear infinite}
+#L-route .fb{stroke:var(--lc);stroke-opacity:.35;stroke-width:16px}
+#L-route .f4{stroke:#fff;stroke-opacity:.22;stroke-width:1.8px}
+#L-route .f3{stroke:#FFF8E6;stroke-opacity:.5;stroke-width:2.6px}
+#L-route .f2{stroke:#FFF8E6;stroke-opacity:.9;stroke-width:3.6px}
+#L-route .f1{stroke:#fff;stroke-opacity:1;stroke-width:7px}
+#L-route .leg.dim .fl{stroke-opacity:0}
+#L-route .leg.on .fb{stroke-opacity:.6;stroke-width:22px}#L-route .leg.on .f1{stroke-width:8px}
+#L-route.far .core{stroke-width:3px}#L-route.far .rim{stroke-width:5.5px}#L-route.far .glow{stroke-width:10px;stroke-opacity:.55}#L-route.far .glow2{stroke-width:18px;stroke-opacity:.28}#L-route.far .halo{stroke-opacity:.14}
+#L-route.far .f1{stroke-width:8px}#L-route.far .fb{stroke-opacity:.45}
 @keyframes rflow{from{stroke-dashoffset:0}to{stroke-dashoffset:-1000}}
-@media (prefers-reduced-motion:reduce){#L-route .flow,#L-route .flowglow{animation:none;stroke-dasharray:none;stroke-opacity:0}}
+@media (prefers-reduced-motion:reduce){#L-route .fl{animation:none;stroke-opacity:0}}
 #rstops{display:none}
 body.route #rstops{display:block}
 body.route .mk.hero,body.route .zl[data-z="main"],body.route .zl[data-z="ferry"]{display:none}
@@ -290,7 +298,7 @@ body.route .zl .s .en{display:none}
 .rs.dim{opacity:.5}
 .layer.zooming .rs .rl{opacity:0}
 .rarr{position:absolute;width:0;height:0;pointer-events:none;transition:opacity var(--dur)}
-.rarr svg{position:absolute;left:-7px;top:-7px;width:14px;height:14px;fill:#fff;opacity:.9;filter:drop-shadow(0 1px 2px rgba(10,31,92,.5))}
+.rarr svg{position:absolute;left:-6px;top:-6px;width:12px;height:12px;fill:#fff;opacity:.8;filter:drop-shadow(0 1px 2px rgba(10,31,92,.5))}
 .rarr.on svg{fill:#FFF3D6}
 .rhd{padding:14px 16px 6px;display:flex;align-items:flex-start;gap:10px}
 .rhd .rt{font-size:20px;font-weight:600;color:var(--ink);letter-spacing:.3px;line-height:1.2}
@@ -441,6 +449,7 @@ const zoneAnimals=z=>D.places.filter(p=>p.zone===z.id&&p.cat==="animal");
 
 /* ---- 場景 ---- */
 const wrap=$("#wrap"), layer=$("#layer"), svg=$("#scene"), marks=$("#marks"), zlabels=$("#zlabels"), body=$("#body"), drawer=$("#drawer");
+let routeG=null;   /* #L-route，buildScene 後指定 */
 function buildScene(){
   svg.setAttribute("width",SW); svg.setAttribute("height",SH); svg.setAttribute("viewBox",`0 0 ${SW} ${SH}`);
   const base=$("#L-base"); base.style.width=SW+"px"; base.style.height=SH+"px";   /* 高解析底圖只涵蓋園區範圍，用 CSS 縮到場景大小 */
@@ -448,6 +457,7 @@ function buildScene(){
     <g id="L-zones">${D.zones.map(z=>`<path class="zone" data-z="${z.id}" d="${z.blob}"/>`).join("")}</g>
     <path id="L-outline2" d=""/><path id="L-outline" d=""/>
     <g id="L-route">${routeSVG()}</g>`;
+  routeG=svg.querySelector("#L-route");
   zlabels.innerHTML=D.zones.map(z=>`<div class="zl${z.hot?" hot":""}" data-z="${z.id}" style="left:${z.anchor.x}px;top:${z.anchor.y}px"><div class="s"><span class="zh">${esc(z.short||z.zh)}</span><span class="en">${esc(z.signEn||z.en)}</span></div></div>`).join("");
 }
 
@@ -467,6 +477,7 @@ function apply(){
   layer.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`;
   layer.style.setProperty("--isc",1/sc);
   const far=sc<0.19; zlabels.classList.toggle("far",far); marks.classList.toggle("far",far);
+  if(routeG) routeG.classList.toggle("far",sc<0.4);
   if(cullDirty||(!gestureLive()&&Math.abs(sc-lastCullSc)>1e-6)) queueCull();
 }
 let rafApply=0; function scheduleApply(){ if(!rafApply) rafApply=requestAnimationFrame(()=>{ rafApply=0; apply(); }); }
@@ -631,7 +642,10 @@ const LEG_COLORS=["#BFE0FF","#FFC9E0","#FFE2B0","#D8CCFF"];   /* 四段各一個
 const legColor=i=>LEG_COLORS[i%LEG_COLORS.length];
 const legLen=l=>{ let L=0; for(let i=1;i<l.path.length;i++) L+=Math.hypot(l.path[i][0]-l.path[i-1][0],l.path[i][1]-l.path[i-1][1]); return L; };
 const legDur=l=>Math.min(16,Math.max(4,Math.round(legLen(l)/280)));   /* 流動的光：長段跑久一點，速度才一致 */
-function routeSVG(){ if(!R) return ""; return R.legs.map((l,i)=>{ const d=curvePath(l.path); return `<g class="leg" data-l="${i}" style="--lc:${legColor(i)};--fdur:${legDur(l)}s"><path class="halo" d="${d}"/><path class="glow" d="${d}"/><path class="rim" d="${d}"/><path class="core" d="${d}"/><path class="flowglow" d="${d}" pathLength="1000"/><path class="flow" d="${d}" pathLength="1000"/></g>`; }).join(""); }
+/* 彗星各層：[class, dash 長度]；頭部對齊：delay = (L - Lmax)/1000 × 週期（負值＝提前跑） */
+const COMET=[["fb",70],["f4",150],["f3",95],["f2",50],["f1",12]];
+const cometSVG=(d,dur)=>COMET.map(([c,L])=>`<path class="fl ${c}" d="${d}" pathLength="1000" style="stroke-dasharray:${L} ${1000-L};animation-delay:${((L-150)/1000*dur).toFixed(2)}s"/>`).join("");
+function routeSVG(){ if(!R) return ""; return R.legs.map((l,i)=>{ const d=curvePath(l.path); return `<g class="leg" data-l="${i}" style="--lc:${legColor(i)};--fdur:${legDur(l)}s"><path class="halo" d="${d}"/><path class="glow2" d="${d}"/><path class="glow" d="${d}"/><path class="rim" d="${d}"/><path class="core" d="${d}"/>${cometSVG(d,legDur(l))}</g>`; }).join(""); }
 const boundsOfPts=pts=>{ const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]); return {x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)}; };
 const legBounds=l=>boundsOfPts(l.path);
 const routeBounds=()=>boundsOfPts(R.legs.flatMap(l=>l.path));
@@ -640,7 +654,7 @@ function renderRouteStops(){
   if(!R) return;
   rstops.innerHTML=R.stops.map(s=>{ const o=stopXY(s); return `<div class="rs${o.x>SW*0.72?" l":""}" data-n="${s.n}" style="left:${o.x}px;top:${o.y}px;--lc:${legColor(legOfStop(s.n))}"><div class="rb">${s.n}</div><div class="rl">${s.time?`<span class="tm">${esc(s.time)}</span>`:""}<span>${esc(s.short||s.zh)}</span></div></div>`; }).join("")
     +R.legs.map((l,i)=>{ const core=svg.querySelector(`#L-route .leg[data-l="${i}"] .core`); if(!core) return ""; const L=core.getTotalLength(); let h="";   /* 沿線每 400 單位一個方向箭頭 */
-      for(let t=200;t<L-80;t+=400){ const a=core.getPointAtLength(t), b=core.getPointAtLength(Math.min(L,t+8)); const ang=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
+      for(let t=300;t<L-80;t+=600){ const a=core.getPointAtLength(t), b=core.getPointAtLength(Math.min(L,t+8)); const ang=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
         h+=`<div class="rarr" data-l="${i}" style="left:${a.x.toFixed(1)}px;top:${a.y.toFixed(1)}px"><svg viewBox="0 0 24 24" style="transform:rotate(${ang.toFixed(1)}deg)"><path d="M4 5l15 7-15 7 4-7z"/></svg></div>`; }
       return h; }).join("");
   rstops.querySelectorAll(".rs").forEach(el=>el.onclick=()=>selectStop(+el.dataset.n));
