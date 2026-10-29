@@ -2,7 +2,7 @@
  * 座標：以官方地圖 3.4 倍渲染（4048×2863，即 img/zoomap.webp）為座標系；地圖只顯示左上 3064×2560（view），底圖 img/base.webp 只涵蓋這個範圍。
  * 自動歸區（看座標落在哪個 poly）錯了就在該地點填 zoneId:"區域id"。
  * zones：id、zh（中文）、en、signEn（名牌英文短字，可省）、short（名牌字）、desc（這區看什麼）、poly（輪廓，tools/retrace_zones.py 以步道為邊界算出）、label（名牌座標）、hero（代表動物的 place id；null＝不放）、hot
- * places 每類必填：id、cat、zh、en；位置三選一：x,y ／ grid（單一格線）／ grids（多格線，逗號分隔）
+ * places 每類必填：id、cat、zh、en；位置四選一：x,y ／ grid（單一格線）／ grids（多格線，逗號分隔）／ points（多個實際座標 [[x,y],…]，從官方地圖圖標位置量出，比格線準）
  *   animal：icon（img/icons/ 檔名）或 abbr（沒圖標時清單用的一個字）；short（地圖短名）；area（搜尋用）
  *   show：time（可逗號分隔多場，如 "12:00pm, 3:00pm"）、grid、host（宿主動物 id，有＝併進該動物；沒有＝獨立場次）、note、hot
  *   food／entry／facility：glyph（向量符號名）、short、note
@@ -149,11 +149,11 @@ window.ZOO_DATA = {
     { id:"train2",      cat:"entry", zoneId:"entry", zh:"園內小火車（下站）", en:"Train Station 10K",    x:1731, y:1976, glyph:"train", short:"小火車" },
 
     /* ---- 設施（格線代號取自官方圖例） ---- */
-    { id:"toilets",     cat:"facility", zh:"廁所",         en:"Toilets",     grids:"5D,7L,4J,8D,11E,11H,12G", glyph:"toilet" },
-    { id:"water",       cat:"facility", zh:"飲水機",       en:"Water Refill & Bubbler", grids:"8L,10L,11F,12J,10I,16G,5D,3C,4K", glyph:"water" },
-    { id:"selfie",      cat:"facility", zh:"拍照景點",     en:"Selfie with a View", grids:"12K,5E,15E,16G", glyph:"camera" },
-    { id:"cash",        cat:"facility", zh:"現金提款",     en:"Cash Kiosk",  grids:"7L,9D", glyph:"cash" },
-    { id:"adultchange", cat:"facility", zh:"成人更衣室",   en:"Adult Change (MLAK)", grids:"12H", glyph:"access" },
+    { id:"toilets",     cat:"facility", zh:"廁所",         en:"Toilets",     points:[[694,573],[1068,2256],[736,1906],[1376,655],[1960,893],[1918,1457],[2119,1313]], glyph:"toilet" },   /* 官方 5D,7L,4J,8D,11E,11H,12G */
+    { id:"water",       cat:"facility", zh:"飲水機",       en:"Water Refill & Bubbler", points:[[1324,2193],[1729,2140],[1871,1056],[2184,1861],[1677,1611],[2737,1247],[866,603],[355,475],[674,1839]], glyph:"water" },   /* 官方 8L,10L,11F,12J,10I,16G,5D,3C,4K */
+    { id:"selfie",      cat:"facility", zh:"拍照景點",     en:"Selfie with a View", points:[[2042,1978],[2163,1963],[744,798],[2787,748],[2782,1182]], glyph:"camera" },   /* 官方 12K（兩處）,5E,15E,16G */
+    { id:"cash",        cat:"facility", zh:"現金提款",     en:"Cash Kiosk",  points:[[1210,2256],[1603,654]], glyph:"cash" },   /* 官方 7L,9D */
+    { id:"adultchange", cat:"facility", zh:"成人更衣室",   en:"Adult Change (MLAK)", points:[[2146,1419]], glyph:"access" },   /* 官方 12H */
     { id:"hospital",    cat:"facility", zh:"野生動物醫院（施工中）", en:"Taronga Wildlife Hospital", x:2137, y:2166, glyph:"hospital", short:"動物醫院" },
     { id:"function",    cat:"facility", zh:"Function Centre", en:"Taronga Function Centre", x:500, y:1536, short:"宴會中心", glyph:"building", short:"Function Centre" },
     { id:"theatre",     cat:"facility", zoneId:"entry", zh:"Centenary 劇場", en:"Centenary Theatre", x:2081, y:1801, glyph:"theatre", short:"Centenary 劇場" },
