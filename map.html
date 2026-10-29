@@ -211,6 +211,93 @@ body.has-place .zl.on .s{background:var(--land);box-shadow:0 1px 0 rgba(0,0,0,.1
   .drawer.dragging{transition:none}
   .sheethead{display:block}
 }
+
+/* ===== 星引南十字 · 液態玻璃：名牌、圓標、控制鈕、底部抽屜都是半透明玻璃；設施分類用主視覺的虹彩淡色（和區域名牌的深藍玻璃不同色） ===== */
+:root{--glass:rgba(255,255,255,.80);--glass-navy:rgba(10,31,92,.76);--glass-edge:rgba(255,255,255,.6);--blur:blur(12px) saturate(1.5);
+  --p-peach:#FFE2B0;--p-pink:#FFC9E0;--p-blue:#BFE0FF;--p-lav:#D8CCFF;
+  --serif:"Songti TC","Noto Serif TC","Source Han Serif TC","PMingLiU",serif}
+.zl .s{background:var(--glass-navy);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glass-edge);border-radius:9px;padding:4px 10px;
+  box-shadow:0 4px 14px rgba(10,31,92,.22),inset 0 1px 0 rgba(255,255,255,.4),inset 0 -1px 0 rgba(10,31,92,.25)}
+.zl .s::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 60%);pointer-events:none}   /* 玻璃上緣的高光 */
+.zl .s .en{color:rgba(255,255,255,.8)}
+.zl.on .s{background:var(--glass);color:var(--ink);border-color:rgba(255,255,255,.95);box-shadow:0 6px 18px rgba(10,31,92,.25),0 0 0 1.5px var(--gold),inset 0 1px 0 #fff}
+.zl.on .s .en{color:var(--ink2)}
+body.has-place .zl.on .s{background:var(--glass-navy);color:#fff;box-shadow:0 4px 14px rgba(10,31,92,.22),inset 0 1px 0 rgba(255,255,255,.4)}
+body.has-place .zl.on .s .en{color:rgba(255,255,255,.8)}
+.mk .d,.d26{--tint:var(--p-lav);background:var(--glass);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.95);
+  box-shadow:0 0 0 2px var(--tint),0 2px 6px rgba(10,31,92,.25)}
+.mk .d svg,.d26 svg{fill:var(--ink)}
+.mk.food .d,.d26.food{--tint:var(--p-peach)}
+.mk.entry .d,.d26.entry{--tint:var(--p-blue)}
+.mk.facility .d,.d26.facility{--tint:var(--p-lav)}
+.mk.on .d{box-shadow:0 0 0 2px var(--gold),0 0 12px rgba(226,199,122,.95),0 2px 6px rgba(10,31,92,.25)}
+.mk .n{background:var(--glass);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.95);box-shadow:0 1px 4px rgba(10,31,92,.18)}
+.mk.on .n{background:var(--glass-navy);color:#fff;border-color:rgba(255,255,255,.6);box-shadow:0 2px 8px rgba(10,31,92,.3)}
+.ctl button,.backpill,.dhandle{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(10,31,92,.18),inset 0 1px 0 #fff}
+.top .btn{background:rgba(255,255,255,.16);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.zr,.item{background:transparent}
+.zhd .zh{font-family:var(--serif);font-weight:400;font-size:22px;letter-spacing:1px}
+.tag{border-color:rgba(10,31,92,.35);background:rgba(255,255,255,.7)}
+.lchip.on{background:var(--land);color:#fff;border-color:transparent}
+@media not all and (orientation:landscape) and (min-width:640px){
+  .drawer{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);border-top:1px solid rgba(255,255,255,.9)}
+}
+/* ===== 當天路線（星軌）：像主視覺那道細白弧線，停靠點編號；選中的那一段轉成主視覺的金光 ===== */
+#L-route{display:none}
+body.route #L-route{display:block}
+#L-route path{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;transition:stroke-opacity var(--dur),stroke var(--dur)}
+#L-route .halo{stroke:#fff;stroke-opacity:.14;stroke-width:22px}
+#L-route .glow{stroke:#fff;stroke-opacity:.42;stroke-width:11px}
+#L-route .core{stroke:#fff;stroke-width:3.5px}
+#L-route .dots{stroke:#fff;stroke-width:5px;stroke-opacity:0}
+#L-route .leg.dim .halo{stroke-opacity:.06}#L-route .leg.dim .glow{stroke-opacity:.16}#L-route .leg.dim .core{stroke-opacity:.5}
+#L-route .leg.on .halo{stroke:var(--p-peach);stroke-opacity:.35}#L-route .leg.on .glow{stroke:var(--p-peach);stroke-opacity:.7}#L-route .leg.on .core{stroke:#FFF3D6;stroke-width:4.5px}
+#L-route .leg.on .dots{stroke-opacity:.95}
+#rstops{display:none}
+body.route #rstops{display:block}
+body.route .mk.hero,body.route .zl[data-z="main"],body.route .zl[data-z="ferry"]{display:none}
+body.route .zl:not(.hide){opacity:.62}
+.rs,.rarr{transform:scale(var(--isc));will-change:transform}
+.rs{position:absolute;width:0;height:0;cursor:pointer;z-index:2}
+.rs::before{content:"";position:absolute;left:-22px;top:-22px;width:44px;height:44px}
+.rs .rb{position:absolute;left:-15px;top:-15px;width:30px;height:30px;border-radius:50%;background:var(--glass-navy);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1.5px solid var(--gold);color:#fff;
+  font-size:13.5px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(10,31,92,.35),0 0 0 3px rgba(255,255,255,.35);font-variant-numeric:tabular-nums;transition:transform var(--dur),background var(--dur)}
+.rs .rb::after{content:"";position:absolute;right:-9px;top:-9px;width:14px;height:14px;background:url(img/kv/star.png) center/contain no-repeat;pointer-events:none}   /* 主視覺的星 */
+.rs .rl{position:absolute;left:21px;top:0;transform:translateY(-50%);display:flex;align-items:center;gap:6px;white-space:nowrap;background:var(--glass);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.95);border-radius:7px;padding:3px 8px;color:var(--ink);font-size:12px;font-weight:600;box-shadow:0 1px 4px rgba(10,31,92,.18);pointer-events:none;transition:opacity .15s}
+.rs .rl .tm{color:var(--sky3);font-variant-numeric:tabular-nums}
+.rs.l .rl{left:auto;right:21px}
+.rs.on .rb{background:#fff;color:var(--ink);transform:scale(1.18);box-shadow:0 0 0 3px var(--gold),0 0 16px rgba(226,199,122,.95),0 2px 8px rgba(10,31,92,.35)}
+.rs.on .rl{background:var(--glass-navy);color:#fff;border-color:rgba(255,255,255,.6)}
+.rs.on .rl .tm{color:var(--p-peach)}
+.rs.dim{opacity:.5}
+.layer.zooming .rs .rl{opacity:0}
+.rarr{position:absolute;width:0;height:0;pointer-events:none;transition:opacity var(--dur)}
+.rarr svg{position:absolute;left:-9px;top:-9px;width:18px;height:18px;fill:#fff;filter:drop-shadow(0 1px 2px rgba(10,31,92,.45))}
+.rarr.on svg{fill:#FFF3D6}
+.rhd{padding:14px 16px 6px;display:flex;align-items:flex-start;gap:10px}
+.rhd .rt{font-family:var(--serif);font-size:22px;color:var(--ink);letter-spacing:1px;line-height:1.2}
+.rhd .rsub{font-size:12px;color:var(--ink2);margin-top:3px}
+.rhd .btn{margin-left:auto;flex-shrink:0;height:34px;padding:0 12px;font-size:12.5px}
+.rleg{position:relative;padding:4px 16px 6px}
+.rlh{display:flex;align-items:center;gap:8px;height:34px;cursor:pointer;color:var(--ink2);font-size:12px;font-weight:600;letter-spacing:.5px}
+.rlh .rln{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:5px;background:#EEF3FF;color:var(--sky2);flex-shrink:0}
+.rlh .rlt{color:var(--ink);font-weight:600;font-size:13px}
+.rleg.on .rlh .rln{background:var(--land);color:#fff}
+.rstops{position:relative}
+.rstop{position:relative;display:flex;align-items:center;gap:12px;min-height:54px;padding:6px 0 6px 2px;cursor:pointer;border-radius:10px}
+.rstop::before{content:"";position:absolute;left:15px;top:-12px;bottom:-12px;width:2px;background:linear-gradient(180deg,var(--p-blue),var(--p-lav),var(--p-pink),var(--p-peach))}   /* 時間軸：主視覺的虹彩線 */
+.rstop:first-child::before{top:50%}.rstop:last-child::before{bottom:50%}
+.rstop .rn,.peekrow .rn{position:relative;width:28px;height:28px;border-radius:50%;background:var(--glass-navy);border:1.5px solid var(--gold);color:#fff;font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-variant-numeric:tabular-nums}
+.rstop.on .rn{background:#fff;color:var(--ink);box-shadow:0 0 0 3px rgba(226,199,122,.6)}
+.rstop .tx{flex:1;min-width:0}
+.rstop .zh{font-size:15px;font-weight:600;color:var(--ink);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rstop .en{font-size:11.5px;color:var(--ink2);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rstop .tm{flex-shrink:0;font-size:14px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;padding-right:4px}
+.rstop .ic{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.rstop .ic img{width:32px;height:32px}
+.rstop:active{opacity:.6}
+.rstop.on{background:#EEF3FF}
+.rcap{font-size:11.5px;color:var(--ink2);padding:8px 16px 14px;line-height:1.5}
 @media (prefers-reduced-motion:reduce){*{transition-duration:0ms!important;animation:none!important}}
 </style>
 </head>
@@ -227,6 +314,7 @@ body.has-place .zl.on .s{background:var(--land);box-shadow:0 1px 0 rgba(0,0,0,.1
         <svg id="scene"></svg>
         <div class="ov" id="zlabels"></div>
         <div class="ov" id="marks"></div>
+        <div class="ov" id="rstops"></div>
       </div>
       <button class="backpill" id="backpill"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><span>全部區域</span><span class="sep">·</span><span class="zn" id="backzn"></span></button>
       <div class="ctl"><button id="zin" title="放大"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button id="zout" title="縮小"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button></div>
@@ -339,7 +427,8 @@ function buildScene(){
   const base=$("#L-base"); base.style.width=SW+"px"; base.style.height=SH+"px";   /* 高解析底圖只涵蓋園區範圍，用 CSS 縮到場景大小 */
   svg.innerHTML=`${EDIT?`<image id="L-raster" href="${D.img}" x="0" y="0" width="${D.w}" height="${D.h}"/>`:""}
     <g id="L-zones">${D.zones.map(z=>`<path class="zone" data-z="${z.id}" d="${z.blob}"/>`).join("")}</g>
-    <path id="L-outline2" d=""/><path id="L-outline" d=""/>`;
+    <path id="L-outline2" d=""/><path id="L-outline" d=""/>
+    <g id="L-route">${routeSVG()}</g>`;
   zlabels.innerHTML=D.zones.map(z=>`<div class="zl${z.hot?" hot":""}" data-z="${z.id}" style="left:${z.anchor.x}px;top:${z.anchor.y}px"><div class="s"><span class="zh">${esc(z.short||z.zh)}</span><span class="en">${esc(z.signEn||z.en)}</span></div></div>`).join("");
 }
 
@@ -354,7 +443,7 @@ const vpNow=()=>{ if(!VW||!VH) measureVp(); return {W:VW,H:VH}; };
 function sheetHeight(state){ const H=body.clientHeight; return state==="peek"?88+safeB():state==="full"?H*0.86:H*0.46; }
 function viewportFor(state){ if(isPhone()) return {W:body.clientWidth,H:Math.max(120,body.clientHeight-sheetHeight(state||sheet))}; const open=state===undefined?panelOpen:state!=="closed"; return {W:Math.max(160,body.clientWidth-(open?320:0)),H:body.clientHeight}; }
 const gestureLive=()=>pts.size>0||wheeling||camOn;
-function queueCull(){ if(cullQueued) return; cullQueued=true; requestAnimationFrame(()=>{ cullQueued=false; cullDirty=false; lastCullSc=sc; cullSigns(); cullLabels(); }); }
+function queueCull(){ if(cullQueued) return; cullQueued=true; requestAnimationFrame(()=>{ cullQueued=false; cullDirty=false; lastCullSc=sc; cullSigns(); cullLabels(); updateDots(); }); }
 function apply(){
   layer.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`;
   layer.style.setProperty("--isc",1/sc);
@@ -507,12 +596,64 @@ function renderMarks(){
   cullDirty=true; apply();
 }
 
+/* ---- 當天路線（星軌） ---- */
+const R=D.route||null, rstops=$("#rstops");
+let curLeg=null, curStop=null, routeOn=false;
+const stopOf=n=>R.stops.find(s=>s.n===n);
+const stopXY=s=>{ if(s.x!=null) return {x:s.x,y:s.y}; const p=s.place&&byId(s.place); return p&&p.pts&&p.pts[0]?p.pts[0]:{x:0,y:0}; };
+/* 開放折線 Catmull-Rom → 三次貝茲，路線才像主視覺那道弧線而不是鋸齒 */
+const curvePath=pts=>{ if(!pts||pts.length<2) return ""; const P=pts.map(([x,y])=>({x,y})); let d=`M${P[0].x} ${P[0].y}`;
+  for(let i=0;i<P.length-1;i++){ const p0=P[Math.max(0,i-1)],p1=P[i],p2=P[i+1],p3=P[Math.min(P.length-1,i+2)];
+    const c1={x:p1.x+(p2.x-p0.x)/6,y:p1.y+(p2.y-p0.y)/6}, c2={x:p2.x-(p3.x-p1.x)/6,y:p2.y-(p3.y-p1.y)/6};
+    d+=`C${c1.x.toFixed(1)} ${c1.y.toFixed(1)} ${c2.x.toFixed(1)} ${c2.y.toFixed(1)} ${p2.x} ${p2.y}`; } return d; };
+function routeSVG(){ if(!R) return ""; return R.legs.map((l,i)=>{ const d=curvePath(l.path); return `<g class="leg" data-l="${i}"><path class="halo" d="${d}"/><path class="glow" d="${d}"/><path class="core" d="${d}"/><path class="dots" d="${d}"/></g>`; }).join(""); }
+const boundsOfPts=pts=>{ const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]); return {x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)}; };
+const legBounds=l=>boundsOfPts(l.path);
+const routeBounds=()=>boundsOfPts(R.legs.flatMap(l=>l.path));
+const legOfStop=n=>{ let li=R.legs.findIndex(l=>l.stops.indexOf(n)>0); if(li<0) li=R.legs.findIndex(l=>l.stops.includes(n)); return Math.max(0,li); };
+function renderRouteStops(){
+  if(!R) return;
+  rstops.innerHTML=R.stops.map(s=>{ const o=stopXY(s); return `<div class="rs${o.x>SW*0.72?" l":""}" data-n="${s.n}" style="left:${o.x}px;top:${o.y}px"><div class="rb">${s.n}</div><div class="rl">${s.time?`<span class="tm">${esc(s.time)}</span>`:""}<span>${esc(s.short||s.zh)}</span></div></div>`; }).join("")
+    +R.legs.map((l,i)=>{ const p=l.path, m=Math.floor(p.length/2), a=p[m-1], b=p[m]; const ang=Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI;   /* 每段中點一個方向箭頭 */
+      return `<div class="rarr" data-l="${i}" style="left:${b[0]}px;top:${b[1]}px"><svg viewBox="0 0 24 24" style="transform:rotate(${ang.toFixed(1)}deg)"><path d="M4 5l15 7-15 7 4-7z"/></svg></div>`; }).join("");
+  rstops.querySelectorAll(".rs").forEach(el=>el.onclick=()=>selectStop(+el.dataset.n));
+}
+function drawRouteState(){
+  document.body.classList.toggle("route",routeOn);
+  svg.querySelectorAll("#L-route .leg").forEach(g=>{ const i=+g.dataset.l; g.classList.toggle("on",curLeg===i); g.classList.toggle("dim",curLeg!=null&&curLeg!==i); });
+  rstops.querySelectorAll(".rs").forEach(el=>{ const n=+el.dataset.n, inLeg=curLeg!=null&&R.legs[curLeg].stops.includes(n); el.classList.toggle("on",curStop===n); el.classList.toggle("dim",curLeg!=null&&!inLeg); });
+  rstops.querySelectorAll(".rarr").forEach(el=>{ const i=+el.dataset.l; el.classList.toggle("on",curLeg===i); el.style.opacity=curLeg!=null&&curLeg!==i?.4:1; });
+  updateDots();
+}
+function updateDots(){ if(!routeOn) return; const g=(16/sc).toFixed(1); svg.querySelectorAll("#L-route .dots").forEach(p=>{ p.style.strokeDasharray=`0 ${g}`; }); }   /* 星塵點：螢幕上固定間距 */
+function enterRoute(){
+  if(!R||routeOn) return;
+  cancelCam(); routeOn=true; curZone=null; curPlace=null; curShow=null; curLeg=null; curStop=null; query=""; $("#q").value="";
+  drawZoneState(); renderMarks(); drawRouteState();
+  const target=isPhone()?"half":undefined; if(isPhone()) setSheet(target,true);
+  const vp=viewportFor(target); minSc=minScFor(vp);
+  fitBounds(routeBounds(),undefined,vp,true); settleAfterLayout(vp);
+  pushURL(true);
+}
+function exitRoute(){ if(!routeOn) return; routeOn=false; curLeg=null; curStop=null; drawRouteState(); if(tab==="route"){ tab="zones"; renderTabs(); } }
+function selectLeg(i){ if(!R) return; if(!routeOn){ tab="route"; renderTabs(); enterRoute(); }
+  cancelCam(); curLeg=i; curStop=null; drawRouteState();
+  const target=isPhone()?"peek":undefined; if(isPhone()) setSheet(target,true);
+  const vp=viewportFor(target); minSc=minScFor(vp);
+  fitBounds(legBounds(R.legs[i]),undefined,vp,true); settleAfterLayout(vp); renderList(); }
+function selectStop(n){ if(!R) return; const s=stopOf(n); if(!s) return; if(!routeOn){ tab="route"; renderTabs(); enterRoute(); }
+  cancelCam(); curStop=n; curLeg=legOfStop(n); drawRouteState();
+  const target=isPhone()?"peek":undefined; if(isPhone()) setSheet(target,true);
+  const vp=viewportFor(target); minSc=minScFor(vp);
+  const o=stopXY(s), s1=Math.max(fitScaleFor(legBounds(R.legs[curLeg]),undefined,vp),0.45);
+  animateTo(o.x,o.y,s1,vp); settleAfterLayout(vp); renderList(); }
+
 /* ---- 面板 ---- */
-const TABS=[["zones","分區"],["shows","時刻表"],["facility","設施"]];
+const TABS=[["zones","分區"],["route","當天路線"],["shows","時刻表"],["facility","設施"]];
 const chev=(dir)=>`<svg viewBox="0 0 24 24"><path d="${dir==="left"?"M15 5l-7 7 7 7":"M9 5l7 7-7 7"}"/></svg>`;
 function renderTabs(){ $("#dtabs").innerHTML=TABS.map(([k,l])=>`<button class="dt${tab===k?" on":""}" data-k="${k}">${l}</button>`).join("");
-  $("#dtabs").querySelectorAll(".dt").forEach(b=>b.onclick=()=>{ tab=b.dataset.k; renderTabs(); renderList(); }); }
-function icHTML(p){ if(p.icon) return `<div class="ic">${iconImg(p)}</div>`; if(p.cat==="animal"||p.cat==="show") return `<div class="ic"><div class="ini">${esc(p.abbr||[...p.zh][0])}</div></div>`; return `<div class="ic"><div class="d26">${glyph(glyphOf(p))}</div></div>`; }
+  $("#dtabs").querySelectorAll(".dt").forEach(b=>b.onclick=()=>{ tab=b.dataset.k; if(tab==="route") enterRoute(); else exitRoute(); renderTabs(); renderList(); }); }
+function icHTML(p){ if(p.icon) return `<div class="ic">${iconImg(p)}</div>`; if(p.cat==="animal"||p.cat==="show") return `<div class="ic"><div class="ini">${esc(p.abbr||[...p.zh][0])}</div></div>`; return `<div class="ic"><div class="d26 ${p.cat}">${glyph(glyphOf(p))}</div></div>`; }
 function itemHTML(p,opts){ opts=opts||{}; const ts=opts.times||timesOf(p); const sub=[p.en, opts.zone?zoneName(p):"", opts.note?(p.note||""):""].filter(Boolean).join(" · ");
   const grid=EDIT&&(p.grid||p.grids)?`<span class="gd">${esc(p.grid||p.grids)}</span>`:"";
   return `<div class="item${curPlace&&curPlace.id===p.id?" on":""}" data-id="${p.id}">${icHTML(opts.icon||p)}<div class="tx"><div class="zh"><span class="nm">${esc(opts.name||p.zh)}</span>${p.hot?`<span class="tag">必看</span>`:""}</div><div class="en">${esc(sub)} ${grid}</div></div>${ts.length?`<div class="tm">${ts.map(esc).join("<br>")}</div>`:""}</div>`; }
@@ -525,6 +666,12 @@ function renderList(){
   let html="";
   if(q){ const items=D.places.filter(p=>(p.zh+" "+p.en+" "+(p.area||"")+" "+(p.note||"")+" "+(p.short||"")).toLowerCase().includes(q));
     html=`<div class="gh">搜尋「${esc(query)}」</div>`+(items.length?items.map(p=>itemHTML(p,{zone:true})).join(""):`<div class="empty">找不到「${esc(query)}」</div>`); }
+  else if(tab==="route"&&R){
+    html=`<div class="rhd"><div><div class="rt">${esc(R.title)}</div><div class="rsub">${esc(R.sub||"")}</div></div><button class="btn" id="rfit">看全程</button></div>`
+      +R.legs.map((l,i)=>`<div class="rleg${curLeg===i?" on":""}" data-l="${i}"><div class="rlh"><span class="rln">第 ${i+1} 段</span><span class="rlt">${esc(l.zh)}</span></div><div class="rstops">`
+        +l.stops.slice(i===0?0:1).map(n=>{ const s=stopOf(n), p=s.place&&byId(s.place); return `<div class="rstop${curStop===n?" on":""}" data-n="${n}"><div class="rn">${n}</div>${p?icHTML(p):""}<div class="tx"><div class="zh">${esc(s.zh)}</div><div class="en">${esc([s.en,s.note].filter(Boolean).join(" · "))}</div></div>${s.time?`<div class="tm">${esc(s.time)}</div>`:""}</div>`; }).join("")
+        +`</div></div>`).join("")
+      +`<div class="rcap">${esc(R.cap||"")}</div>`; }
   else if(tab==="shows"){ const rows=D.places.filter(p=>p.cat==="show").flatMap(s=>splitTimes(s.time).map(t=>({s,t}))).sort((a,b)=>toMin(a.t)-toMin(b.t));
     html=`<div class="gh">全日時刻（以現場公告為準）</div>`+rows.map(({s,t})=>itemHTML(s,{times:[fmt24(t)],zone:true,note:true,icon:s.hostRef||s})).join(""); }
   else if(tab==="facility"){
@@ -545,12 +692,20 @@ function renderList(){
   list.innerHTML=html;
   list.querySelectorAll(".zr").forEach(el=>el.onclick=()=>selectZone(zoneOf(el.dataset.z)));
   list.querySelectorAll(".item").forEach(el=>el.onclick=()=>selectPlace(byId(el.dataset.id)));
+  list.querySelectorAll(".rstop").forEach(el=>el.onclick=()=>selectStop(+el.dataset.n));
+  list.querySelectorAll(".rlh").forEach(el=>el.onclick=()=>selectLeg(+el.parentElement.dataset.l));
+  const rf=list.querySelector("#rfit"); if(rf) rf.onclick=()=>{ curLeg=null; curStop=null; drawRouteState(); fitBounds(routeBounds(),undefined,viewportFor(),true); renderList(); };
   const br=list.querySelector("#backrow"); if(br) br.onclick=goBack;
-  const on=list.querySelector(".item.on"); if(on){ const lt=list.getBoundingClientRect(), ot=on.getBoundingClientRect(); if(ot.top<lt.top||ot.bottom>lt.bottom) list.scrollTop+= (ot.top-lt.top)-(lt.height-ot.height)/2; }
+  const on=list.querySelector(".item.on,.rstop.on"); if(on){ const lt=list.getBoundingClientRect(), ot=on.getBoundingClientRect(); if(ot.top<lt.top||ot.bottom>lt.bottom) list.scrollTop+= (ot.top-lt.top)-(lt.height-ot.height)/2; }
   renderPeek();
 }
 function renderPeek(){
   const pr=$("#peekrow"); if(!isPhone()){ pr.classList.add("hidden"); return; }
+  if(routeOn&&curStop!=null){ const s=stopOf(curStop), p=s.place&&byId(s.place);
+    pr.classList.remove("hidden"); pr.innerHTML=`<button class="iconb" id="pkback">${chev("left")}</button><div class="rn">${s.n}</div>${p?icHTML(p):""}<div class="lk"><div class="zh">${esc(s.zh)}</div><div class="en">${esc([s.en,s.note].filter(Boolean).join(" · "))}</div></div><div class="right">${s.time?`<div class="tm">${esc(s.time)}</div>`:""}<div class="nt">第 ${curLeg+1} 段 · ${esc(R.legs[curLeg].zh)}</div></div>`;
+    $("#pkback").onclick=()=>{ curStop=null; curLeg=null; drawRouteState(); setSheet("half"); renderList(); }; return; }
+  if(routeOn&&sheet==="peek"){ pr.classList.remove("hidden"); pr.innerHTML=`<div class="strip">${R.legs.map((l,i)=>`<button class="lchip${curLeg===i?" on":""}" data-l="${i}">${i+1}. ${esc(l.zh)}</button>`).join("")}</div>`;
+    pr.querySelectorAll(".lchip").forEach(b=>b.onclick=()=>selectLeg(+b.dataset.l)); return; }
   if(curPlace){ const p=curShow||curPlace, host=curPlace; const ts=curShow?[fmt24(curShow.time)]:timesOf(host); const note=p.note||"";
     pr.classList.remove("hidden"); pr.innerHTML=`<button class="iconb" id="pkback">${chev("left")}</button>${icHTML(host)}<div class="lk"><div class="zh">${esc(p.zh)}</div><div class="en">${esc([p.en,zoneName(host)].filter(Boolean).join(" · "))}</div></div><div class="right">${ts.length?`<div class="tm">${esc(ts.join(" · "))}</div>`:""}${note?`<div class="nt">${esc(note)}</div>`:""}</div>`;
     $("#pkback").onclick=goBack; return; }
@@ -569,7 +724,7 @@ function pushURL(replace){ if(!history.pushState) return; const u=new URL(locati
 function selectZone(z,opts){
   opts=opts||{};
   if(z&&curZone===z&&!curPlace&&!opts.fromHistory){ fitBounds(z.b,undefined,undefined,true); return; }
-  cancelCam();
+  cancelCam(); exitRoute();
   curZone=z; curPlace=null; curShow=null; if(!opts.keepSearch){ query=""; $("#q").value=""; }
   drawZoneState(); renderMarks();
   const target=isPhone()?(z?"peek":"half"):undefined;
@@ -584,7 +739,7 @@ function selectPlace(p,opts){
   opts=opts||{}; if(!p) return;
   let show=null; if(p.cat==="show"&&p.hostRef){ show=p; p=p.hostRef; }
   if(curPlace===p&&curShow===show&&!opts.fromHistory) return;
-  cancelCam(); const prevZone=curZone;
+  cancelCam(); exitRoute(); const prevZone=curZone;
   if(p.zone&&(!curZone||curZone.id!==p.zone)){ curZone=zoneOf(p.zone); } else if(!p.zone&&p.pts.length>1){ curZone=null; }
   curPlace=p; curShow=show; query=""; $("#q").value="";
   drawZoneState(); renderMarks();
@@ -699,7 +854,7 @@ function onLayoutChange(){ setLayoutClass(); if(isPhone()){ drawer.classList.rem
   renderList(); measureVp(); const vp=viewportFor(); if(curPlace&&curPlace.pts.length===1){ fit(vp); const z=curZone; goTo(curPlace.pts[0].x,curPlace.pts[0].y,z?fitScaleFor(z.b,undefined,vp):sc,vp); } else if(curZone) { fit(vp); fitBounds(curZone.b,undefined,vp); } else fit(vp); settleAfterLayout(vp); }
 LANDQ.addEventListener?LANDQ.addEventListener("change",onLayoutChange):LANDQ.addListener(onLayoutChange);
 window.addEventListener("resize",()=>{ if(transitioning) return; if(!curZone&&!curPlace) fit(); else refit(); });
-buildScene(); D.zones.forEach(z=>{ z.heroP=heroOf(z); }); measureSigns(); renderTabs(); setLayoutClass();
+buildScene(); renderRouteStops(); D.zones.forEach(z=>{ z.heroP=heroOf(z); }); measureSigns(); renderTabs(); setLayoutClass();
 if(isPhone()) setSheet("half",true); else { let saved="open"; try{ saved=localStorage.getItem("zoo_panel")||"open"; }catch(e){} panelOpen=saved!=="closed"; drawer.classList.toggle("closed",!panelOpen); $("#dhchev").setAttribute("d",panelOpen?"M9 5l7 7-7 7":"M15 5l-7 7 7 7"); }
 renderList();
 requestAnimationFrame(()=>{ measureVp(); fit(); drawZoneState(); renderMarks();

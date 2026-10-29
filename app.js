@@ -685,7 +685,7 @@ PAGES.settings=(hdr,scr)=>{
     <div class="card"><div class="field"><label>Rockpool 飲品（中文｜English｜備註｜圖檔）</label><textarea id="td">${esc(S.drinksTxt)}</textarea></div></div>
     <div class="card"><div class="field"><label>喜鳳台 酒單（分類｜名稱｜產地／年份｜描述｜價格｜圖檔）</label><textarea id="tw" style="min-height:180px">${esc(S.winesTxt)}</textarea></div></div>
     <div class="btnrow"><button class="btn pri" id="sv">儲存</button><button class="btn sec" id="exp">匯出紀錄</button><button class="btn danger" id="rst">重置全部</button></div>
-    <p class="vs" style="margin-top:16px">版本 tle-syd-v11 · 主視覺「星引南十字」（元素在 img/kv/）。出團日期在 app.js 的 CONFIG 設定（待補）。</p>`;
+    <p class="vs" style="margin-top:16px">版本 tle-syd-v12 · 主視覺「星引南十字」（元素在 img/kv/）。出團日期在 app.js 的 CONFIG 設定（待補）。</p>`;
   el.querySelector("#sv").onclick=()=>{ S.guestsTxt=$("#tg").value; S.drinksTxt=$("#td").value; S.winesTxt=$("#tw").value; save(); toast("已儲存"); };
   el.querySelector("#exp").onclick=()=>{
     const a=document.createElement("a");
