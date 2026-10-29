@@ -28,8 +28,8 @@ button{cursor:pointer}
 .top{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:calc(6px + var(--safe-top)) 16px 6px;min-height:calc(var(--top-h) + var(--safe-top));color:#fff;position:relative;overflow:hidden;z-index:6;
   background:#0A1F5C url(img/kv/bg.jpg) 100% 15% / 230% auto no-repeat}
 .top>*{position:relative}
-.top .t{flex:1;min-width:0;font-size:17px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.5px}
-.top .t small{font-size:11px;letter-spacing:2.5px;opacity:.8;margin-left:10px;font-weight:600}
+.top .t{flex:1;min-width:0;font-size:18px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.5px;text-shadow:0 2px 10px rgba(5,20,60,.5)}
+.top .t small{font-family:var(--font);font-size:11px;letter-spacing:2.5px;opacity:.8;margin-left:10px;font-weight:600}
 .top .btn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.45);color:#fff}
 body.embed .top{display:none}
 @media (max-width:430px){.top .t small{display:none}}
@@ -40,7 +40,7 @@ body.embed .top{display:none}
 .body{flex:1;min-height:0;display:flex;position:relative}
 .mapwrap{position:relative;flex:1;min-width:0;min-height:0;background:var(--forest);overflow:hidden;touch-action:none}
 .layer{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform;--isc:1}
-.layer svg{display:block;position:absolute;left:0;top:0}
+.layer>svg{display:block;position:absolute;left:0;top:0}   /* 只針對場景 svg；圖標裡的小 svg 不受影響 */
 #L-base{position:absolute;left:0;top:0;display:block;pointer-events:none;-webkit-user-drag:none;backface-visibility:hidden}
 .zone{fill:rgba(255,255,255,0);stroke:none;pointer-events:all;cursor:pointer}
 #L-outline{stroke-width:calc(2.5px * var(--isc))}
@@ -129,6 +129,10 @@ body.has-place .zl.on .s{background:var(--land);box-shadow:0 1px 0 rgba(0,0,0,.1
 .lchip:active{opacity:.6}
 .peekrow .iconb{width:40px;height:40px;border:none;background:transparent;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
 .peekrow .iconb svg{width:18px;height:18px;stroke:var(--ink);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.peekrow .pnav{display:flex;flex-shrink:0;margin-left:-4px}
+.peekrow .pnav .iconb{width:34px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.peekrow .pnav .iconb+.iconb{margin-left:4px}
+.peekrow .iconb:disabled{opacity:.3}
 .peekrow .ic{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .peekrow .ic img{width:32px;height:32px;display:block}
 .peekrow .lk{flex:1;min-width:0}
@@ -204,7 +208,8 @@ body.has-place .zl.on .s{background:var(--land);box-shadow:0 1px 0 rgba(0,0,0,.1
 /* 直向（手機、iPad 直放 iframe）：底部抽屜 */
 @media not all and (orientation:landscape) and (min-width:640px){
   .body{flex-direction:column}
-  .drawer{flex-shrink:0;height:46%;border-top:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:var(--shadow-sheet);transition:height var(--dur-layout) ease}
+  .drawer{position:absolute;left:0;right:0;bottom:0;height:46%;border-top:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:var(--shadow-sheet);transition:height var(--dur-layout) ease}   /* 疊在地圖上，玻璃後面才有地圖可透 */
+  .ctl{top:12px;bottom:auto}
   .drawer.peek{height:calc(var(--peek) + var(--safe-bottom))}
   .drawer.half{height:46%}
   .drawer.full{height:86%}
@@ -213,81 +218,95 @@ body.has-place .zl.on .s{background:var(--land);box-shadow:0 1px 0 rgba(0,0,0,.1
 }
 
 /* ===== 星引南十字 · 液態玻璃：名牌、圓標、控制鈕、底部抽屜都是半透明玻璃；設施分類用主視覺的虹彩淡色（和區域名牌的深藍玻璃不同色） ===== */
-:root{--glass:rgba(255,255,255,.80);--glass-navy:rgba(10,31,92,.76);--glass-edge:rgba(255,255,255,.6);--blur:blur(12px) saturate(1.5);
+:root{--glass:rgba(255,255,255,.80);--glass-navy:rgba(10,31,92,.66);--glass-edge:rgba(255,255,255,.72);--blur:blur(14px) saturate(1.7);
+  --ring-food:#FFB36B;--ring-entry:#7FBCFF;--ring-fac:#B39BFF;
   --p-peach:#FFE2B0;--p-pink:#FFC9E0;--p-blue:#BFE0FF;--p-lav:#D8CCFF;
   --serif:"Songti TC","Noto Serif TC","Source Han Serif TC","PMingLiU",serif}
-.zl .s{background:var(--glass-navy);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--glass-edge);border-radius:9px;padding:4px 10px;
-  box-shadow:0 4px 14px rgba(10,31,92,.22),inset 0 1px 0 rgba(255,255,255,.4),inset 0 -1px 0 rgba(10,31,92,.25)}
-.zl .s::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 60%);pointer-events:none}   /* 玻璃上緣的高光 */
-.zl .s .en{color:rgba(255,255,255,.8)}
-.zl.on .s{background:var(--glass);color:var(--ink);border-color:rgba(255,255,255,.95);box-shadow:0 6px 18px rgba(10,31,92,.25),0 0 0 1.5px var(--gold),inset 0 1px 0 #fff}
-.zl.on .s .en{color:var(--ink2)}
-body.has-place .zl.on .s{background:var(--glass-navy);color:#fff;box-shadow:0 4px 14px rgba(10,31,92,.22),inset 0 1px 0 rgba(255,255,255,.4)}
-body.has-place .zl.on .s .en{color:rgba(255,255,255,.8)}
+.zl .s{background:rgba(255,255,255,.74);-webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);color:var(--ink);border:1px solid rgba(255,255,255,.9);border-radius:10px;padding:5px 11px;
+  box-shadow:0 2px 10px rgba(10,31,92,.14),0 0 0 .5px rgba(10,31,92,.08)}   /* 淺色霧面玻璃：沒有亮面高光，不要初代 iPhone 感 */
+.zl .s .zh{letter-spacing:.2px}
+.zl .s .en{color:#5B6A8C}
+.zl.hot .s .zh::before{filter:brightness(.55) saturate(1.4)}
+.zl.on .s{background:rgba(10,31,92,.88);color:#fff;border-color:rgba(255,255,255,.55);box-shadow:0 6px 18px rgba(10,31,92,.3)}   /* 選中：反白成深藍玻璃 */
+.zl.on .s .en{color:rgba(255,255,255,.78)}
+.zl.on .s .zh::before{filter:none}
+body.has-place .zl.on .s{background:rgba(255,255,255,.74);color:var(--ink);border-color:rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(10,31,92,.14),0 0 0 .5px rgba(10,31,92,.08)}
+body.has-place .zl.on .s .en{color:#5B6A8C}
+body.has-place .zl.on .s .zh::before{filter:brightness(.55) saturate(1.4)}
 .mk .d,.d26{--tint:var(--p-lav);background:var(--glass);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.95);
-  box-shadow:0 0 0 2px var(--tint),0 2px 6px rgba(10,31,92,.25)}
+  box-shadow:0 0 0 2px var(--tint),0 0 0 2.5px rgba(10,31,92,.25),0 2px 6px rgba(10,31,92,.2)}
 .mk .d svg,.d26 svg{fill:var(--ink)}
-.mk.food .d,.d26.food{--tint:var(--p-peach)}
-.mk.entry .d,.d26.entry{--tint:var(--p-blue)}
-.mk.facility .d,.d26.facility{--tint:var(--p-lav)}
-.mk.on .d{box-shadow:0 0 0 2px var(--gold),0 0 12px rgba(226,199,122,.95),0 2px 6px rgba(10,31,92,.25)}
+.mk.food .d,.d26.food{--tint:var(--ring-food)}
+.mk.entry .d,.d26.entry{--tint:var(--ring-entry)}
+.mk.facility .d,.d26.facility{--tint:var(--ring-fac)}
+.mk.on .d{box-shadow:0 0 0 2px var(--gold),0 0 0 2.5px rgba(10,31,92,.25),0 0 12px rgba(226,199,122,.95),0 2px 6px rgba(10,31,92,.2)}
 .mk .n{background:var(--glass);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.95);box-shadow:0 1px 4px rgba(10,31,92,.18)}
 .mk.on .n{background:var(--glass-navy);color:#fff;border-color:rgba(255,255,255,.6);box-shadow:0 2px 8px rgba(10,31,92,.3)}
-.ctl button,.backpill,.dhandle{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(10,31,92,.18),inset 0 1px 0 #fff}
-.top .btn{background:rgba(255,255,255,.16);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.ctl button,.backpill,.dhandle{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(10,31,92,.16)}
+.top .btn{background:rgba(255,255,255,.16);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.5)}
 .zr,.item{background:transparent}
-.zhd .zh{font-family:var(--serif);font-weight:400;font-size:22px;letter-spacing:1px}
+.zhd .zh{font-size:20px;font-weight:600;letter-spacing:.3px}
 .tag{border-color:rgba(10,31,92,.35);background:rgba(255,255,255,.7)}
 .lchip.on{background:var(--land);color:#fff;border-color:transparent}
 @media not all and (orientation:landscape) and (min-width:640px){
-  .drawer{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);border-top:1px solid rgba(255,255,255,.9)}
+  .drawer{background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);border-top:1px solid rgba(255,255,255,.9)}
 }
 /* ===== 當天路線（星軌）：像主視覺那道細白弧線，停靠點編號；選中的那一段轉成主視覺的金光 ===== */
 #L-route{display:none}
 body.route #L-route{display:block}
-#L-route path{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;transition:stroke-opacity var(--dur),stroke var(--dur)}
-#L-route .halo{stroke:#fff;stroke-opacity:.14;stroke-width:22px}
-#L-route .glow{stroke:#fff;stroke-opacity:.42;stroke-width:11px}
+#L-route path{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;transition:stroke-opacity var(--dur),stroke var(--dur);pointer-events:none}
+#L-route .halo{pointer-events:stroke;cursor:pointer}
+#L-route .halo{stroke:var(--lc);stroke-opacity:.3;stroke-width:18px}
+#L-route .glow{stroke:var(--lc);stroke-opacity:.8;stroke-width:11px}
+#L-route .rim{stroke:rgba(10,31,92,.55);stroke-width:7px}
 #L-route .core{stroke:#fff;stroke-width:3.5px}
-#L-route .dots{stroke:#fff;stroke-width:5px;stroke-opacity:0}
-#L-route .leg.dim .halo{stroke-opacity:.06}#L-route .leg.dim .glow{stroke-opacity:.16}#L-route .leg.dim .core{stroke-opacity:.5}
-#L-route .leg.on .halo{stroke:var(--p-peach);stroke-opacity:.35}#L-route .leg.on .glow{stroke:var(--p-peach);stroke-opacity:.7}#L-route .leg.on .core{stroke:#FFF3D6;stroke-width:4.5px}
-#L-route .leg.on .dots{stroke-opacity:.95}
+#L-route .leg.dim .halo{stroke-opacity:0}#L-route .leg.dim .glow{stroke-opacity:.18}#L-route .leg.dim .rim{stroke-opacity:.22}#L-route .leg.dim .core{stroke-opacity:.4}
+#L-route .leg.on .halo{stroke-opacity:.4;stroke-width:22px}#L-route .leg.on .glow{stroke-opacity:.95;stroke-width:12px}#L-route .leg.on .rim{stroke:rgba(28,63,143,.7);stroke-width:8px}#L-route .leg.on .core{stroke:#fff;stroke-width:4px}
+/* 2. 流動的光：一小段亮線沿著路線往前跑（pathLength 正規化，跟縮放無關），看了就知道方向 */
+#L-route .flowglow{stroke:#fff;stroke-opacity:.5;stroke-width:12px;stroke-dasharray:45 955;animation:rflow var(--fdur,8s) linear infinite}
+#L-route .flow{stroke:#FFF8E6;stroke-opacity:1;stroke-width:4.5px;stroke-dasharray:45 955;animation:rflow var(--fdur,8s) linear infinite}
+#L-route .leg.dim .flow,#L-route .leg.dim .flowglow{stroke-opacity:0}
+#L-route .leg.on .flowglow{stroke:var(--lc);stroke-opacity:.9;stroke-width:16px}#L-route .leg.on .flow{stroke-width:5.5px}
+@keyframes rflow{from{stroke-dashoffset:0}to{stroke-dashoffset:-1000}}
+@media (prefers-reduced-motion:reduce){#L-route .flow,#L-route .flowglow{animation:none;stroke-dasharray:none;stroke-opacity:0}}
 #rstops{display:none}
 body.route #rstops{display:block}
 body.route .mk.hero,body.route .zl[data-z="main"],body.route .zl[data-z="ferry"]{display:none}
-body.route .zl:not(.hide){opacity:.62}
+body.route .zl .s{background:rgba(255,255,255,.62);padding:3px 8px;box-shadow:0 1px 4px rgba(10,31,92,.12)}
+body.route .zl .s .zh{font-size:12px}
+body.route .zl .s .en{display:none}
 .rs,.rarr{transform:scale(var(--isc));will-change:transform}
 .rs{position:absolute;width:0;height:0;cursor:pointer;z-index:2}
 .rs::before{content:"";position:absolute;left:-22px;top:-22px;width:44px;height:44px}
-.rs .rb{position:absolute;left:-15px;top:-15px;width:30px;height:30px;border-radius:50%;background:var(--glass-navy);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1.5px solid var(--gold);color:#fff;
+.rs .rb{position:absolute;left:-15px;top:-15px;width:30px;height:30px;border-radius:50%;background:rgba(10,31,92,.88);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:2px solid var(--lc,var(--gold));color:#fff;
   font-size:13.5px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(10,31,92,.35),0 0 0 3px rgba(255,255,255,.35);font-variant-numeric:tabular-nums;transition:transform var(--dur),background var(--dur)}
-.rs .rb::after{content:"";position:absolute;right:-9px;top:-9px;width:14px;height:14px;background:url(img/kv/star.png) center/contain no-repeat;pointer-events:none}   /* 主視覺的星 */
-.rs .rl{position:absolute;left:21px;top:0;transform:translateY(-50%);display:flex;align-items:center;gap:6px;white-space:nowrap;background:var(--glass);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.95);border-radius:7px;padding:3px 8px;color:var(--ink);font-size:12px;font-weight:600;box-shadow:0 1px 4px rgba(10,31,92,.18);pointer-events:none;transition:opacity .15s}
+.rs.on .rb::after{content:"";position:absolute;right:-11px;top:-11px;width:18px;height:18px;background:url(img/kv/star.png) center/contain no-repeat;filter:drop-shadow(0 0 1.5px rgba(10,31,92,.6));pointer-events:none}   /* 選中的停靠點：主視覺的星 */
+.rs .rl{position:absolute;left:21px;top:0;transform:translateY(-50%);display:flex;align-items:center;gap:6px;white-space:nowrap;background:var(--glass);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.95);border-radius:7px;padding:3px 8px;color:var(--ink);font-size:13px;font-weight:600;box-shadow:0 1px 4px rgba(10,31,92,.18);pointer-events:none;transition:opacity .15s}
 .rs .rl .tm{color:var(--sky3);font-variant-numeric:tabular-nums}
 .rs.l .rl{left:auto;right:21px}
-.rs.on .rb{background:#fff;color:var(--ink);transform:scale(1.18);box-shadow:0 0 0 3px var(--gold),0 0 16px rgba(226,199,122,.95),0 2px 8px rgba(10,31,92,.35)}
+.rs.on .rb{background:#fff;color:var(--ink);font-size:14px;transform:scale(1.25);box-shadow:0 0 0 3px var(--gold),0 0 16px rgba(226,199,122,.95),0 2px 8px rgba(10,31,92,.35)}
 .rs.on .rl{background:var(--glass-navy);color:#fff;border-color:rgba(255,255,255,.6)}
 .rs.on .rl .tm{color:var(--p-peach)}
 .rs.dim{opacity:.5}
 .layer.zooming .rs .rl{opacity:0}
 .rarr{position:absolute;width:0;height:0;pointer-events:none;transition:opacity var(--dur)}
-.rarr svg{position:absolute;left:-9px;top:-9px;width:18px;height:18px;fill:#fff;filter:drop-shadow(0 1px 2px rgba(10,31,92,.45))}
+.rarr svg{position:absolute;left:-7px;top:-7px;width:14px;height:14px;fill:#fff;opacity:.9;filter:drop-shadow(0 1px 2px rgba(10,31,92,.5))}
 .rarr.on svg{fill:#FFF3D6}
 .rhd{padding:14px 16px 6px;display:flex;align-items:flex-start;gap:10px}
-.rhd .rt{font-family:var(--serif);font-size:22px;color:var(--ink);letter-spacing:1px;line-height:1.2}
+.rhd .rt{font-size:20px;font-weight:600;color:var(--ink);letter-spacing:.3px;line-height:1.2}
 .rhd .rsub{font-size:12px;color:var(--ink2);margin-top:3px}
 .rhd .btn{margin-left:auto;flex-shrink:0;height:34px;padding:0 12px;font-size:12.5px}
-.rleg{position:relative;padding:4px 16px 6px}
+.rleg{position:relative;margin:4px 10px;padding:2px 8px 6px;border-radius:12px;background:color-mix(in srgb,var(--lc) 30%,#fff);transition:box-shadow var(--dur)}   /* 每段一個色塊 */
+.rleg.on{box-shadow:inset 0 0 0 1.5px var(--lc),0 2px 10px rgba(10,31,92,.1)}
 .rlh{display:flex;align-items:center;gap:8px;height:34px;cursor:pointer;color:var(--ink2);font-size:12px;font-weight:600;letter-spacing:.5px}
-.rlh .rln{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:5px;background:#EEF3FF;color:var(--sky2);flex-shrink:0}
+.rlh .rln{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:5px;background:var(--lc);color:var(--ink);flex-shrink:0}
 .rlh .rlt{color:var(--ink);font-weight:600;font-size:13px}
-.rleg.on .rlh .rln{background:var(--land);color:#fff}
+.rleg.on .rlh .rln{background:var(--ink);color:#fff}
 .rstops{position:relative}
 .rstop{position:relative;display:flex;align-items:center;gap:12px;min-height:54px;padding:6px 0 6px 2px;cursor:pointer;border-radius:10px}
-.rstop::before{content:"";position:absolute;left:15px;top:-12px;bottom:-12px;width:2px;background:linear-gradient(180deg,var(--p-blue),var(--p-lav),var(--p-pink),var(--p-peach))}   /* 時間軸：主視覺的虹彩線 */
+.rstop::before{content:"";position:absolute;left:15px;top:-12px;bottom:-12px;width:2px;background:var(--lc)}   /* 時間軸：該段顏色 */
 .rstop:first-child::before{top:50%}.rstop:last-child::before{bottom:50%}
-.rstop .rn,.peekrow .rn{position:relative;width:28px;height:28px;border-radius:50%;background:var(--glass-navy);border:1.5px solid var(--gold);color:#fff;font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-variant-numeric:tabular-nums}
+.rstop .rn,.peekrow .rn{position:relative;width:28px;height:28px;border-radius:50%;background:var(--ink);border:2px solid var(--lc,var(--gold));color:#fff;font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-variant-numeric:tabular-nums}
 .rstop.on .rn{background:#fff;color:var(--ink);box-shadow:0 0 0 3px rgba(226,199,122,.6)}
 .rstop .tx{flex:1;min-width:0}
 .rstop .zh{font-size:15px;font-weight:600;color:var(--ink);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -296,7 +315,7 @@ body.route .zl:not(.hide){opacity:.62}
 .rstop .ic{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .rstop .ic img{width:32px;height:32px}
 .rstop:active{opacity:.6}
-.rstop.on{background:#EEF3FF}
+.rstop.on{background:rgba(255,255,255,.75)}
 .rcap{font-size:11.5px;color:var(--ink2);padding:8px 16px 14px;line-height:1.5}
 @media (prefers-reduced-motion:reduce){*{transition-duration:0ms!important;animation:none!important}}
 </style>
@@ -439,7 +458,7 @@ const probe=document.createElement("div"); probe.style.cssText="position:fixed;l
 const safeB=()=>probe.offsetHeight||0;
 let sheet="half", panelOpen=true;
 function measureVp(){ VW=wrap.clientWidth; VH=wrap.clientHeight; }
-const vpNow=()=>{ if(!VW||!VH) measureVp(); return {W:VW,H:VH}; };
+const vpNow=()=>{ if(isPhone()) return viewportFor(sheet); if(!VW||!VH) measureVp(); return {W:VW,H:VH}; };   /* 直向：抽屜疊在地圖上，可視範圍要扣掉它 */
 function sheetHeight(state){ const H=body.clientHeight; return state==="peek"?88+safeB():state==="full"?H*0.86:H*0.46; }
 function viewportFor(state){ if(isPhone()) return {W:body.clientWidth,H:Math.max(120,body.clientHeight-sheetHeight(state||sheet))}; const open=state===undefined?panelOpen:state!=="closed"; return {W:Math.max(160,body.clientWidth-(open?320:0)),H:body.clientHeight}; }
 const gestureLive=()=>pts.size>0||wheeling||camOn;
@@ -481,6 +500,7 @@ function cullSigns(){
   const toScr=pt=>({x:tx+pt.x*sc,y:ty+pt.y*sc}), toScene=(x,y)=>({x:(x-tx)/sc,y:(y-ty)/sc});
   const heroEls=new Map(); marks.querySelectorAll(".mk.hero").forEach(m=>heroEls.set(m.dataset.z,m));
   const mkRects=[...marks.querySelectorAll(".mk:not(.hero):not(.hide)")].map(glyphRect);   /* 非代表動物的圖標：名牌不可壓到 */
+  if(routeOn) rstops.querySelectorAll(".rs").forEach(el=>{ const x=tx+parseFloat(el.style.left)*sc, y=ty+parseFloat(el.style.top)*sc, lw=(el.querySelector(".rl")||{}).offsetWidth||80, left=el.classList.contains("l"); mkRects.push({x:left?x-22-lw:x-18,y:y-18,w:40+lw,h:36}); });   /* 路線停靠點＋標籤 */
   const heroRects=new Map(); D.zones.forEach(z=>{ const h=z.heroP; if(overview&&h&&h.pts[0]&&heroEls.has(z.id)){ const c=toScr(h.pts[0]), r=h.cat==="animal"?20:13; heroRects.set(z.id,{x:c.x-r,y:c.y-r,w:2*r,h:2*r,disc:h.cat!=="animal"}); } });
   const order=[...zlabels.querySelectorAll(".zl")].map(el=>({el,z:zoneOf(el.dataset.z)})).sort((a,b)=>{
     const pa=a.z.id==="main"||a.z.id==="ferry"?-1:a.z.nAnimals, pb=b.z.id==="main"||b.z.id==="ferry"?-1:b.z.nAnimals; return pb-pa; });
@@ -503,6 +523,7 @@ function cullSigns(){
       for(const r of cands){
         if(!inside(r)) continue;
         if(others.some(o=>rectsOverlap(o,r))) continue;
+        if(mkRects.some(k=>rectsOverlap(k,padR(r,6)))) continue;
         if(kept.some(k=>rectsOverlap(k,padR(r,12)))) continue;
         const c=toScene(r.x+r.w/2,r.y+r.h/2); el.style.left=c.x+"px"; el.style.top=c.y+"px"; kept.push(r); return;
       }
@@ -606,33 +627,40 @@ const curvePath=pts=>{ if(!pts||pts.length<2) return ""; const P=pts.map(([x,y])
   for(let i=0;i<P.length-1;i++){ const p0=P[Math.max(0,i-1)],p1=P[i],p2=P[i+1],p3=P[Math.min(P.length-1,i+2)];
     const c1={x:p1.x+(p2.x-p0.x)/6,y:p1.y+(p2.y-p0.y)/6}, c2={x:p2.x-(p3.x-p1.x)/6,y:p2.y-(p3.y-p1.y)/6};
     d+=`C${c1.x.toFixed(1)} ${c1.y.toFixed(1)} ${c2.x.toFixed(1)} ${c2.y.toFixed(1)} ${p2.x} ${p2.y}`; } return d; };
-function routeSVG(){ if(!R) return ""; return R.legs.map((l,i)=>{ const d=curvePath(l.path); return `<g class="leg" data-l="${i}"><path class="halo" d="${d}"/><path class="glow" d="${d}"/><path class="core" d="${d}"/><path class="dots" d="${d}"/></g>`; }).join(""); }
+const LEG_COLORS=["#BFE0FF","#FFC9E0","#FFE2B0","#D8CCFF"];   /* 四段各一個主視覺虹彩色：淡藍、粉、桃、薰衣草 */
+const legColor=i=>LEG_COLORS[i%LEG_COLORS.length];
+const legLen=l=>{ let L=0; for(let i=1;i<l.path.length;i++) L+=Math.hypot(l.path[i][0]-l.path[i-1][0],l.path[i][1]-l.path[i-1][1]); return L; };
+const legDur=l=>Math.min(16,Math.max(4,Math.round(legLen(l)/280)));   /* 流動的光：長段跑久一點，速度才一致 */
+function routeSVG(){ if(!R) return ""; return R.legs.map((l,i)=>{ const d=curvePath(l.path); return `<g class="leg" data-l="${i}" style="--lc:${legColor(i)};--fdur:${legDur(l)}s"><path class="halo" d="${d}"/><path class="glow" d="${d}"/><path class="rim" d="${d}"/><path class="core" d="${d}"/><path class="flowglow" d="${d}" pathLength="1000"/><path class="flow" d="${d}" pathLength="1000"/></g>`; }).join(""); }
 const boundsOfPts=pts=>{ const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]); return {x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)}; };
 const legBounds=l=>boundsOfPts(l.path);
 const routeBounds=()=>boundsOfPts(R.legs.flatMap(l=>l.path));
 const legOfStop=n=>{ let li=R.legs.findIndex(l=>l.stops.indexOf(n)>0); if(li<0) li=R.legs.findIndex(l=>l.stops.includes(n)); return Math.max(0,li); };
 function renderRouteStops(){
   if(!R) return;
-  rstops.innerHTML=R.stops.map(s=>{ const o=stopXY(s); return `<div class="rs${o.x>SW*0.72?" l":""}" data-n="${s.n}" style="left:${o.x}px;top:${o.y}px"><div class="rb">${s.n}</div><div class="rl">${s.time?`<span class="tm">${esc(s.time)}</span>`:""}<span>${esc(s.short||s.zh)}</span></div></div>`; }).join("")
-    +R.legs.map((l,i)=>{ const p=l.path, m=Math.floor(p.length/2), a=p[m-1], b=p[m]; const ang=Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI;   /* 每段中點一個方向箭頭 */
-      return `<div class="rarr" data-l="${i}" style="left:${b[0]}px;top:${b[1]}px"><svg viewBox="0 0 24 24" style="transform:rotate(${ang.toFixed(1)}deg)"><path d="M4 5l15 7-15 7 4-7z"/></svg></div>`; }).join("");
+  rstops.innerHTML=R.stops.map(s=>{ const o=stopXY(s); return `<div class="rs${o.x>SW*0.72?" l":""}" data-n="${s.n}" style="left:${o.x}px;top:${o.y}px;--lc:${legColor(legOfStop(s.n))}"><div class="rb">${s.n}</div><div class="rl">${s.time?`<span class="tm">${esc(s.time)}</span>`:""}<span>${esc(s.short||s.zh)}</span></div></div>`; }).join("")
+    +R.legs.map((l,i)=>{ const core=svg.querySelector(`#L-route .leg[data-l="${i}"] .core`); if(!core) return ""; const L=core.getTotalLength(); let h="";   /* 沿線每 400 單位一個方向箭頭 */
+      for(let t=200;t<L-80;t+=400){ const a=core.getPointAtLength(t), b=core.getPointAtLength(Math.min(L,t+8)); const ang=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
+        h+=`<div class="rarr" data-l="${i}" style="left:${a.x.toFixed(1)}px;top:${a.y.toFixed(1)}px"><svg viewBox="0 0 24 24" style="transform:rotate(${ang.toFixed(1)}deg)"><path d="M4 5l15 7-15 7 4-7z"/></svg></div>`; }
+      return h; }).join("");
   rstops.querySelectorAll(".rs").forEach(el=>el.onclick=()=>selectStop(+el.dataset.n));
 }
 function drawRouteState(){
   document.body.classList.toggle("route",routeOn);
   svg.querySelectorAll("#L-route .leg").forEach(g=>{ const i=+g.dataset.l; g.classList.toggle("on",curLeg===i); g.classList.toggle("dim",curLeg!=null&&curLeg!==i); });
+  const onG=svg.querySelector("#L-route .leg.on"); if(onG) onG.parentNode.appendChild(onG);
   rstops.querySelectorAll(".rs").forEach(el=>{ const n=+el.dataset.n, inLeg=curLeg!=null&&R.legs[curLeg].stops.includes(n); el.classList.toggle("on",curStop===n); el.classList.toggle("dim",curLeg!=null&&!inLeg); });
   rstops.querySelectorAll(".rarr").forEach(el=>{ const i=+el.dataset.l; el.classList.toggle("on",curLeg===i); el.style.opacity=curLeg!=null&&curLeg!==i?.4:1; });
   updateDots();
 }
-function updateDots(){ if(!routeOn) return; const g=(16/sc).toFixed(1); svg.querySelectorAll("#L-route .dots").forEach(p=>{ p.style.strokeDasharray=`0 ${g}`; }); }   /* 星塵點：螢幕上固定間距 */
+function updateDots(){}   /* 保留呼叫點；流動的光改用 pathLength 正規化，不需隨縮放更新 */
 function enterRoute(){
   if(!R||routeOn) return;
   cancelCam(); routeOn=true; curZone=null; curPlace=null; curShow=null; curLeg=null; curStop=null; query=""; $("#q").value="";
   drawZoneState(); renderMarks(); drawRouteState();
   const target=isPhone()?"half":undefined; if(isPhone()) setSheet(target,true);
   const vp=viewportFor(target); minSc=minScFor(vp);
-  fitBounds(routeBounds(),undefined,vp,true); settleAfterLayout(vp);
+  fitBounds(routeBounds(),isPhone()?Math.round(Math.min(vp.W,vp.H)*0.12)+40:undefined,vp,true); settleAfterLayout(vp);
   pushURL(true);
 }
 function exitRoute(){ if(!routeOn) return; routeOn=false; curLeg=null; curStop=null; drawRouteState(); if(tab==="route"){ tab="zones"; renderTabs(); } }
@@ -668,7 +696,7 @@ function renderList(){
     html=`<div class="gh">搜尋「${esc(query)}」</div>`+(items.length?items.map(p=>itemHTML(p,{zone:true})).join(""):`<div class="empty">找不到「${esc(query)}」</div>`); }
   else if(tab==="route"&&R){
     html=`<div class="rhd"><div><div class="rt">${esc(R.title)}</div><div class="rsub">${esc(R.sub||"")}</div></div><button class="btn" id="rfit">看全程</button></div>`
-      +R.legs.map((l,i)=>`<div class="rleg${curLeg===i?" on":""}" data-l="${i}"><div class="rlh"><span class="rln">第 ${i+1} 段</span><span class="rlt">${esc(l.zh)}</span></div><div class="rstops">`
+      +R.legs.map((l,i)=>`<div class="rleg${curLeg===i?" on":""}" data-l="${i}" style="--lc:${legColor(i)}"><div class="rlh"><span class="rln">第 ${i+1} 段</span><span class="rlt">${esc(l.zh)}</span></div><div class="rstops">`
         +l.stops.slice(i===0?0:1).map(n=>{ const s=stopOf(n), p=s.place&&byId(s.place); return `<div class="rstop${curStop===n?" on":""}" data-n="${n}"><div class="rn">${n}</div>${p?icHTML(p):""}<div class="tx"><div class="zh">${esc(s.zh)}</div><div class="en">${esc([s.en,s.note].filter(Boolean).join(" · "))}</div></div>${s.time?`<div class="tm">${esc(s.time)}</div>`:""}</div>`; }).join("")
         +`</div></div>`).join("")
       +`<div class="rcap">${esc(R.cap||"")}</div>`; }
@@ -701,9 +729,10 @@ function renderList(){
 }
 function renderPeek(){
   const pr=$("#peekrow"); if(!isPhone()){ pr.classList.add("hidden"); return; }
-  if(routeOn&&curStop!=null){ const s=stopOf(curStop), p=s.place&&byId(s.place);
-    pr.classList.remove("hidden"); pr.innerHTML=`<button class="iconb" id="pkback">${chev("left")}</button><div class="rn">${s.n}</div>${p?icHTML(p):""}<div class="lk"><div class="zh">${esc(s.zh)}</div><div class="en">${esc([s.en,s.note].filter(Boolean).join(" · "))}</div></div><div class="right">${s.time?`<div class="tm">${esc(s.time)}</div>`:""}<div class="nt">第 ${curLeg+1} 段 · ${esc(R.legs[curLeg].zh)}</div></div>`;
-    $("#pkback").onclick=()=>{ curStop=null; curLeg=null; drawRouteState(); setSheet("half"); renderList(); }; return; }
+  if(routeOn&&curStop!=null){ const s=stopOf(curStop), idx=R.stops.findIndex(x=>x.n===curStop), pv=R.stops[idx-1], nx=R.stops[idx+1];
+    pr.classList.remove("hidden"); pr.innerHTML=`<button class="iconb" id="pkback">${chev("left")}</button><div class="rn" style="--lc:${legColor(curLeg)}">${s.n}</div><div class="lk"><div class="zh">${esc(s.zh)}</div><div class="en">${nx?`下一站 ${nx.n} ${esc(nx.zh)}${nx.time?` · ${esc(nx.time)}`:""}`:esc(s.en)}</div></div>${s.time?`<div class="right"><div class="tm">${esc(s.time)}</div></div>`:""}<div class="pnav"><button class="iconb" id="pkprev" ${pv?"":"disabled"}>${chev("left")}</button><button class="iconb" id="pknext" ${nx?"":"disabled"}>${chev("right")}</button></div>`;
+    $("#pkback").onclick=()=>{ curStop=null; curLeg=null; drawRouteState(); setSheet("half"); renderList(); };
+    if(pv) $("#pkprev").onclick=()=>selectStop(pv.n); if(nx) $("#pknext").onclick=()=>selectStop(nx.n); return; }
   if(routeOn&&sheet==="peek"){ pr.classList.remove("hidden"); pr.innerHTML=`<div class="strip">${R.legs.map((l,i)=>`<button class="lchip${curLeg===i?" on":""}" data-l="${i}">${i+1}. ${esc(l.zh)}</button>`).join("")}</div>`;
     pr.querySelectorAll(".lchip").forEach(b=>b.onclick=()=>selectLeg(+b.dataset.l)); return; }
   if(curPlace){ const p=curShow||curPlace, host=curPlace; const ts=curShow?[fmt24(curShow.time)]:timesOf(host); const note=p.note||"";
@@ -786,14 +815,19 @@ const up=e=>{ if(!pts.has(e.pointerId)) return; pts.delete(e.pointerId);
   if(pts.size===0&&!moved&&held<300){ const r=gestureRect||wrap.getBoundingClientRect(), now=performance.now();
     if(EDIT&&curPlace&&!curPlace.grids&&!e.target.closest(".mk,.zl")){ overrides[curPlace.id]={x:Math.round((e.clientX-r.left-tx)/sc),y:Math.round((e.clientY-r.top-ty)/sc)}; localStorage.setItem("zoo_overrides",JSON.stringify(overrides)); assignZones(); selectPlace(curPlace,{fromHistory:true}); return; }
     const el=document.elementFromPoint(e.clientX,e.clientY);
+    const rs=el&&el.closest&&el.closest(".rs");
+    if(rs){ selectStop(+rs.dataset.n); lastTap=0; start=snap(); return; }
+    const leg=routeOn&&el&&el.closest&&el.closest("#L-route .leg");
+    if(leg){ selectLeg(+leg.dataset.l); lastTap=0; start=snap(); return; }
     const mk=el&&el.closest(".mk");
     if(mk){ if(mk.classList.contains("hero")) selectZone(zoneOf(mk.dataset.z)); else selectPlace(byId(mk.dataset.id)); lastTap=0; start=snap(); return; }
     const zl=el&&el.closest(".zl");
-    if(zl){ selectZone(zoneOf(zl.dataset.z)); lastTap=0; start=snap(); return; }
+    if(zl){ if(!routeOn) selectZone(zoneOf(zl.dataset.z)); lastTap=0; start=snap(); return; }   /* 路線模式下名牌只是地標，點了不切頁 */
     const zone=el&&el.classList&&el.classList.contains("zone")?zoneOf(el.dataset.z):null;
     if(now-lastTap<300){ lastTap=0; zoomAt(2,e.clientX-r.left,e.clientY-r.top,true); start=snap(); return; }
     lastTap=now;
-    if(zone&&(!curZone||curZone.id!==zone.id)) selectZone(zone);
+    if(routeOn){ if(curStop!=null||curLeg!=null){ curStop=null; curLeg=null; drawRouteState(); renderList(); if(isPhone()) setSheet("half",true); } }   /* 路線模式：點空白處取消選段，不離開路線 */
+    else if(zone&&(!curZone||curZone.id!==zone.id)) selectZone(zone);
     else if(curPlace){ curPlace=null; curShow=null; renderMarks(); renderList(); pushURL(true); }
   }
   start=snap(); };
@@ -814,11 +848,12 @@ $("#zout").onclick=()=>zoomAt(1/1.4,wrap.clientWidth/2,wrap.clientHeight/2,true)
 function setSheet(state,silent){ if(!isPhone()) return; sheet=state||"half"; drawer.classList.remove("peek","half","full"); drawer.classList.add(sheet); drawer.style.height=""; if(!silent){ settleAfterLayout(viewportFor(sheet)); } renderPeek(); }
 (function sheetDrag(){
   const head=$("#sheethead"); let drag=null;
-  head.addEventListener("pointerdown",e=>{ if(!isPhone()||e.target.closest("button,img")) return; drag={id:e.pointerId,y0:e.clientY,h0:drawer.getBoundingClientRect().height,moved:false,samples:[[performance.now(),0]]}; head.setPointerCapture(e.pointerId); });
+  head.addEventListener("pointerdown",e=>{ if(!isPhone()||e.target.closest("button,img")) return; drag={id:e.pointerId,y0:e.clientY,h0:drawer.getBoundingClientRect().height,moved:false,samples:[[performance.now(),0]],target:e.target}; head.setPointerCapture(e.pointerId); });
   head.addEventListener("pointermove",e=>{ if(!drag||e.pointerId!==drag.id) return; const dy=e.clientY-drag.y0; if(!drag.moved&&Math.abs(dy)<10) return; drag.moved=true; drawer.classList.add("dragging");
     const H=body.clientHeight, h=Math.min(H*0.86,Math.max(88+safeB(),drag.h0-dy)); drawer.style.height=h+"px"; drag.samples.push([performance.now(),h]); drag.samples=drag.samples.filter(s=>performance.now()-s[0]<80); });
   const end=e=>{ if(!drag||e.pointerId!==drag.id) return; const d=drag; drag=null; drawer.classList.remove("dragging");
-    if(!d.moved){ if(e.target.closest("#grab,.lk")||(e.target.closest(".peekrow")&&!e.target.closest("button,img,.lchip"))) setSheet(sheet==="peek"?"half":"peek"); return; }
+    const t0=d.target||e.target;
+    if(!d.moved){ if(t0.closest("#grab,.lk")||(t0.closest(".peekrow")&&!t0.closest("button,img,.lchip"))) setSheet(sheet==="peek"?"half":"peek"); return; }
     const H=body.clientHeight, h=drawer.getBoundingClientRect().height, states={peek:88+safeB(),half:H*0.46,full:H*0.86};
     let v=0; if(d.samples.length>1){ const a=d.samples[0],b=d.samples[d.samples.length-1]; v=(b[1]-a[1])/Math.max(1,b[0]-a[0]); }
     const order=["peek","half","full"]; let cur=order.reduce((best,k)=>Math.abs(states[k]-h)<Math.abs(states[best]-h)?k:best,"half");
@@ -860,6 +895,7 @@ renderList();
 requestAnimationFrame(()=>{ measureVp(); fit(); drawZoneState(); renderMarks();
   const z=params.get("z"), p=params.get("p");
   if(p&&byId(p)){ selectPlace(byId(p),{fromHistory:true}); } else if(z&&zoneOf(z)){ selectZone(zoneOf(z),{fromHistory:true,instant:true}); }
+  else if(params.get("tab")==="route"&&R){ tab="route"; renderTabs(); enterRoute(); const r=+params.get("r"); if(r&&stopOf(r)) selectStop(r); else renderList(); }
   try{ history.replaceState({z:curZone&&curZone.id,p:curPlace&&curPlace.id,i:0},"",location.href); }catch(e){} });
 </script>
 </body>
