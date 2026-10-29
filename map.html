@@ -264,16 +264,19 @@ body.route #L-route{display:block}
 #L-route .core{stroke:#fff;stroke-width:2.4px}
 #L-route .leg.dim .halo{stroke-opacity:0}#L-route .leg.dim .glow2{stroke-opacity:.05}#L-route .leg.dim .glow{stroke-opacity:.12}#L-route .leg.dim .rim{stroke-opacity:.14}#L-route .leg.dim .core{stroke-opacity:.3}
 #L-route .leg.on .halo{stroke-opacity:.2;stroke-width:32px}#L-route .leg.on .glow2{stroke-opacity:.38;stroke-width:20px}#L-route .leg.on .glow{stroke-opacity:.8;stroke-width:10px}#L-route .leg.on .rim{stroke:rgba(28,63,143,.55);stroke-width:5.5px}#L-route .leg.on .core{stroke:#fff;stroke-width:3px}
-/* 方向：白線本身是一段段柔邊的光，整條緩緩往前流（像機場的動態步道），沒有頭尾。dash 用螢幕像素（non-scaling-stroke），縮放不影響節奏 */
+/* 方向：長長的一道光帶（120px）沿線緩緩滑過，間隔很寬；三層由寬到窄、兩端羽化，沒有頭尾。dash 用螢幕像素（non-scaling-stroke），縮放不影響節奏 */
 #L-route .core{stroke-opacity:.42}
-#L-route .fsoft{stroke:#fff;stroke-opacity:.28;stroke-width:5.5px;stroke-linecap:round;stroke-dasharray:30 22;animation:rflow 2.8s linear infinite}
-#L-route .flow{stroke:#fff;stroke-opacity:.96;stroke-width:2.6px;stroke-linecap:round;stroke-dasharray:28 24;animation:rflow 2.8s linear infinite}
-#L-route .leg.on .flow{stroke:#FFF6DF;stroke-width:3px}#L-route .leg.on .fsoft{stroke:#FFE2B0;stroke-opacity:.5}
-#L-route .leg.dim .flow,#L-route .leg.dim .fsoft{stroke-opacity:0}
+#L-route .fsoft2{stroke:#fff;stroke-opacity:.14;stroke-width:9px;stroke-linecap:round;stroke-dasharray:132 188;animation:rflowB 12s linear infinite}
+#L-route .fsoft{stroke:#fff;stroke-opacity:.32;stroke-width:5px;stroke-linecap:round;stroke-dasharray:126 194;animation:rflowA 12s linear infinite}
+#L-route .flow{stroke:#fff;stroke-opacity:.96;stroke-width:2.6px;stroke-linecap:round;stroke-dasharray:120 200;animation:rflow 12s linear infinite}
+#L-route .leg.on .flow{stroke:#FFF6DF;stroke-width:3px}#L-route .leg.on .fsoft{stroke:#FFE2B0;stroke-opacity:.55}#L-route .leg.on .fsoft2{stroke:#FFE2B0;stroke-opacity:.25}
+#L-route .leg.dim .flow,#L-route .leg.dim .fsoft,#L-route .leg.dim .fsoft2{stroke-opacity:0}
 #L-route.far .core{stroke-width:3px}#L-route.far .rim{stroke-width:5.5px}#L-route.far .glow{stroke-width:10px;stroke-opacity:.55}#L-route.far .glow2{stroke-width:18px;stroke-opacity:.28}#L-route.far .halo{stroke-opacity:.14}
 #L-route.far .flow{stroke-width:3px}
-@keyframes rflow{from{stroke-dashoffset:0}to{stroke-dashoffset:-52}}
-@media (prefers-reduced-motion:reduce){#L-route .flow,#L-route .fsoft{animation:none}}
+@keyframes rflow{from{stroke-dashoffset:0}to{stroke-dashoffset:-320}}
+@keyframes rflowA{from{stroke-dashoffset:3px}to{stroke-dashoffset:-317px}}   /* 寬層各往前錯 3／6px，光帶才會置中 */
+@keyframes rflowB{from{stroke-dashoffset:6px}to{stroke-dashoffset:-314px}}
+@media (prefers-reduced-motion:reduce){#L-route .flow,#L-route .fsoft,#L-route .fsoft2{animation:none}}
 #rstops{display:none}
 body.route #rstops{display:block}
 body.route .mk.hero,body.route .zl[data-z="main"],body.route .zl[data-z="ferry"]{display:none}
@@ -638,7 +641,7 @@ const curvePath=pts=>{ if(!pts||pts.length<2) return ""; const P=pts.map(([x,y])
 const LEG_COLORS=["#BFE0FF","#FFC9E0","#FFE2B0","#D8CCFF"];   /* 四段各一個主視覺虹彩色：淡藍、粉、桃、薰衣草 */
 const legColor=i=>LEG_COLORS[i%LEG_COLORS.length];
 const legLen=l=>{ let L=0; for(let i=1;i<l.path.length;i++) L+=Math.hypot(l.path[i][0]-l.path[i-1][0],l.path[i][1]-l.path[i-1][1]); return L; };
-function routeSVG(){ if(!R) return ""; return R.legs.map((l,i)=>{ const d=curvePath(l.path); return `<g class="leg" data-l="${i}" style="--lc:${legColor(i)}"><path class="halo" d="${d}"/><path class="glow2" d="${d}"/><path class="glow" d="${d}"/><path class="rim" d="${d}"/><path class="core" d="${d}"/><path class="fsoft" d="${d}"/><path class="flow" d="${d}"/></g>`; }).join(""); }
+function routeSVG(){ if(!R) return ""; return R.legs.map((l,i)=>{ const d=curvePath(l.path); return `<g class="leg" data-l="${i}" style="--lc:${legColor(i)}"><path class="halo" d="${d}"/><path class="glow2" d="${d}"/><path class="glow" d="${d}"/><path class="rim" d="${d}"/><path class="core" d="${d}"/><path class="fsoft2" d="${d}"/><path class="fsoft" d="${d}"/><path class="flow" d="${d}"/></g>`; }).join(""); }
 const boundsOfPts=pts=>{ const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]); return {x0:Math.min(...xs),x1:Math.max(...xs),y0:Math.min(...ys),y1:Math.max(...ys)}; };
 const legBounds=l=>boundsOfPts(l.path);
 const routeBounds=()=>boundsOfPts(R.legs.flatMap(l=>l.path));
