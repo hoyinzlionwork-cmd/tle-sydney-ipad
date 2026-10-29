@@ -2,7 +2,7 @@
  * 座標：以官方地圖 3.4 倍渲染（4048×2863，即 img/zoomap.webp）為座標系；地圖只顯示左上 3064×2560（view），底圖 img/base.webp 只涵蓋這個範圍。
  * 自動歸區（看座標落在哪個 poly）錯了就在該地點填 zoneId:"區域id"。
  * zones：id、zh（中文）、en、signEn（名牌英文短字，可省）、short（名牌字）、desc（這區看什麼）、poly（輪廓，tools/retrace_zones.py 以步道為邊界算出）、label（名牌座標）、hero（代表動物的 place id；null＝不放）、hot
- * places 每類必填：id、cat、zh、en；位置三選一：x,y ／ grid（單一格線）／ grids（多格線，逗號分隔）
+ * places 每類必填：id、cat、zh、en；位置四選一：x,y ／ grid（單一格線）／ grids（多格線，逗號分隔）／ points（多個實際座標 [[x,y],…]，從官方地圖圖標位置量出，比格線準）
  *   animal：icon（img/icons/ 檔名）或 abbr（沒圖標時清單用的一個字）；short（地圖短名）；area（搜尋用）
  *   show：time（可逗號分隔多場，如 "12:00pm, 3:00pm"）、grid、host（宿主動物 id，有＝併進該動物；沒有＝獨立場次）、note、hot
  *   food／entry／facility：glyph（向量符號名）、short、note
@@ -53,6 +53,25 @@ window.ZOO_DATA = {
       desc:"渡輪碼頭、往正門的公車；由此步行往下入口（海洋區）。",
       poly:[[2568,0],[2547,128],[2440,182],[2440,192],[2529,189],[2555,203],[2560,320],[2706,319],[2735,340],[2775,337],[2797,316],[2800,204],[2703,156],[2692,0]] },
   ],
+  /* 當天路線（「當天路線」頁簽）：stops 停靠點（n 編號、zh、short 地圖上的短名、en、note、time、place 地點 id；給 x,y 可覆蓋位置）；
+   * legs 分段：zh 段名、stops 這段經過的停靠點編號（頭尾與前後段相接）、path 沿步道的折線座標（程式會平滑成曲線；校正請看 map.html?edit=1） */
+  route: {
+    title:"董事會當天路線", sub:"11/07 · Taronga Zoo · 共 4 段", cap:"時間以領隊現場公告為準。點一段或一個停靠點，地圖會亮起那一段路。",
+    stops:[
+      { n:1, zh:"正門集合",             short:"正門集合",   en:"Main Entrance",          place:"mainentrance" },
+      { n:2, zh:"無尾熊合照",           short:"無尾熊合照", en:"Koala Encounter",        note:"澳洲原生動物區", place:"koala", x:630, y:1930 },
+      { n:3, zh:"Saltwater Bistro 午餐", short:"午餐",       en:"Lunch",                  note:"經藍山步道", place:"saltwater" },
+      { n:4, zh:"兒童步道 看袋熊",       short:"袋熊",       en:"Kids Trail · Wombat",    place:"wombat", x:520, y:282 },
+      { n:5, zh:"海獅表演",             short:"海獅表演",   en:"Seals for the Wild",     time:"14:00", place:"seals" },
+      { n:6, zh:"正門 搭車離開",         short:"搭車離開",   en:"Bus Stop · Main Entrance", place:"busmain" },
+    ],
+    legs:[
+      { zh:"入口 → 無尾熊合照",   stops:[1,2],   path:[[820,2240],[1030,2174],[1110,2094],[1186,2102],[1190,1994],[946,1738],[726,1682],[654,1682],[530,1782],[662,1866],[630,1930]] },
+      { zh:"藍山步道 → 午餐",     stops:[2,3],   path:[[630,1930],[666,1870],[530,1786],[626,1710],[626,1622],[894,1606],[998,1526],[710,1166],[778,998],[682,966],[848,882]] },
+      { zh:"兒童步道 → 海獅表演", stops:[3,4,5], path:[[848,882],[782,918],[690,686],[530,530],[394,498],[306,282],[414,258],[610,322],[678,450],[1066,734],[1154,850],[1206,1042],[1310,1154],[1422,1170],[1526,1122],[1626,1162],[1662,1070],[1615,1007]] },
+      { zh:"離開",               stops:[5,6],   path:[[1615,1007],[1674,1134],[1878,1106],[1946,1226],[2042,1322],[2022,1338],[1926,1338],[1846,1474],[1406,1782],[1426,1830],[1570,1834],[1654,1942],[1558,1950],[1514,1990],[1542,2018],[1334,2198],[834,2266],[700,2400]] },
+    ],
+  },
   places: [
     /* ---- 動物 ---- */
     { id:"koala",        cat:"animal", zh:"無尾熊",         en:"Koala Country",          x:610,  y:1931, icon:"koala", area:"Nura Diya Australia" },
@@ -130,15 +149,15 @@ window.ZOO_DATA = {
     { id:"t_penguin",   cat:"show", zh:"企鵝 Keeper Talk",   en:"Penguin Keeper Talk",   time:"2:40pm",  grid:"9E", icon:"penguin", host:"penguins" },
 
     /* ---- 餐飲購物 ---- */
-    { id:"foodmarket",  cat:"food", zh:"美食市集",        en:"Taronga Food Market",   x:2088, y:1249, glyph:"food" },
-    { id:"forage",      cat:"food", zh:"Forage & Graze 咖啡", en:"Forage & Graze Café", x:1121, y:2121, glyph:"cafe", short:"Forage & Graze" },
-    { id:"saltwater",   cat:"food", zoneId:"bluemt", zh:"Saltwater Bistro", en:"Saltwater Bistro",     x:876,  y:846, glyph:"food", short:"Saltwater" },
-    { id:"pitstop",     cat:"food", zoneId:"bluemt", zh:"Pit Stop 小吃",    en:"Pit Stop",              x:982,  y:1078, glyph:"cafe", short:"Pit Stop" },
+    { id:"foodmarket",  cat:"food", zh:"美食市集",        en:"Taronga Food Market",   x:2110, y:1185, glyph:"food" },
+    { id:"forage",      cat:"food", zh:"Forage & Graze 咖啡", en:"Forage & Graze Café", x:1100, y:2132, glyph:"cafe", short:"Forage & Graze" },
+    { id:"saltwater",   cat:"food", zoneId:"bluemt", zh:"Saltwater Bistro", en:"Saltwater Bistro",     x:848,  y:882, glyph:"food", short:"Saltwater" },
+    { id:"pitstop",     cat:"food", zoneId:"bluemt", zh:"Pit Stop 小吃",    en:"Pit Stop",              x:930,  y:1175, glyph:"cafe", short:"Pit Stop" },
     { id:"topplaza",    cat:"food", zh:"Top Plaza 商店", en:"Top Plaza Shop", x:1251, y:2136, glyph:"shop", short:"Top Plaza 商店", note:"無尾熊合照購票" },
-    { id:"midshop",     cat:"food", zh:"Mid Shop 商店",    en:"Mid Shop",              x:1993, y:957, glyph:"shop", short:"Mid Shop" },
+    { id:"midshop",     cat:"food", zh:"Mid Shop 商店",    en:"Mid Shop",              x:2010, y:935, glyph:"shop", short:"Mid Shop" },
 
     /* ---- 入口交通 ---- */
-    { id:"mainentrance",cat:"entry", zh:"正門",            en:"Main Entrance",          x:810,  y:2261, glyph:"gate" },
+    { id:"mainentrance",cat:"entry", zh:"正門",            en:"Main Entrance",          x:820,  y:2240, glyph:"gate" },
     { id:"zooentry",    cat:"entry", zh:"Zoo Entry（Start）", en:"Zoo Entry",            x:1541, y:2016, glyph:"gate" },
     { id:"ferry",       cat:"entry", zh:"渡輪碼頭",        en:"Ferry Wharf",            x:2616, y:136, glyph:"ferry" },
     { id:"lowerentrance",cat:"entry",zh:"下入口（往渡輪）", en:"Lower Entrance & Exit to Ferry", x:1489, y:599, glyph:"gate", short:"下入口" },
@@ -149,14 +168,14 @@ window.ZOO_DATA = {
     { id:"train2",      cat:"entry", zoneId:"entry", zh:"園內小火車（下站）", en:"Train Station 10K",    x:1731, y:1976, glyph:"train", short:"小火車" },
 
     /* ---- 設施（格線代號取自官方圖例） ---- */
-    { id:"toilets",     cat:"facility", zh:"廁所",         en:"Toilets",     grids:"5D,7L,4J,8D,11E,11H,12G", glyph:"toilet" },
-    { id:"water",       cat:"facility", zh:"飲水機",       en:"Water Refill & Bubbler", grids:"8L,10L,11F,12J,10I,16G,5D,3C,4K", glyph:"water" },
-    { id:"selfie",      cat:"facility", zh:"拍照景點",     en:"Selfie with a View", grids:"12K,5E,15E,16G", glyph:"camera" },
-    { id:"cash",        cat:"facility", zh:"現金提款",     en:"Cash Kiosk",  grids:"7L,9D", glyph:"cash" },
-    { id:"adultchange", cat:"facility", zh:"成人更衣室",   en:"Adult Change (MLAK)", grids:"12H", glyph:"access" },
+    { id:"toilets",     cat:"facility", zh:"廁所",         en:"Toilets",     points:[[694,573],[1068,2256],[736,1906],[1376,655],[1960,893],[1918,1457],[2119,1313]], glyph:"toilet" },   /* 官方 5D,7L,4J,8D,11E,11H,12G */
+    { id:"water",       cat:"facility", zh:"飲水機",       en:"Water Refill & Bubbler", points:[[1324,2193],[1729,2140],[1871,1056],[2184,1861],[1677,1611],[2737,1247],[866,603],[355,475],[674,1839]], glyph:"water" },   /* 官方 8L,10L,11F,12J,10I,16G,5D,3C,4K */
+    { id:"selfie",      cat:"facility", zh:"拍照景點",     en:"Selfie with a View", points:[[2042,1978],[2163,1963],[744,798],[2787,748],[2782,1182]], glyph:"camera" },   /* 官方 12K（兩處）,5E,15E,16G */
+    { id:"cash",        cat:"facility", zh:"現金提款",     en:"Cash Kiosk",  points:[[1210,2256],[1603,654]], glyph:"cash" },   /* 官方 7L,9D */
+    { id:"adultchange", cat:"facility", zh:"更衣室",       en:"Adult Change (MLAK)", points:[[2146,1419]], glyph:"access" },   /* 官方 12H */
     { id:"hospital",    cat:"facility", zh:"野生動物醫院（施工中）", en:"Taronga Wildlife Hospital", x:2137, y:2166, glyph:"hospital", short:"動物醫院" },
     { id:"function",    cat:"facility", zh:"Function Centre", en:"Taronga Function Centre", x:500, y:1536, short:"宴會中心", glyph:"building", short:"Function Centre" },
-    { id:"theatre",     cat:"facility", zoneId:"entry", zh:"Centenary 劇場", en:"Centenary Theatre", x:2081, y:1801, glyph:"theatre", short:"Centenary 劇場" },
+    { id:"theatre",     cat:"facility", zoneId:"entry", zh:"Centenary 劇場", en:"Centenary Theatre", x:2088, y:1775, glyph:"theatre", short:"Centenary 劇場" },
     { id:"lawns",       cat:"facility", zh:"Harbour View 草坪（野餐）", en:"Harbour View Lawns", x:2737, y:786, glyph:"picnic", short:"Harbour View 草坪" },
     { id:"concert",     cat:"facility", zh:"Concert Lawns 草坪", en:"Concert Lawns", x:856, y:705, glyph:"picnic", short:"Concert 草坪" },
   ],
