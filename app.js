@@ -136,11 +136,14 @@ function toast(msg){
   const t=$("#toast"); t.innerHTML=STAR_IMG("ts")+esc(msg); t.classList.add("on");
   clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("on"),1900);
 }
-function goPage(p){ S.page=p; save(); render(); }
+/* 本次暫不開放的功能：首頁磁磚變灰、點不進去，?page= 與先前存下的 S.page 也擋掉 */
+const DISABLED=new Set(["wine","drinks"]);
+function goPage(p){ if(DISABLED.has(p)){ toast("此功能本次暫不開放"); return; } S.page=p; save(); render(); }
 function render(){
   stopCam();
   const hdr=$("#hdr"), scr=$("#screen");
   scr.innerHTML=""; hdr.innerHTML="";
+  if(DISABLED.has(S.page)){ S.page=null; save(); }
   if(S.page && PAGES[S.page]) PAGES[S.page](hdr,scr);
   else renderHome(hdr,scr);
   scr.scrollTop=0;
@@ -214,16 +217,17 @@ function renderHome(hdr,scr){
     ["zoo",   "map",    "04","Taronga Zoo","園區地圖",     "選動物就亮起位置；可分享給旅客手機用"],
   ];
   el.innerHTML=`<div class="tiles">${tiles.map(([id,icn,no,place,tt,td,main])=>`
-    <div class="tile${main?" main":""}" data-p="${id}">
+    <div class="tile${main?" main":""}${DISABLED.has(id)?" off":""}" data-p="${id}">
       ${main?`<img class="kvc" src="${KV.crux}" alt="">`:""}
       <span class="no">${no}</span>
       <div class="tic">${ic(icn,22)}</div>
       <div class="tp">${esc(place)}</div>
       <div class="tt">${esc(tt)}</div>
       <div class="td">${esc(td)}</div>
+      ${DISABLED.has(id)?`<span class="pill gray offtag">暫不開放</span>`:""}
     </div>`).join("")}</div>
     <div class="setlink" id="setlink">設定：董事名單、飲品、酒單、重置</div>`;
-  el.querySelectorAll(".tile").forEach(t=>t.onclick=()=>goPage(t.dataset.p));
+  el.querySelectorAll(".tile:not(.off)").forEach(t=>t.onclick=()=>goPage(t.dataset.p));
   el.querySelector("#setlink").onclick=()=>goPage("settings");
   scr.appendChild(el);
 }
@@ -475,6 +479,22 @@ async function shareFile(file,title){
     <p class="vs" style="margin-top:10px;text-align:center">此環境無法直接分享。iPad 上請<b>長按圖片 → 加入照片</b>；電腦上可<a href="${u}" download="${esc(file.name)}">下載</a>。</p>`,[["關閉","sec",closeModal]]);
   return false;
 }
+/* 多張一起分享／儲存：iPad 走分享面板（AirDrop 或「儲存影像」一次存全部）；不支援的環境就逐張下載 */
+async function shareFiles(files,title){
+  if(!files.length) return false;
+  if(files.length===1) return shareFile(files[0],title);
+  if(navigator.canShare && navigator.canShare({files})){
+    try{ await navigator.share({files,title}); return true; }
+    catch(e){ if(e&&e.name==="AbortError") return false; console.warn("share 失敗",e); }
+  }
+  for(const f of files){
+    const a=document.createElement("a"); a.href=URL.createObjectURL(f); a.download=f.name; a.click();
+    await new Promise(r=>setTimeout(r,350));   /* 連續下載要間隔，瀏覽器才不會吃掉後面的 */
+  }
+  toast(`已下載 ${files.length} 張`);
+  return true;
+}
+const recFile=rec=>rec.blob instanceof File?rec.blob:new File([rec.blob],`TarongaZoo_${String(rec.name).replace(/\D/g,"")}.jpg`,{type:"image/jpeg"});
 
 let camStream=null;
 function stopCam(){ if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; } }
@@ -499,7 +519,7 @@ PAGES.koala=(hdr,scr)=>{
         <div class="framenote"><div class="fbox"><img id="frthumb" alt=""></div>
           <div><div class="fn">${esc(fr.name)}</div><div class="fd">使用本次董事會主視覺的原始元素：星空底圖、南十字座、歌劇院、「星引南十字」標題字與雄獅 Logo。照片滿版、無邊框，自動印上日期（${esc(dateEN())} · ${esc(CONFIG.zooLine)}）。</div></div></div>
       </div>
-      <h3 class="sect">已製作的紀念照</h3>
+      <h3 class="sect">已製作的紀念照<button class="btn line galall" id="galall" hidden>${ic("share",15)} 全部分享／儲存</button></h3>
       <div class="gal" id="gal">讀取中…</div>
     </div>
     <div>
@@ -515,7 +535,9 @@ PAGES.koala=(hdr,scr)=>{
         <div class="btnrow" style="justify-content:center">
           <label class="camlbl">${ic("camera",16)} 用相機 App 拍<input type="file" accept="image/*" capture="environment" id="fcap"></label>
           <label class="camlbl">${ic("photo",16)} 從相簿選<input type="file" accept="image/*" id="fpick"></label>
+          <label class="camlbl">${ic("film",16)} 批量套框<input type="file" accept="image/*" multiple id="fbatch"></label>
         </div>
+        <p class="vs" style="margin:10px 0 0;text-align:center">批量：一次選多張，全部自動套框存進紀念照，再一鍵分享或儲存到相簿。</p>
       </div>
     </div>
   </div>`;
@@ -551,8 +573,43 @@ PAGES.koala=(hdr,scr)=>{
   };
   el.querySelector("#fcap").onchange=pick;
   el.querySelector("#fpick").onchange=pick;
+  el.querySelector("#fbatch").onchange=e=>{ const fs=[...e.target.files]; e.target.value=""; if(!fs.length) return; if(fs.length===1) return pick({target:{files:fs,value:""}}); batchCompose(fs,fr); };
+  el.querySelector("#galall").onclick=async()=>{
+    const list=(await idbAll("photos")).sort((a,b)=>a.ts-b.ts);
+    shareFiles(list.map(recFile),"星引南十字 · Taronga Zoo");
+  };
   renderGallery(el.querySelector("#gal"));
 };
+/* 批量套框：逐張合成（一次一張，記憶體才不會爆），全部存進紀念照後再一次分享／儲存 */
+async function batchCompose(files,fr){
+  const opt=koalaOpt(), done=[], failed=[];
+  let cancelled=false;
+  openModal(`批量套框（${files.length} 張）`,`<div class="compose"><div class="hint" id="bhint">準備中…</div><div class="bprog"><div id="bbar"></div></div></div>`,
+    [["取消","ghost",()=>{ cancelled=true; closeModal(); }]]);
+  const cv=document.createElement("canvas");
+  for(let i=0;i<files.length;i++){
+    if(cancelled) break;
+    const h=$("#bhint"), bar=$("#bbar"); if(h) h.textContent=`合成中 ${i+1} / ${files.length}`; if(bar) bar.style.width=`${(i/files.length)*100}%`;
+    try{
+      const im=await loadImage(files[i]);
+      await compose(im,fr,opt,cv);
+      const b=await toBlob(cv);
+      URL.revokeObjectURL(im.src);
+      const f=new File([b],`TarongaZoo_${stamp()}_${String(i+1).padStart(2,"0")}.jpg`,{type:"image/jpeg"});
+      await idbPut("photos",{ id:"k"+Date.now()+"_"+i, name:`紀念照 ${String(new Date().getHours()).padStart(2,"0")}:${String(new Date().getMinutes()).padStart(2,"0")} #${i+1}`, guest:"", frame:fr.id, blob:f, ts:Date.now()+i });
+      done.push(f);
+    }catch(e){ console.warn("批量套框失敗",files[i]&&files[i].name,e); failed.push(files[i]&&files[i].name||`#${i+1}`); }
+  }
+  cv.width=cv.height=0;
+  const gal=$("#gal"); if(gal) renderGallery(gal);
+  if(cancelled){ if(done.length) toast(`已停止，完成 ${done.length} 張`); return; }
+  openModal("批量套框完成",`<div class="compose">
+      <div class="gal" style="width:100%">${done.slice(0,8).map(f=>`<div class="gi"><img src="${URL.createObjectURL(f)}" alt=""></div>`).join("")}</div>
+      <div class="hint">${done.length} 張已套框並存入紀念照${failed.length?`；${failed.length} 張無法讀取（${esc(failed.join("、"))}）`:""}。iPad 按「分享／儲存」後可選 AirDrop，或「儲存影像」一次存進相簿。</div>
+    </div>`,
+    [["關閉","sec",closeModal],
+     [`${ic("share",16)} 分享／儲存全部`,"pri",()=>shareFiles(done,"星引南十字 · Taronga Zoo")]]);
+}
 function koalaOpt(){
   return { line2:[dateEN(),CONFIG.zooLine].filter(Boolean).join(" · ") };
 }
@@ -585,6 +642,7 @@ async function savePhoto(file,fr){
 async function renderGallery(box){
   const list=(await idbAll("photos")).sort((a,b)=>b.ts-a.ts);
   box.innerHTML=list.length?"":`<div class="vs" style="grid-column:1/-1">尚無紀念照。拍一張就會出現在這裡，之後隨時可以重新分享。</div>`;
+  const all=$("#galall"); if(all) all.hidden=list.length<2;
   list.forEach(rec=>{
     const u=URL.createObjectURL(rec.blob);
     const g=document.createElement("div");
@@ -593,7 +651,7 @@ async function renderGallery(box){
     g.onclick=()=>openModal(rec.name,`<img src="${u}" style="max-width:100%;max-height:62dvh;display:block;margin:0 auto;border-radius:12px">`,
       [["刪除","ghost",()=>confirmBox(`刪除「${rec.name}」這張紀念照？`,async()=>{ await idbDel("photos",rec.id); renderGallery(box); toast("已刪除"); })],
        ["關閉","sec",closeModal],
-       [`${ic("share",16)} 分享／AirDrop`,"pri",()=>{ const f=rec.blob instanceof File?rec.blob:new File([rec.blob],`TarongaZoo_${String(rec.name).replace(/\D/g,"")}.jpg`,{type:"image/jpeg"}); shareFile(f,`${rec.name} · Taronga Zoo`); }]]);
+       [`${ic("share",16)} 分享／AirDrop`,"pri",()=>shareFile(recFile(rec),`${rec.name} · Taronga Zoo`)]]);
     box.appendChild(g);
   });
 }
@@ -627,7 +685,7 @@ PAGES.settings=(hdr,scr)=>{
     <div class="card"><div class="field"><label>Rockpool 飲品（中文｜English｜備註｜圖檔）</label><textarea id="td">${esc(S.drinksTxt)}</textarea></div></div>
     <div class="card"><div class="field"><label>喜鳳台 酒單（分類｜名稱｜產地／年份｜描述｜價格｜圖檔）</label><textarea id="tw" style="min-height:180px">${esc(S.winesTxt)}</textarea></div></div>
     <div class="btnrow"><button class="btn pri" id="sv">儲存</button><button class="btn sec" id="exp">匯出紀錄</button><button class="btn danger" id="rst">重置全部</button></div>
-    <p class="vs" style="margin-top:16px">版本 tle-syd-v10 · 主視覺「星引南十字」（元素在 img/kv/）。出團日期在 app.js 的 CONFIG 設定（待補）。</p>`;
+    <p class="vs" style="margin-top:16px">版本 tle-syd-v11 · 主視覺「星引南十字」（元素在 img/kv/）。出團日期在 app.js 的 CONFIG 設定（待補）。</p>`;
   el.querySelector("#sv").onclick=()=>{ S.guestsTxt=$("#tg").value; S.drinksTxt=$("#td").value; S.winesTxt=$("#tw").value; save(); toast("已儲存"); };
   el.querySelector("#exp").onclick=()=>{
     const a=document.createElement("a");
